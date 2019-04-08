@@ -1,0 +1,173 @@
+---
+title: "Temporal Analysis"
+author: "Kari Norman"
+date: "9/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#devtools::install_github("karinorman/functional_diversity")
+
+library(tidyverse)
+library(dplyr)
+library(FD)
+library(furrr)
+library(here)
+library(foreach)
+#library(functional.diversity)
+
+
+piggyback::pb_download(file = c("data/trait.rda", "data/bbs.rda"), repo = "karinorman/functional_diversity", dest = here())
+
+load(here("data", "trait.rda"))
+load(here("data", "bbs.rda"))
+```
+
+Get FD and TD for each site for each year
+```{r}
+min_year <- 1969
+
+bbs_wide <- bbs %>%
+  select(site_id, scientific, year, abundance) %>%
+  spread(scientific, abundance)
+
+bbs_species_mat <- select(bbs_wide, -site_id, -year)
+bbs_trait_mat <- get_trait_matrix(colnames(bbs_species_mat))
+
+data_path <- paste0(here('data'), '/FD_bbs_yearly.RData')
+  if (file.exists(data_path)){
+    print("FD present")
+    FD_file <- load(data_path)
+  }else{
+    print("No FD")
+    FD <- as.data.frame(dbFD(bbs_trait_mat, bbs_species_mat, w.abun = TRUE))
+    save(FD, file = data_path)
+    pb_upload(data_path)
+  }
+
+FD <- cbind(bbs_wide[c('site_id', 'year')], FD) #dbFD() preserves row order, so we can just brute force labels back on 
+#FD$site_id <- as.factor(FD$site_id)
+
+#double check that labels are right by comparing richnesses calculated below
+# richness <- bbs %>%
+#   select(site_id, scientific, year) %>%
+#   group_by(site_id, year) %>%
+#   summarise(n = n())
+
+```
+
+Jarzyna & Jetz 2016 (doi: 10.1111/gcb.13571) calculates a few different metrics to measure temporal change.
+
+Change relative to previous year: (previous year - current year)/current year x 100%
+```{r}
+yearly_delta <- FD %>%
+  select(site_id, year, nbsp, FRic) %>%
+  group_by(site_id) %>%
+  arrange(year) %>%
+  mutate(nbsp_delta = (lag(nbsp) - nbsp)/nbsp,
+         fric_delta = (lag(FRic) - FRic)/FRic)
+```
+
+Simpson's dissimilarity
+Still need to figure out how to deal with holes in the timeseries
+
+Attempt using purrr
+```{r}
+library(fossil)
+
+get_simpson <- function(site, start_year){
+  sp1 <- filter(bbs, site_id == site & year == start_year) %>%
+    select(species_id, abundance)
+  
+  sp2 <- filter(bbs, site_id == site & year == start_year + 1) %>%
+    select(species_id, abundance)
+  
+  if(dim(sp2)[1] == 0){
+    return(data.frame())
+  } else{   
+    #need a complete list of species in both sites with zeros for non-occurrences
+    comb_sp <- full_join(sp1, sp2, by = "species_id") %>%
+      replace_na(list(species_id = 0, abundance.x = 0, abundance.y = 0))
+    
+    simp <- simpson(comb_sp$abundance.x, comb_sp$abundance.y)
+    return(data.frame(site_id = site, year = start_year + 1, simpson = simp))
+  }
+} 
+
+site_year_comb <- unique(bbs[c('site_id', 'year')]) #get a dataframe of all the site and year combinations that need to be mapped over 
+
+bbs_simpson <- map2_dfr(site_year_comb$site_id, site_year_comb$year, get_simpson)
+```
+
+For loop approach
+```{r}
+data_path <- paste0(here('data'), '/simpson_diversity.RData')
+if (file.exists(data_path)){
+  simpson_file <- load(data_path)
+}else{
+  
+  site_list <- unique(bbs$site_id)
+  
+  #initialize for loops
+  simpson_list <- list()
+  rownum <- 1
+  
+  for (i in 1:length(site_list)) {
+    site_data <- filter(bbs, site_id == site_list[i])
+    site_years <- unique(site_data$year)
+    
+    for (j in 1:length(site_years)) {
+      if (j != length(site_years)) { #this will skip the last year which doesn't have a next year to compare to
+        sp1 <- filter(site_data, year == site_years[j]) %>%
+          select(species_id, abundance)
+        
+        sp2 <- filter(site_data, year == site_years[j + 1]) %>%
+          select(species_id, abundance)
+        
+        comb_sp <- full_join(sp1, sp2, by = "species_id") %>%
+          replace_na(list(species_id = 0, abundance.x = 0, abundance.y = 0))
+        
+        simp <- simpson(comb_sp$abundance.x, comb_sp$abundance.y)
+        simpson_list[[rownum]] <- data.frame(site_id = site_list[i], year = site_years[j+1], simpson = simp)
+        
+        rownum <- rownum + 1
+      }
+    }
+  }
+  
+  bbs_simpson <- bind_rows(simpson_list)
+  save(bbs_simpson, file = data_path)
+  
+  pb_upload(data_path)
+}
+```
+
+Master dataframe of all the metrics
+```{r}
+metrics <- FD %>%
+  select(-starts_with("CWM"), -qual.FRic, -sing.sp) %>%
+  left_join(bbs_simpson, by = c("year", "site_id")) %>%
+  left_join(yearly_delta, by = c("year", "site_id", "nbsp"))
+```
+
+Plotting!
+```{r}
+sites <- unique(metrics$site_id)
+metrics %>%
+  filter(site_id %in% sites[1:10]) %>%
+  ggplot(aes(year, nbsp, color = as.factor(site_id))) + geom_line() #+
+    #theme(legend.position = "none")
+``` 
+
+```{r}
+metrics %>%
+  group_by(year) %>%
+  summarise(ave = mean(nbsp)) %>%
+  mutate(ave_5 = RcppRoll::roll_mean(ave, n = 5, fill = NA)) %>%
+  ggplot(aes(year, ave_5)) + geom_line()
+```
+

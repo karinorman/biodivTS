@@ -1,0 +1,89 @@
+---
+title: "BioTime"
+author: "Kari Norman"
+date: "4/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(lazyeval)
+library(rdataretriever)
+
+```
+
+Import occurence data from Biotime
+```{r}
+#rdataretriever::install("biotime", connection = "csv", data_dir = here("data"))
+
+data <- read_csv(here("data", "biotime_metadata.csv")) %>% filter(taxa %in% c("Birds", "Mammals")) %>%
+  select(study_id, taxa) %>%
+  left_join(read_csv(here("data", "biotime_query.csv")), by = "study_id")
+  
+```
+
+Get mammal and trait data
+```{r}
+bird_trait <- read_csv(here("data/elton_traits/elton_traits_BirdFuncDat.csv"))
+mamm_trait <- read.csv(here("data/elton_traits/elton_traits_MammFuncDat.csv"))
+```
+
+Start with trying to merge bird data via taxadb
+```{r}
+library(taxadb)
+
+get_match_counts <- function(data, species_col){
+  species_col <- lazyeval::as_name(species_col)
+  data %>% 
+    select(!!species_col) %>% 
+    drop_na() %>%
+    distinct() %>%
+    mutate(
+      gbif = get_ids(!!species_col, "gbif"),
+      col = get_ids(!!species_col, "col" ),
+      itis = get_ids(!!species_col, "itis"),
+      ncbi = get_ids(!!species_col, "ncbi"),
+      wd = get_ids(!!species_col, "wd"  ),
+      iucn = get_ids(!!species_col, "iucn"),
+      ott = get_ids(!!species_col, "ott" ) 
+    ) %>%
+    #select(!!call("-", species_col)) %>%
+    purrr::map_dbl(function(x) sum(!is.na(x)))
+}
+
+##Counts show that OTT is the best authority for both data sets
+get_match_counts(data %>% filter(taxa == "Birds"), "genus_species")
+get_match_counts(bird_trait, "scientific")
+
+```
+
+Merge functional traits on OTT ids
+```{r}
+#Getting matches by scientific name 
+bird_data <- data %>% 
+  filter(taxa == "Birds") %>%
+  select(genus_species) %>%
+  drop_na() %>%
+  distinct() %>%
+  mutate(id = get_ids(genus_species, "ott")) %>%
+  left_join(data, by = "genus_species")
+
+bird_common <- bird_data %>%
+  filter(is.na(id)) %>%
+  select(genus_species) %>%
+  distinct() %>%
+  by_rank("Aves", "class", "ott")
+
+
+sci_names <- by_name(data$genus_species, "ott")
+
+comm_names <- by_common(data$genus, "ott")
+```
+
+
+
