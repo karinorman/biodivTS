@@ -33,7 +33,7 @@ bird_trait <- read_csv(here("data/elton_traits/elton_traits_BirdFuncDat.csv"))
 mamm_trait <- read.csv(here("data/elton_traits/elton_traits_MammFuncDat.csv"))
 ```
 
-Start with trying to merge bird data via taxadb
+Check which authority would result in the most matches 
 ```{r}
 library(taxadb)
 
@@ -58,31 +58,37 @@ get_match_counts <- function(data, species_col){
 
 ##Counts show that OTT is the best authority for both data sets
 get_match_counts(data %>% filter(taxa == "Birds"), "genus_species")
+get_match_counts(data, "genus_species")
 get_match_counts(bird_trait, "scientific")
-
+get_match_counts(mamm_trait, "scientific")
 ```
 
-Merge functional traits on OTT ids
+OTT is the best authority but doesn't have common names, so we use the next best ITIS
 ```{r}
 #Getting matches by scientific name 
-bird_data <- data %>% 
-  filter(taxa == "Birds") %>%
+biotime <- data %>% 
+  #filter(taxa == "Birds") %>%
   select(genus_species) %>%
   drop_na() %>%
   distinct() %>%
-  mutate(id = get_ids(genus_species, "ott")) %>%
+  mutate(id = get_ids(genus_species, "itis")) %>%
   left_join(data, by = "genus_species")
 
-bird_common <- bird_data %>%
-  filter(is.na(id)) %>%
-  select(genus_species) %>%
-  distinct() %>%
-  by_rank("Aves", "class", "ott")
+#Getting matches by sci name and common name 
+biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
+  bind_rows(by_common(unique(data$genus_species), "itis")) %>%
+  drop_na(acceptedNameUsageID)
 
+#There is not a unique taxonID for each species, different pop's have different ID's for some marine mammals
+#Names with more than one match that need to be resolved manually
+#biotime_ids %>% group_by(sort) %>% filter(n()>1) %>% View()
 
-sci_names <- by_name(data$genus_species, "ott")
-
-comm_names <- by_common(data$genus, "ott")
+biotime_data <- biotime_ids %>%
+  group_by(sort) %>%
+  filter(n() < 2) %>%
+  ungroup(sort) %>%
+  select(taxonID,input) %>%
+  left_join(data, by = c("input" = "genus_species"))
 ```
 
 
