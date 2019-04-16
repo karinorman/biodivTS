@@ -63,7 +63,10 @@ get_match_counts(bird_trait, "scientific")
 get_match_counts(mamm_trait, "scientific")
 ```
 
-OTT is the best authority but doesn't have common names, so we use the next best ITIS
+OTT is the best authority but doesn't have common names, so we use the next best ITIS. We'll start with BioTime data:
+
+##Biotime
+
 ```{r}
 #Getting matches by scientific name 
 biotime <- data %>% 
@@ -77,19 +80,63 @@ biotime <- data %>%
 #Getting matches by sci name and common name 
 biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
   bind_rows(by_common(unique(data$genus_species), "itis")) %>%
+  filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
   drop_na(acceptedNameUsageID)
+```
 
-#There is not a unique taxonID for each species, different pop's have different ID's for some marine mammals
-#Names with more than one match that need to be resolved manually
-#biotime_ids %>% group_by(sort) %>% filter(n()>1) %>% View()
+Some names match to multiple acceptedUsage ID's, so we have to manually choose which one we want. In this case it's just the Blue-winged warbler
+```{r}
+unres <- biotime_ids %>%
+  distinct(acceptedNameUsageID, input, sort) %>%
+  group_by(sort) %>% 
+  filter(n()>1) %>% 
+  ungroup()
+  
+unres
+```
+
+Add the unresolved ID to all the other ids and join with biotime data
+```{r}
+biotime_ids <- unres %>%
+left_join(biotime_ids) %>% #join observations back with all the columns
+  filter(taxonomicStatus == "accepted") %>% #want the accepted ID's
+  bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
-  group_by(sort) %>%
-  filter(n() < 2) %>%
-  ungroup(sort) %>%
-  select(taxonID,input) %>%
-  left_join(data, by = c("input" = "genus_species"))
+  select(id = acceptedNameUsageID,input) %>%
+  distinct() %>%
+  right_join(data, by = c("input" = "genus_species")) %>%
+  rename(genus_species = input)
 ```
 
 
+
+##Elton Traits
+
+```{r}
+bird_ids <- by_name(unique(bird_trait$scientific), "itis") %>%
+  bind_rows(by_common(unique(bird_trait$scientific), "itis")) %>%
+  #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
+  drop_na(acceptedNameUsageID)
+```
+
+check if all bird biotime data w/id's has an elton match. There are 54 species without a match
+```{r}
+biotime_data %>%
+  filter(taxa == "Birds") %>%
+  select(id) %>%
+  distinct() %>%
+  filter(!id %in% bird_ids$acceptedNameUsageID) %>%
+  dim()
+```
+
+and 605 entries in the species column without an ID
+```{r}
+biotime_data %>%
+  filter(taxa == "Birds") %>%
+  select(id, genus_species) %>%
+  distinct() %>%
+  filter(is.na(id)) %>%
+  dim()
+```
 
