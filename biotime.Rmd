@@ -138,7 +138,7 @@ bird_ids <- unres_trait %>%
   
   
 bird_trait_data <- bird_ids  %>%
-  select(acceptedNameUsageID, input) %>%
+  select(id = acceptedNameUsageID, input) %>%
   distinct() %>%
   right_join(bird_trait, by = c("input" = "scientific")) %>%
   rename(scientific = input)
@@ -168,6 +168,6 @@ Are there any studies for which we have trait data for all species?
 ```{r}
 bird_data <- biotime_data %>%
   filter(taxa == "Birds") %>%
-  left_join(bird_ids)
+  left_join(bird_trait_data) 
 ```
 
