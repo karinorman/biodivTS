@@ -168,6 +168,7 @@ Are there any studies for which we have trait data for all species?
 ```{r}
 bird_data <- biotime_data %>%
   filter(taxa == "Birds") %>%
-  left_join(bird_trait_data) 
+  rowid_to_column("row") %>%
+  left_join(bird_trait_data, na_matches = "never")
 ```
 
