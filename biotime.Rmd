@@ -86,20 +86,24 @@ biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
 
 Some names match to multiple acceptedUsage ID's, so we have to manually choose which one we want. In this case it's just the Blue-winged warbler
 ```{r}
-unres <- biotime_ids %>%
-  distinct(acceptedNameUsageID, input, sort) %>%
-  group_by(sort) %>% 
-  filter(n()>1) %>% 
-  ungroup()
-  
-unres
+
+get_dupe_ids <- function(data){
+  biotime_ids %>%
+    distinct(acceptedNameUsageID, input, sort) %>%
+    group_by(sort) %>% 
+    filter(n()>1) %>% 
+    ungroup()
+}  
+
+unres <- get_dupe_ids(biotime_ids)
+unres 
 ```
 
 Add the unresolved ID to all the other ids and join with biotime data
 ```{r}
 biotime_ids <- unres %>%
-left_join(biotime_ids) %>% #join observations back with all the columns
-  filter(taxonomicStatus == "accepted") %>% #want the accepted ID's
+left_join(biotime_ids) %>% #join ID's back with all the columns
+  filter(taxonomicStatus == "accepted") %>% #want the accepted ID from the two Warbler options
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
@@ -112,12 +116,32 @@ biotime_data <- biotime_ids %>%
 
 
 ##Elton Traits
-
+Get id's for the Elton Bird trait data
 ```{r}
 bird_ids <- by_name(unique(bird_trait$scientific), "itis") %>%
   bind_rows(by_common(unique(bird_trait$scientific), "itis")) %>%
   #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
   drop_na(acceptedNameUsageID)
+```
+
+Are there any unresolved ids? Yes - just one, which is a synonym to two different accepted id's
+```{r}
+unres_trait <- get_dupe_ids(bird_ids) %>%
+  left_join(bird_ids)
+
+unres_trait
+
+#resolve to the desired ID (in this case the one with complete hierarchy data)
+bird_ids <- unres_trait %>% 
+  filter(!is.na(kingdom)) %>%
+  bind_rows(bird_ids %>% filter(!sort %in% unres_trait$sort))
+  
+  
+bird_trait_data <- bird_ids  %>%
+  select(acceptedNameUsageID, input) %>%
+  distinct() %>%
+  right_join(bird_trait, by = c("input" = "scientific")) %>%
+  rename(scientific = input)
 ```
 
 check if all bird biotime data w/id's has an elton match. There are 54 species without a match
@@ -126,11 +150,11 @@ biotime_data %>%
   filter(taxa == "Birds") %>%
   select(id) %>%
   distinct() %>%
-  filter(!id %in% bird_ids$acceptedNameUsageID) %>%
+  filter(!id %in% bird_trait_ids$acceptedNameUsageID) %>%
   dim()
 ```
 
-and 605 entries in the species column without an ID
+and 605 species without an ID
 ```{r}
 biotime_data %>%
   filter(taxa == "Birds") %>%
@@ -138,5 +162,12 @@ biotime_data %>%
   distinct() %>%
   filter(is.na(id)) %>%
   dim()
+```
+
+Are there any studies for which we have trait data for all species?
+```{r}
+bird_data <- biotime_data %>%
+  filter(taxa == "Birds") %>%
+  left_join(bird_ids)
 ```
 
