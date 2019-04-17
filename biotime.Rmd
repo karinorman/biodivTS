@@ -107,10 +107,10 @@ left_join(biotime_ids) %>% #join ID's back with all the columns
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
-  select(id = acceptedNameUsageID,input) %>%
+  select(id = acceptedNameUsageID,input, scientificName) %>%
   distinct() %>%
-  right_join(data, by = c("input" = "genus_species")) %>%
-  rename(genus_species = input)
+  right_join(data %>% select(-species, -genus), by = c("input" = "genus_species")) %>%
+  rename(originalSciName = input)
 ```
 
 
@@ -136,12 +136,14 @@ bird_ids <- unres_trait %>%
   filter(!is.na(kingdom)) %>%
   bind_rows(bird_ids %>% filter(!sort %in% unres_trait$sort))
   
-  
+#only want one column for old name and one column for new name, these are the old ID columns to remove
+col_ex <- c("specid", "passnonpass", "iocorder", "blfamilylatin", "blfamilyenglish", "blfamsequid", "taxo")
+
 bird_trait_data <- bird_ids  %>%
   select(id = acceptedNameUsageID, input) %>%
   distinct() %>%
-  right_join(bird_trait, by = c("input" = "scientific")) %>%
-  rename(scientific = input)
+  right_join(bird_trait %>% select(.dots = -col_ex), by = c("input" = "scientific")) %>%
+  rename(originalSciName = input)
 ```
 
 check if all bird biotime data w/id's has an elton match. There are 54 species without a match
@@ -166,9 +168,19 @@ biotime_data %>%
 
 Are there any studies for which we have trait data for all species?
 ```{r}
+#join trait and biotime data
 bird_data <- biotime_data %>%
-  filter(taxa == "Birds") %>%
+  #filter(taxa == "Birds") %>%
   rowid_to_column("row") %>%
-  left_join(bird_trait_data, na_matches = "never")
+  left_join(bird_trait_data %>% 
+              select(), 
+            na_matches = "never")
+
+coverage <- bird_data %>%
+  group_by(study_id) %>%
+  summarise(perc = sum(!is.na(id))/n()) %>%
+  arrange(desc(perc))
+
+head(coverage)
 ```
 
