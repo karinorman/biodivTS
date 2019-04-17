@@ -87,15 +87,17 @@ biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
 Some names match to multiple acceptedUsage ID's, so we have to manually choose which one we want. In this case it's just the Blue-winged warbler
 ```{r}
 
-get_dupe_ids <- function(data){
-  biotime_ids %>%
-    distinct(acceptedNameUsageID, input, sort) %>%
-    group_by(sort) %>% 
+get_dupe_ids <- function(data, orig_id){
+  orig_id <- lazyeval::as_name(orig_id)
+  
+  data %>%
+    distinct(acceptedNameUsageID, input, !!orig_id) %>%
+    group_by(!!orig_id) %>% 
     filter(n()>1) %>% 
     ungroup()
 }  
 
-unres <- get_dupe_ids(biotime_ids)
+unres <- get_dupe_ids(biotime_ids, "sort")
 unres 
 ```
 
@@ -118,15 +120,31 @@ biotime_data <- biotime_ids %>%
 ##Elton Traits
 Get id's for the Elton Bird trait data
 ```{r}
-bird_ids <- by_name(unique(bird_trait$scientific), "itis") %>%
-  bind_rows(by_common(unique(bird_trait$scientific), "itis")) %>%
+sci_names <-  by_name(unique(bird_trait$scientific), "itis") %>%
+  drop_na(acceptedNameUsageID) %>%
+  #get original specid so we can figure out how many don't have matches
+  left_join(bird_trait %>% select(specid, scientific), by = c("input" = "scientific")) %>%
+  mutate(match_type = "scientific")
+  
+com_names <- bird_trait %>% 
+  filter(!specid %in% sci_names$specid) %>%
+  pull(english) %>%
+  unique() %>%
+  by_common("itis") %>%
+  #mutate(match_type = "common")
   #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
-  drop_na(acceptedNameUsageID)
+  drop_na(acceptedNameUsageID) %>%
+  left_join(bird_trait %>% select(specid, english), by = c("input" = "english"))%>%
+  mutate(match_type = "common")
+
+
+#there are both sci and common names, only want common name 
+bird_ids <- bind_rows(sci_names, com_names)
 ```
 
 Are there any unresolved ids? Yes - just one, which is a synonym to two different accepted id's
 ```{r}
-unres_trait <- get_dupe_ids(bird_ids) %>%
+unres_trait <- get_dupe_ids(bird_ids, "specid") %>%
   left_join(bird_ids)
 
 unres_trait
