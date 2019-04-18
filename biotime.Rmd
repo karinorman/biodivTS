@@ -180,7 +180,7 @@ comm_matches <- bird_ids  %>%
 bird_trait_data <- bind_rows(sci_matches, comm_matches)
 ```
 
-check if all bird biotime data w/id's has an elton match. There are 54 species without a match
+check if all bird biotime data w/id's has an elton match. There are 38 species without a match
 ```{r}
 biotime_data %>%
   filter(taxa == "Birds") %>%
@@ -194,7 +194,7 @@ and 605 species without an ID
 ```{r}
 biotime_data %>%
   filter(taxa == "Birds") %>%
-  select(id, genus_species) %>%
+  select(id, matchingName) %>%
   distinct() %>%
   filter(is.na(id)) %>%
   dim()
