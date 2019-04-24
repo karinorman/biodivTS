@@ -147,35 +147,13 @@ get_trait_ids <- function(data, provider, id, common = TRUE){
   }else{ return(sci_match)}
 }
 
-test <- get_trait_ids(bird_trait, "itis", "specid")
-test_mamm <- get_trait_ids(mamm_trait, "itis", "msw3_id", FALSE)
+bird_ids <- get_trait_ids(bird_trait, "itis", "specid")
+mammal_ids <- get_trait_ids(mamm_trait, "itis", "msw3_id", FALSE)
 
 ```
 
-```{r}
-sci_names <-  by_name(unique(bird_trait$scientific), "itis") %>%
-  drop_na(acceptedNameUsageID) %>%
-  #get original specid so we can figure out how many don't have matches
-  left_join(bird_trait %>% select(specid, scientific), by = c("input" = "scientific")) %>%
-  mutate(match_type = "scientific")
-  
-com_names <- bird_trait %>% 
-  filter(!specid %in% sci_names$specid) %>%
-  pull(english) %>%
-  unique() %>%
-  by_common("itis") %>%
-  #mutate(match_type = "common")
-  #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
-  drop_na(acceptedNameUsageID) %>%
-  left_join(bird_trait %>% select(specid, english), by = c("input" = "english"))%>%
-  mutate(match_type = "common")
 
-
-#there are both sci and common names, only want common name 
-bird_ids <- bind_rows(sci_names, com_names)
-```
-
-Are there any unresolved ids? Yes - just one, which is a synonym to two different accepted id's
+Are there any unresolved ids for birds? Yes - just one, which is a synonym to two different accepted id's
 ```{r}
 unres_trait <- get_dupe_ids(bird_ids, "specid") %>%
   left_join(bird_ids)
@@ -186,7 +164,22 @@ unres_trait
 bird_ids <- unres_trait %>% 
   filter(!is.na(kingdom)) %>%
   bind_rows(bird_ids %>% filter(!sort %in% unres_trait$sort))
-  
+```
+
+What about for mammals? Yes - also a synonym to two different accepted id's. Further research shows that the Callospermophilus saturatus uses the subgenus, so we'll keep the name with the genus 
+```{r}
+unres_mamm_trait <- get_dupe_ids(mammal_ids, "msw3_id") %>% 
+  left_join(mammal_ids)
+
+unres_mamm_trait
+
+mammal_ids <- unres_mamm_trait %>% 
+  filter(acceptedNameUsageID == "ITIS:632452") %>%
+  bind_rows(mammal_ids %>% filter(!sort %in% unres_mamm_trait$sort))
+```
+
+Join bird ids back to original trait data (to get data that didn't have an id match)
+```{r}
 #only want one column for old name and one column for new name, these are the old ID columns to remove
 col_ex <- c("passnonpass", "iocorder", "blfamilylatin", "blfamilyenglish", "blfamsequid", "taxo")
 
@@ -211,6 +204,16 @@ comm_matches <- bird_ids  %>%
 
 #there are more rows after ID data is joined because for species that matched on common names there may be more than one scientificName 
 bird_trait_data <- bind_rows(sci_matches, comm_matches)
+```
+
+Do the same for mammal trait data
+```{r}
+mamm_trait_data <- mammal_ids %>%
+  select(id = acceptedNameUsageID, input, scientificName) %>%
+  distinct() %>%
+  right_join(mamm_trait %>% select(-mswfamilylatin), by = c("input" = "scientific"), na_matches = "never") %>%
+  drop_na(id) %>%
+  distinct() 
 ```
 
 check if all bird biotime data w/id's has an elton match. There are 38 species without a match
