@@ -119,6 +119,39 @@ biotime_data <- biotime_ids %>%
 
 ##Elton Traits
 Get id's for the Elton Bird trait data
+
+```{r}
+get_trait_ids <- function(data, provider, id, common = TRUE){
+  #id <- lazyeval::as_name(id)
+  sci_match <-  by_name(unique(data$scientific), provider) %>%
+    drop_na(acceptedNameUsageID) %>%
+    #get original specid so we can figure out ho w many don't have matches
+    left_join(data %>% select_(id, "scientific"), by = c("input" = "scientific")) %>%
+    mutate(match_type = "scientific")
+  
+  if(common){
+    com_names <- data %>% 
+      #the id argument should be inplace of specid, but it doesn't work for some reason
+      filter(!specid %in% sci_match$specid) %>%
+      pull(english) %>%
+      unique() %>%
+      by_common("itis") %>%
+      #mutate(match_type = "common")
+      #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
+      drop_na(acceptedNameUsageID) %>%
+      left_join(bird_trait %>% select_(id, "english"), by = c("input" = "english"))%>%
+      mutate(match_type = "common")
+    
+    #there are both sci and common names, only want common name 
+    return(bind_rows(sci_match, com_names))
+  }else{ return(sci_match)}
+}
+
+test <- get_trait_ids(bird_trait, "itis", "specid")
+test_mamm <- get_trait_ids(mamm_trait, "itis", "msw3_id", FALSE)
+
+```
+
 ```{r}
 sci_names <-  by_name(unique(bird_trait$scientific), "itis") %>%
   drop_na(acceptedNameUsageID) %>%
@@ -190,10 +223,10 @@ biotime_data %>%
   dim()
 ```
 
-and 605 species without an ID
+and 605 bird species without an ID, 657 total species
 ```{r}
 biotime_data %>%
-  filter(taxa == "Birds") %>%
+  #filter(taxa == "Birds") %>%
   select(id, matchingName) %>%
   distinct() %>%
   filter(is.na(id)) %>%
@@ -205,14 +238,12 @@ Are there any studies for which we have trait data for all species?
 #join trait and biotime data
 bird_data <- biotime_data %>%
   #filter(taxa == "Birds") %>%
-  rowid_to_column("row") %>%
-  left_join(bird_trait_data %>% 
-              select(), 
+  left_join(bird_trait_data, by = "id",
             na_matches = "never")
 
 coverage <- bird_data %>%
   group_by(study_id) %>%
-  summarise(perc = sum(!is.na(id))/n()) %>%
+  summarise(perc = sum(!is.na(specid))/n()) %>%
   arrange(desc(perc))
 
 head(coverage)
