@@ -80,7 +80,7 @@ biotime <- data %>%
 #Getting matches by sci name and common name 
 biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
   bind_rows(by_common(unique(data$genus_species), "itis")) %>%
-  filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
+  #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
   drop_na(acceptedNameUsageID)
 ```
 
@@ -115,6 +115,37 @@ biotime_data <- biotime_ids %>%
   rename(matchingName = input)
 ```
 
+Do any unmatched species have matches with other providers?
+```{r}
+get_match_counts(biotime_data %>% filter(is.na(id)), "matchingName")
+
+#match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species 
+syn_res <- bind_rows(synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "ott"),
+                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "gbif"),
+                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "col"),
+                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "ncbi"),
+                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "wd"),
+                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "iucn")
+                  ) %>%
+  pull(synonym) %>% 
+  na.omit() %>% 
+  unique() %>%
+  by_name("itis") %>%
+  select(id = acceptedNameUsageID, input, scientificName) %>% 
+  drop_na(id) %>% 
+  left_join(data %>% select(-species, -genus), by = c("input" = "genus_species")) %>%
+  rename(matchingName = input)
+
+
+#Below add's more rows, should just replace them 
+biotime_data <- biotime_data %>% filter(!matchingName %in% syn_res$matchingName) %>%
+  bind_rows(syn_res)
+
+#These two should be equal, why aren't they??
+dim(syn_res)  
+biotime_data %>% filter(matchingName %in% syn_res$matchingName) %>% dim()
+biotime_data %>% filter(is.na(id)) %>% dim()
+```
 
 
 ##Elton Traits
@@ -178,7 +209,7 @@ mammal_ids <- unres_mamm_trait %>%
   bind_rows(mammal_ids %>% filter(!sort %in% unres_mamm_trait$sort))
 ```
 
-Join bird ids back to original trait data (to get data that didn't have an id match)
+Join bird ids back to original trait data
 ```{r}
 #only want one column for old name and one column for new name, these are the old ID columns to remove
 col_ex <- c("passnonpass", "iocorder", "blfamilylatin", "blfamilyenglish", "blfamsequid", "taxo")
@@ -210,16 +241,18 @@ Do the same for mammal trait data
 ```{r}
 mamm_trait_data <- mammal_ids %>%
   select(id = acceptedNameUsageID, input, scientificName) %>%
-  distinct() %>%
   right_join(mamm_trait %>% select(-mswfamilylatin), by = c("input" = "scientific"), na_matches = "never") %>%
   drop_na(id) %>%
   distinct() 
 ```
 
-check if all bird biotime data w/id's has an elton match. There are 38 species without a match
+
+#Checking Coverage of ID's and trait data -> biotime
+
+check if all bird & mammal biotime data w/id's has an elton match. There are 258 species without a match (38 are birds).
 ```{r}
 biotime_data %>%
-  filter(taxa == "Birds") %>%
+  #filter(taxa == "Birds") %>%
   select(id) %>%
   distinct() %>%
   filter(!id %in% bird_trait_data$id) %>%
