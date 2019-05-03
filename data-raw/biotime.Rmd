@@ -21,16 +21,16 @@ Import occurence data from Biotime
 ```{r}
 #rdataretriever::install("biotime", connection = "csv", data_dir = here("data"))
 
-data <- read_csv(here("data", "biotime_metadata.csv")) %>% filter(taxa %in% c("Birds", "Mammals")) %>%
+data <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>% 
+  filter(taxa %in% c("Birds", "Mammals")) %>%
   select(study_id, taxa) %>%
-  left_join(read_csv(here("data", "biotime_query.csv")), by = "study_id")
-  
+  left_join(read_csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
 ```
 
 Get mammal and trait data
 ```{r}
-bird_trait <- read_csv(here("data/elton_traits/elton_traits_BirdFuncDat.csv"))
-mamm_trait <- read.csv(here("data/elton_traits/elton_traits_MammFuncDat.csv"))
+bird_trait <- read_csv(system.file("extdata", "elton_traits/elton_traits_BirdFuncDat.csv", package = "biodivTS"))
+mamm_trait <- read.csv(system.file("extdata", "elton_traits/elton_traits_MammFuncDat.csv", package = "biodivTS"))
 ```
 
 Check which authority would result in the most matches 
