@@ -14,7 +14,9 @@ library(here)
 library(tidyverse)
 library(lazyeval)
 library(rdataretriever)
+library(taxadb)
 
+source(here::here("data-raw", "helper_functions.R"))
 ```
 
 Import occurence data from Biotime
@@ -35,27 +37,6 @@ mamm_trait <- read.csv(system.file("extdata", "elton_traits/elton_traits_MammFun
 
 Check which authority would result in the most matches 
 ```{r}
-library(taxadb)
-
-get_match_counts <- function(data, species_col){
-  species_col <- lazyeval::as_name(species_col)
-  data %>% 
-    select(!!species_col) %>% 
-    drop_na() %>%
-    distinct() %>%
-    mutate(
-      gbif = get_ids(!!species_col, "gbif"),
-      col = get_ids(!!species_col, "col" ),
-      itis = get_ids(!!species_col, "itis"),
-      ncbi = get_ids(!!species_col, "ncbi"),
-      wd = get_ids(!!species_col, "wd"  ),
-      iucn = get_ids(!!species_col, "iucn"),
-      ott = get_ids(!!species_col, "ott" ) 
-    ) %>%
-    #select(!!call("-", species_col)) %>%
-    purrr::map_dbl(function(x) sum(!is.na(x)))
-}
-
 ##Counts show that OTT is the best authority for both data sets
 get_match_counts(data %>% filter(taxa == "Birds"), "genus_species")
 get_match_counts(data, "genus_species")
@@ -86,17 +67,6 @@ biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
 
 Some names match to multiple acceptedUsage ID's, so we have to manually choose which one we want. In this case it's just the Blue-winged warbler
 ```{r}
-
-get_dupe_ids <- function(data, orig_id){
-  orig_id <- lazyeval::as_name(orig_id)
-  
-  data %>%
-    distinct(acceptedNameUsageID, input, !!orig_id) %>%
-    group_by(!!orig_id) %>% 
-    filter(n()>1) %>% 
-    ungroup()
-}  
-
 unres <- get_dupe_ids(biotime_ids, "sort")
 unres 
 ```
