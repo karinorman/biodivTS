@@ -18,8 +18,7 @@ source(here::here("data-raw", "helper_functions.R"))
 ```{r}
 #original data from https://figshare.com/articles/Oliveira_et_al_AmphiBIO_v1/4644424
 
-amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS")) %>%
-  unite(scientificName, Genus, Species)
+amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS"))
 
 amph_ids <- amph %>%
   mutate(id = get_ids(Species, "itis")) %>%
