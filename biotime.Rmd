@@ -119,32 +119,29 @@ Do any unmatched species have matches with other providers?
 ```{r}
 get_match_counts(biotime_data %>% filter(is.na(id)), "matchingName")
 
+unmatched <- biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique()
+providers <- c("ott", "gbif", "col", "ncbi", "wd", "iucn")
+
 #match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species 
-syn_res <- bind_rows(synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "ott"),
-                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "gbif"),
-                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "col"),
-                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "ncbi"),
-                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "wd"),
-                  synonyms(biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique(), "iucn")
-                  ) %>%
-  pull(synonym) %>% 
-  na.omit() %>% 
-  unique() %>%
-  by_name("itis") %>%
+alt_names <- map_df(providers, function(name) synonyms(unmatched, name)) %>%
+  drop_na(acceptedNameUsageID)
+
+syn_res <- bind_rows(by_name(na.omit(unique(alt_names$synonym)),"itis"),
+                     by_name(na.omit(unique(alt_names$acceptedNameUsage)),"itis")) %>%
   select(id = acceptedNameUsageID, input, scientificName) %>% 
   drop_na(id) %>% 
-  left_join(data %>% select(-species, -genus), by = c("input" = "genus_species")) %>%
-  rename(matchingName = input)
-
+  distinct() %>%
+  inner_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
+  rename(matchingName = input) 
 
 #Below add's more rows, should just replace them 
 biotime_data <- biotime_data %>% filter(!matchingName %in% syn_res$matchingName) %>%
   bind_rows(syn_res)
 
-#These two should be equal, why aren't they??
-dim(syn_res)  
-biotime_data %>% filter(matchingName %in% syn_res$matchingName) %>% dim()
-biotime_data %>% filter(is.na(id)) %>% dim()
+# #These two should be equal, why aren't they??
+# dim(syn_res)  
+# biotime_data %>% filter(matchingName %in% syn_res$matchingName) %>% dim()
+# biotime_data %>% filter(is.na(id)) %>% dim()
 ```
 
 
