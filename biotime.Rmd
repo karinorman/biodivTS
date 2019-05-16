@@ -124,14 +124,20 @@ providers <- c("ott", "gbif", "col", "ncbi", "wd", "iucn")
 
 #match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species 
 alt_names <- map_df(providers, function(name) synonyms(unmatched, name)) %>%
-  drop_na(acceptedNameUsageID)
+  drop_na(acceptedNameUsageID) %>%
+  #new matches can be in either the synonym or acceptedNameUsage column, so let's combine them
+  gather(type, altProviderName, synonym, acceptedNameUsage) %>%
+  select(altProviderName, input) %>% 
+  distinct()
 
-syn_res <- bind_rows(by_name(na.omit(unique(alt_names$synonym)),"itis"),
-                     by_name(na.omit(unique(alt_names$acceptedNameUsage)),"itis")) %>%
+#match accepted names from 
+syn_res <- by_name(na.omit(unique(alt_names$altProviderName)),"itis") %>%
+                       rename(altProviderName = input) %>%
+                       left_join(alt_names) %>%
   select(id = acceptedNameUsageID, input, scientificName) %>% 
   drop_na(id) %>% 
   distinct() %>%
-  inner_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
+  left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
   rename(matchingName = input) 
 
 #Below add's more rows, should just replace them 
