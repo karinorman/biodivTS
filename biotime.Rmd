@@ -140,28 +140,25 @@ syn_res <- by_name(na.omit(unique(alt_names$altProviderName)),"itis") %>%
 ## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
 ## so we have to find duplicate ID's and then filter
 alt_dupes <- syn_res %>% 
-  group_by(acceptedNameUsageID, input) %>%
+  group_by(input) %>%
   filter(n() > 1)
 
 #filter duplicates for accepted, and replace old entries 
 syn_res <- alt_dupes %>% 
-  filter(taxonomicStatus == "accepted") %>% 
+  filter(taxonRank == "species", taxonomicStatus == "accepted") %>% 
   bind_rows(syn_res %>% 
               filter(!acceptedNameUsageID %in% alt_dupes$acceptedNameUsageID)) %>%
 #then finish clean up 
   select(id = acceptedNameUsageID, input, scientificName) %>% 
   distinct() %>%
   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
-  rename(matchingName = input) 
+  rename(matchingName = input) %>%
+  ungroup()
 
 #Below add's more rows, should just replace them 
 biotime_data <- biotime_data %>% filter(!matchingName %in% syn_res$matchingName) %>%
   bind_rows(syn_res)
 
-# #These two should be equal, why aren't they??
-# dim(syn_res)  
-# biotime_data %>% filter(matchingName %in% syn_res$matchingName) %>% dim()
-# biotime_data %>% filter(is.na(id)) %>% dim()
 ```
 
 
