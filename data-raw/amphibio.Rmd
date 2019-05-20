@@ -1,0 +1,33 @@
+---
+title: "AmphibBio"
+author: "Kari Norman"
+date: "5/3/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+source(here::here("data-raw", "helper_functions.R"))
+```
+
+```{r}
+#original data from https://figshare.com/articles/Oliveira_et_al_AmphiBIO_v1/4644424
+
+amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS"))
+
+amph_ids <- amph %>%
+  mutate(id = get_ids(Species, "itis")) %>%
+  filter(!is.na(id))
+
+# Using by_ doesn't give any additional ids
+# amph_ids <- by_name(amph$Species, "itis") %>%
+#   filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
+#   drop_na(acceptedNameUsageID)
+
+```
+
