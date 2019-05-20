@@ -117,7 +117,7 @@ biotime_data <- biotime_ids %>%
 
 Do any unmatched species have matches with other providers?
 ```{r}
-get_match_counts(biotime_data %>% filter(is.na(id)), "matchingName")
+#get_match_counts(biotime_data %>% filter(is.na(id)), "matchingName")
 
 unmatched <- biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique()
 providers <- c("ott", "gbif", "col", "ncbi", "wd", "iucn")
@@ -132,10 +132,24 @@ alt_names <- map_df(providers, function(name) synonyms(unmatched, name)) %>%
 
 #match accepted names from 
 syn_res <- by_name(na.omit(unique(alt_names$altProviderName)),"itis") %>%
-                       rename(altProviderName = input) %>%
-                       left_join(alt_names) %>%
+  drop_na(acceptedNameUsageID) %>% 
+  rename(altProviderName = input) %>%
+  left_join(alt_names, na_matches = "never")
+
+#some names have multiple matches (same ID but multiple scinames), have to pick one
+## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
+## so we have to find duplicate ID's and then filter
+alt_dupes <- syn_res %>% 
+  group_by(acceptedNameUsageID, input) %>%
+  filter(n() > 1)
+
+#filter duplicates for accepted, and replace old entries 
+syn_res <- alt_dupes %>% 
+  filter(taxonomicStatus == "accepted") %>% 
+  bind_rows(syn_res %>% 
+              filter(!acceptedNameUsageID %in% alt_dupes$acceptedNameUsageID)) %>%
+#then finish clean up 
   select(id = acceptedNameUsageID, input, scientificName) %>% 
-  drop_na(id) %>% 
   distinct() %>%
   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
   rename(matchingName = input) 
