@@ -1,0 +1,136 @@
+---
+title: "elton trait"
+author: "Kari Norman"
+date: "5/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(lazyeval)
+library(rdataretriever)
+library(taxadb)
+
+source(here::here("data-raw", "helper_functions.R"))
+```
+
+
+Get mammal and trait data
+```{r}
+bird_trait <- read_csv(system.file("extdata", "elton_traits/elton_traits_BirdFuncDat.csv", package = "biodivTS"))
+mamm_trait <- read.csv(system.file("extdata", "elton_traits/elton_traits_MammFuncDat.csv", package = "biodivTS"))
+```
+
+Check which authority would result in the most matches 
+```{r}
+##Counts show that OTT is the best authority for both data sets
+get_match_counts(bird_trait, "scientific")
+get_match_counts(mamm_trait, "scientific")
+```
+
+Get id's for the Elton trait data
+```{r}
+get_trait_ids <- function(data, provider, id, common = TRUE){
+  #id <- lazyeval::as_name(id)
+  sci_match <-  by_name(unique(data$scientific), provider) %>%
+    drop_na(acceptedNameUsageID) %>%
+    #get original specid so we can figure out ho w many don't have matches
+    left_join(data %>% select_(id, "scientific"), by = c("input" = "scientific")) %>%
+    mutate(match_type = "scientific")
+  
+  if(common){
+    com_names <- data %>% 
+      #the id argument should be inplace of specid, but it doesn't work for some reason
+      filter(!specid %in% sci_match$specid) %>%
+      pull(english) %>%
+      unique() %>%
+      by_common("itis") %>%
+      #mutate(match_type = "common")
+      #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
+      drop_na(acceptedNameUsageID) %>%
+      left_join(bird_trait %>% select_(id, "english"), by = c("input" = "english"))%>%
+      mutate(match_type = "common")
+    
+    #there are both sci and common names, only want common name 
+    return(bind_rows(sci_match, com_names))
+  }else{ return(sci_match)}
+}
+
+bird_ids <- get_trait_ids(bird_trait, "itis", "specid")
+mammal_ids <- get_trait_ids(mamm_trait, "itis", "msw3_id", FALSE)
+
+```
+
+
+Are there any unresolved ids for birds? Yes - just one, which is a synonym to two different accepted id's
+```{r}
+unres_trait <- get_dupe_ids(bird_ids, "specid") %>%
+  left_join(bird_ids)
+
+unres_trait
+
+#resolve to the desired ID (in this case the one with complete hierarchy data)
+bird_ids <- unres_trait %>% 
+  filter(!is.na(kingdom)) %>%
+  bind_rows(bird_ids %>% filter(!sort %in% unres_trait$sort))
+```
+
+What about for mammals? Yes - also a synonym to two different accepted id's. Further research shows that the Callospermophilus saturatus uses the subgenus, so we'll keep the name with the genus 
+```{r}
+unres_mamm_trait <- get_dupe_ids(mammal_ids, "msw3_id") %>% 
+  left_join(mammal_ids)
+
+unres_mamm_trait
+
+mammal_ids <- unres_mamm_trait %>% 
+  filter(acceptedNameUsageID == "ITIS:632452") %>%
+  bind_rows(mammal_ids %>% filter(!sort %in% unres_mamm_trait$sort))
+```
+
+Join bird ids back to original trait data
+```{r}
+#only want one column for old name and one column for new name, these are the old ID columns to remove
+col_ex <- c("passnonpass", "iocorder", "blfamilylatin", "blfamilyenglish", "blfamsequid", "taxo")
+
+#join on scientific and common
+sci_matches <- bird_ids  %>%
+  filter(match_type == "scientific") %>%
+  select(id = acceptedNameUsageID, input, scientificName) %>%
+  distinct() %>%
+  right_join(bird_trait %>% select(.dots = -col_ex), by = c("input" = "scientific"), na_matches = "never") %>%
+  drop_na(id) %>%
+  distinct() %>%
+  select(-english)
+
+comm_matches <- bird_ids  %>%
+  filter(match_type == "common") %>%
+  select(id = acceptedNameUsageID, input, scientificName) %>%
+  distinct() %>%
+  right_join(bird_trait %>% filter(!specid %in% sci_matches$specid) %>% select(.dots = -col_ex), by = c("input" = "english"), na_matches = "never") %>%
+  distinct() %>%
+  rename(matchingName = input) %>%
+  select(-scientific)
+
+#there are more rows after ID data is joined because for species that matched on common names there may be more than one scientificName 
+elton_bird <- bind_rows(sci_matches, comm_matches)
+```
+
+Do the same for mammal trait data
+```{r}
+elton_mamm <- mammal_ids %>%
+  select(id = acceptedNameUsageID, input, scientificName) %>%
+  right_join(mamm_trait %>% select(-mswfamilylatin), by = c("input" = "scientific"), na_matches = "never") %>%
+  drop_na(id) %>%
+  distinct() 
+```
+
+```{r}
+usethis::use_data(elton_bird, elton_mamm)
+```
+

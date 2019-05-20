@@ -1,0 +1,55 @@
+---
+title: "Check Coverage"
+author: "Kari Norman"
+date: "5/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load(here::here("data", "biotime_data.rda"))
+load(here::here("data", "elton_mamm.rda"))
+load(here::here("data", "elton_bird.rda"))
+```
+
+#Checking Coverage of ID's and trait data -> biotime
+
+check if all bird & mammal biotime data w/id's has an elton match. There are 258 species without a match (38 are birds).
+```{r}
+biotime_data %>%
+  #filter(taxa == "Birds") %>%
+  select(id) %>%
+  distinct() %>%
+  filter(!id %in% elton_bird$id) %>%
+  dim()
+```
+
+and 605 bird species without an ID, 657 total species
+```{r}
+biotime_data %>%
+  #filter(taxa == "Birds") %>%
+  select(id, matchingName) %>%
+  distinct() %>%
+  filter(is.na(id)) %>%
+  dim()
+```
+
+Are there any studies for which we have trait data for all species?
+```{r}
+#join trait and biotime data
+bird_data <- biotime_data %>%
+  #filter(taxa == "Birds") %>%
+  left_join(elton_bird, by = "id",
+            na_matches = "never")
+
+coverage <- bird_data %>%
+  group_by(study_id) %>%
+  summarise(perc = sum(!is.na(specid))/n()) %>%
+  arrange(desc(perc))
+
+head(coverage)
+```
+

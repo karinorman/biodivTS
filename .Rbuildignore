@@ -1,2 +1,4 @@
+^\.pbattributes$
+^manifest\.json$
 ^biodivTS\.Rproj$
 ^\.Rproj\.user$

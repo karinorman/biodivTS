@@ -1,3 +1,7 @@
+data/elton_traits/*.csv
+data/*.rda
+data/*.csv
+manifest.json
 .Rproj.user
 .Rhistory
 .RData
