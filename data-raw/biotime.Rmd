@@ -66,8 +66,8 @@ unres
 Add the unresolved ID to all the other ids and join with biotime data
 ```{r}
 biotime_ids <- unres %>%
-left_join(biotime_ids) %>% #join ID's back with all the columns
-  filter(taxonomicStatus == "accepted") %>% #want the accepted ID from the two Warbler options
+  left_join(biotime_ids) %>% #join ID's back with all the columns
+  filter(taxonomicStatus == "accepted", taxonRank == "species") %>% #want the accepted ID from the two Warbler options
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
