@@ -24,14 +24,13 @@ Import occurence data from Biotime
 #rdataretriever::install("biotime", connection = "csv", data_dir = here("data"))
 
 data <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>% 
-  filter(taxa %in% c("Birds", "Mammals")) %>%
   select(study_id, taxa) %>%
   left_join(read_csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
 ```
 
 Check which authority would result in the most matches 
 ```{r}
-##Counts show that OTT is the best authority for both data sets
+##Counts show that OTT is the best authority 
 get_match_counts(data %>% filter(taxa == "Birds"), "genus_species")
 get_match_counts(data, "genus_species")
 ```
@@ -41,23 +40,22 @@ OTT is the best authority but doesn't have common names, so we use the next best
 ##Biotime
 
 ```{r}
-#Getting matches by scientific name 
-biotime <- data %>% 
-  #filter(taxa == "Birds") %>%
-  select(genus_species) %>%
-  drop_na() %>%
-  distinct() %>%
-  mutate(id = get_ids(genus_species, "itis")) %>%
-  left_join(data, by = "genus_species")
+# #Getting matches by scientific name 
+# biotime <- data %>% 
+#   select(genus_species) %>%
+#   drop_na() %>%
+#   distinct() %>%
+#   mutate(id = get_ids(genus_species, "itis")) %>%
+#   left_join(data, by = "genus_species")
 
 #Getting matches by sci name and common name 
 biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
   bind_rows(by_common(unique(data$genus_species), "itis")) %>%
-  #filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
+  filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
   drop_na(acceptedNameUsageID)
 ```
 
-Some names match to multiple acceptedUsage ID's, so we have to manually choose which one we want. In this case it's just the Blue-winged warbler
+Some names match to multiple acceptedUsage ID's, so we have to manually choose which one we want.
 ```{r}
 unres <- get_dupe_ids(biotime_ids, "sort")
 unres 
@@ -67,7 +65,11 @@ Add the unresolved ID to all the other ids and join with biotime data
 ```{r}
 biotime_ids <- unres %>%
   left_join(biotime_ids) %>% #join ID's back with all the columns
-  filter(taxonomicStatus == "accepted", taxonRank == "species") %>% #want the accepted ID from the two Warbler options
+  filter(acceptedNameUsageID %in% c(
+    "ITIS:159807", #Heterodontus zebra, all the studies including it are using sci names, so we should match to the sci name match not common name match
+    "ITIS:175125" #The Redhead is coming from bird studies, so choose the bird match, 
+    #the rest can't be match due to too little information
+  )) %>%
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
@@ -90,36 +92,51 @@ alt_names <- map_df(providers, function(name) synonyms(unmatched, name)) %>%
   #new matches can be in either the synonym or acceptedNameUsage column, so let's combine them
   gather(type, altProviderName, synonym, acceptedNameUsage) %>%
   select(altProviderName, input) %>% 
-  distinct()
+  distinct() %>%
+  drop_na(altProviderName)
 
 #match accepted names from 
 syn_res <- by_name(na.omit(unique(alt_names$altProviderName)),"itis") %>%
   drop_na(acceptedNameUsageID) %>% 
   rename(altProviderName = input) %>%
-  left_join(alt_names, na_matches = "never")
+  left_join(alt_names, na_matches = "never", by = "altProviderName") 
 
 #some names have multiple matches (same ID but multiple scinames), have to pick one
 ## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
 ## so we have to find duplicate ID's and then filter
-alt_dupes <- syn_res %>% 
+alt_dupes <- syn_res %>%
+  select(-taxonID) %>%
+  filter(taxonRank == "species") %>%
   group_by(input) %>%
   filter(n() > 1)
 
-#filter duplicates for accepted, and replace old entries 
-syn_res <- alt_dupes %>% 
-  filter(taxonRank == "species", taxonomicStatus == "accepted") %>% 
-  bind_rows(syn_res %>% 
-              filter(!acceptedNameUsageID %in% alt_dupes$acceptedNameUsageID)) %>%
-#then finish clean up 
-  select(id = acceptedNameUsageID, input, scientificName) %>% 
+# #filter duplicates for accepted, and replace old entries 
+# syn_res <- alt_dupes %>% 
+#   filter(acceptedNameUsageID %in% c(
+#     ITIS:331277, 
+#   )) %>% 
+#   bind_rows(syn_res %>% 
+#               filter(!acceptedNameUsageID %in% alt_dupes$acceptedNameUsageID)) %>%
+# #then finish clean up 
+#   select(id = acceptedNameUsageID, input, scientificName) %>% 
+#   distinct() %>%
+#   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
+#   rename(matchingName = input) %>%
+#   ungroup()
+
+#Just get rid of those with duplicates, deal with them later
+add_syn_res <- syn_res %>% 
+  filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
+  select(id = acceptedNameUsageID, input, scientificName) %>%
   distinct() %>%
   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
   rename(matchingName = input) %>%
   ungroup()
 
-#Below add's more rows, should just replace them 
-biotime_data <- biotime_data %>% filter(!matchingName %in% syn_res$matchingName) %>%
-  bind_rows(syn_res)
+biotime_data <- biotime_data %>% 
+  filter(!matchingName %in% add_syn_res$matchingName) %>%
+  distinct() %>%
+  bind_rows(add_syn_res)
 
 ```
 
