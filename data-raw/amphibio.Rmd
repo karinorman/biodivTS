@@ -20,17 +20,20 @@ source(here::here("data-raw", "helper_functions.R"))
 
 amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS"))
 
-amph_ids <- amph %>%
+amphibio <- amph %>%
   mutate(id = get_ids(Species, "itis")) %>%
   filter(!is.na(id)) %>%
   mutate(scientificName = get_names(id, "itis")) %>%
-  select(-c("Order", "Family", "Genus")) %>%
-  rename(sourceName = Species)
+  select(id, scientificName, Species) %>%
+  right_join(select(amph, -id), by = "Species") %>%
+  rename(sourceName = Species) %>%
+  select(-c("Order", "Family", "Genus")) 
 
 # Using by_ doesn't give any additional ids
-# amph_ids <- by_name(amph$Species, "itis") %>%
+# amphibio <- by_name(amph$Species, "itis") %>%
 #   filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
 #   drop_na(acceptedNameUsageID)
 
+usethis::use_data(amphibio)
 ```
 
