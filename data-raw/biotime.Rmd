@@ -106,7 +106,7 @@ syn_res <- by_name(na.omit(unique(alt_names$altProviderName)),"itis") %>%
 ## so we have to find duplicate ID's and then filter
 alt_dupes <- syn_res %>%
   select(-taxonID) %>%
-  filter(taxonRank == "species") %>%
+  #filter(taxonRank == "species") %>%
   group_by(input) %>%
   filter(n() > 1)
 
@@ -127,15 +127,14 @@ alt_dupes <- syn_res %>%
 #Just get rid of those with duplicates, deal with them later
 add_syn_res <- syn_res %>% 
   filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
-  select(id = acceptedNameUsageID, input, scientificName) %>%
+  select(id = acceptedNameUsageID, matchingName = input, scientificName) %>%
   distinct() %>%
-  left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
-  rename(matchingName = input) %>%
-  ungroup()
+  left_join(biotime_data%>% select(-c(id, scientificName)), by = "matchingName", na_matches =  "never") %>%
+  ungroup() %>%
+  distinct()
 
 biotime_data <- biotime_data %>% 
   filter(!matchingName %in% add_syn_res$matchingName) %>%
-  distinct() %>%
   bind_rows(add_syn_res)
 
 ```
