@@ -76,14 +76,14 @@ biotime_data <- biotime_ids %>%
   select(id = acceptedNameUsageID,input, scientificName) %>%
   distinct() %>%
   right_join(data %>% select(-species, -genus), by = c("input" = "genus_species")) %>%
-  rename(matchingName = input)
+  rename(sourceName = input)
 ```
 
 Do any unmatched species have matches with other providers?
 ```{r}
-#get_match_counts(biotime_data %>% filter(is.na(id)), "matchingName")
+#get_match_counts(biotime_data %>% filter(is.na(id)), "sourceName")
 
-unmatched <- biotime_data %>% filter(is.na(id)) %>% pull(matchingName) %>% unique()
+unmatched <- biotime_data %>% filter(is.na(id)) %>% pull(sourceName) %>% unique()
 providers <- c("ott", "gbif", "col", "ncbi", "wd", "iucn")
 
 #match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species 
@@ -121,20 +121,20 @@ alt_dupes <- syn_res %>%
 #   select(id = acceptedNameUsageID, input, scientificName) %>% 
 #   distinct() %>%
 #   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
-#   rename(matchingName = input) %>%
+#   rename(sourceName = input) %>%
 #   ungroup()
 
 #Just get rid of those with duplicates, deal with them later
 add_syn_res <- syn_res %>% 
   filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
-  select(id = acceptedNameUsageID, matchingName = input, scientificName) %>%
+  select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
   distinct() %>%
-  left_join(biotime_data%>% select(-c(id, scientificName)), by = "matchingName", na_matches =  "never") %>%
+  left_join(biotime_data%>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
   ungroup() %>%
   distinct()
 
 biotime_data <- biotime_data %>% 
-  filter(!matchingName %in% add_syn_res$matchingName) %>%
+  filter(!sourceName %in% add_syn_res$sourceName) %>%
   bind_rows(add_syn_res)
 
 ```

@@ -22,7 +22,10 @@ amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "b
 
 amph_ids <- amph %>%
   mutate(id = get_ids(Species, "itis")) %>%
-  filter(!is.na(id))
+  filter(!is.na(id)) %>%
+  mutate(scientificName = get_names(id, "itis")) %>%
+  select(-c("Order", "Family", "Genus")) %>%
+  rename(sourceName = Species)
 
 # Using by_ doesn't give any additional ids
 # amph_ids <- by_name(amph$Species, "itis") %>%
