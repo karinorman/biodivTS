@@ -104,7 +104,7 @@ sci_matches <- bird_ids  %>%
   select(id = acceptedNameUsageID, input, scientificName) %>%
   distinct() %>%
   right_join(bird_trait %>% select(.dots = -col_ex), by = c("input" = "scientific"), na_matches = "never") %>%
-  drop_na(id) %>%
+  #drop_na(id) %>%
   distinct() %>%
   select(-english)
 
@@ -118,7 +118,7 @@ comm_matches <- bird_ids  %>%
   select(-scientific)
 
 #there are more rows after ID data is joined because for species that matched on common names there may be more than one scientificName 
-elton_bird <- bind_rows(sci_matches, comm_matches)
+elton_bird <- bind_rows(sci_matches, comm_matches) %>% rename(sourceName = input)
 ```
 
 Do the same for mammal trait data
@@ -126,8 +126,8 @@ Do the same for mammal trait data
 elton_mamm <- mammal_ids %>%
   select(id = acceptedNameUsageID, input, scientificName) %>%
   right_join(mamm_trait %>% select(-mswfamilylatin), by = c("input" = "scientific"), na_matches = "never") %>%
-  drop_na(id) %>%
-  distinct() 
+  distinct() %>%
+  rename(sourceName = input)
 ```
 
 ```{r}
