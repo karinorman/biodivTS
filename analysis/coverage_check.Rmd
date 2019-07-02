@@ -21,11 +21,11 @@ load(here::here("data", "elton_bird.rda"))
 
 #Checking Coverage of ID's and trait data -> biotime
 
-check if all bird & mammal biotime data w/id's has an elton match. There are 81 species without a match (67 are birds).
+check if all bird & mammal biotime data w/id's has an elton match. There are 63 species without a match (54 are birds).
 ```{r}
 no_trait <- biotime_data %>%
-  #filter(taxa == "Birds") %>%
-  select(id, taxa) %>%
+  filter(taxa %in% c("Birds", "Mammals")) %>%
+  select(id, matchingName, taxa) %>%
   drop_na(id) %>%
   distinct() %>%
   filter(!id %in% elton_bird$id, !id %in% elton_mamm$id)
@@ -33,13 +33,13 @@ no_trait <- biotime_data %>%
 dim(no_trait)
 ```
 
-and 552 species without an ID, some of which are species codes
+and 20384 species without an ID, some of which are species codes
 ```{r}
 biotime_data %>%
   #filter(taxa == "Birds") %>%
   select(id, matchingName, taxa) %>%
-  distinct() %>%
   filter(is.na(id)) %>%
+  distinct() %>%
   dim()
 ```
 
@@ -51,11 +51,22 @@ bird_data <- biotime_data %>%
   left_join(elton_bird, by = "id",
             na_matches = "never")
 
-coverage <- bird_data %>%
+mamm_data <- biotime_data %>%
+  filter(taxa == "Mammals") %>%
+  left_join(elton_mamm, by = "id",
+            na_matches = "never")
+
+bird_coverage <- bird_data %>%
   group_by(study_id) %>%
   summarise(perc = sum(!is.na(specid))/n()) %>%
   arrange(desc(perc))
 
-head(coverage)
+mamm_coverage <- mamm_data %>%
+  group_by(study_id) %>%
+  summarise(perc = sum(!is.na(msw3_id))/n()) %>%
+  arrange(desc(perc))
+
+head(bird_coverage)
+head(mamm_coverage)
 ```
 
