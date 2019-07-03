@@ -81,25 +81,9 @@ biotime_data <- biotime_ids %>%
 
 Do any unmatched species have matches with other providers?
 ```{r}
-#get_match_counts(biotime_data %>% filter(is.na(id)), "sourceName")
 
-unmatched <- biotime_data %>% filter(is.na(id)) %>% pull(sourceName) %>% unique()
-providers <- c("ott", "gbif", "col", "ncbi", "wd", "iucn")
-
-#match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species 
-alt_names <- map_df(providers, function(name) synonyms(unmatched, name)) %>%
-  drop_na(acceptedNameUsageID) %>%
-  #new matches can be in either the synonym or acceptedNameUsage column, so let's combine them
-  gather(type, altProviderName, synonym, acceptedNameUsage) %>%
-  select(altProviderName, input) %>% 
-  distinct() %>%
-  drop_na(altProviderName)
-
-#match accepted names from 
-syn_res <- by_name(na.omit(unique(alt_names$altProviderName)),"itis") %>%
-  drop_na(acceptedNameUsageID) %>% 
-  rename(altProviderName = input) %>%
-  left_join(alt_names, na_matches = "never", by = "altProviderName") 
+#Check for potential matches from synonyms found in the other providers
+syn_res <- match_providers(biotime_data, "itis")
 
 #some names have multiple matches (same ID but multiple scinames), have to pick one
 ## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
