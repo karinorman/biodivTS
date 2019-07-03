@@ -17,6 +17,7 @@ library(tidyverse)
 load(here::here("data", "biotime_data.rda"))
 load(here::here("data", "elton_mamm.rda"))
 load(here::here("data", "elton_bird.rda"))
+load(here::here("data", "amphibio.rda"))
 ```
 
 #Checking Coverage of ID's and trait data -> biotime
@@ -33,11 +34,11 @@ no_trait <- biotime_data %>%
 dim(no_trait)
 ```
 
-and 20384 species without an ID, some of which are species codes
+and 19869 species without an ID, some of which are species codes
 ```{r}
 biotime_data %>%
   #filter(taxa == "Birds") %>%
-  select(id, matchingName, taxa) %>%
+  select(id, sourceName, taxa) %>%
   filter(is.na(id)) %>%
   distinct() %>%
   dim()
@@ -45,28 +46,21 @@ biotime_data %>%
 
 Are there any studies for which we have trait data for all species?
 ```{r}
-#join trait and biotime data
-bird_data <- biotime_data %>%
-  filter(taxa == "Birds") %>%
-  left_join(elton_bird, by = "id",
+get_coverage <- function(taxa, trait_data){
+  taxa_data <- biotime_data %>%
+    select(-sourceName, -scientificName) %>%
+  filter(taxa == taxa) %>%
+  left_join(trait_data, by = "id",
             na_matches = "never")
 
-mamm_data <- biotime_data %>%
-  filter(taxa == "Mammals") %>%
-  left_join(elton_mamm, by = "id",
-            na_matches = "never")
-
-bird_coverage <- bird_data %>%
+  coverage <- taxa_data %>%
   group_by(study_id) %>%
-  summarise(perc = sum(!is.na(specid))/n()) %>%
+  summarise(perc = sum(!is.na(sourceName))/n()) %>%
   arrange(desc(perc))
+}
 
-mamm_coverage <- mamm_data %>%
-  group_by(study_id) %>%
-  summarise(perc = sum(!is.na(msw3_id))/n()) %>%
-  arrange(desc(perc))
-
-head(bird_coverage)
-head(mamm_coverage)
+get_coverage("Birds", elton_bird) %>% View()
+get_coverage("Mammals", elton_mamm) %>% View()
+get_coverage("Amphibians", amphibio) %>% View()
 ```
 
