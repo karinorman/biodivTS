@@ -83,7 +83,7 @@ Do any unmatched species have matches with other providers?
 ```{r}
 
 #Check for potential matches from synonyms found in the other providers
-syn_res <- match_providers(biotime_data, "itis")
+syn_res <- match_providers(biotime_data, "itis", common = TRUE)
 
 #some names have multiple matches (same ID but multiple scinames), have to pick one
 ## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms

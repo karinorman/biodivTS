@@ -30,7 +30,7 @@ get_dupe_ids <- function(data, orig_id){
 }
 
 #Check if synonyms from other providers have matches in the original database
-match_providers <- function(data, original_provider) {
+match_providers <- function(data, original_provider, common = FALSE) {
   unmatched <- data %>% filter(is.na(id)) %>% pull(sourceName) %>% unique()
   providers <- c("itis", "ncbi", "col", "gbif", "fb", "wd", "ott", "iucn")
 
@@ -48,5 +48,22 @@ match_providers <- function(data, original_provider) {
     drop_na(acceptedNameUsageID) %>%
     rename(altProviderName = input) %>%
     left_join(alt_names, na_matches = "never", by = "altProviderName")
+
+  if (common == TRUE){
+    common_providers <- c("col", "fb", "gbif", "itis", "iucn", "ncbi", "slb")
+    unmatched <- unmatched[unmatched %in% syn_res$input]
+
+    common_match <- map_df(common_providers[common_providers != original_provider],
+           function(name) by_common(unmatched, name)) %>%
+      drop_na(acceptedNameUsageID)
+
+    sci_match <- by_name(unique(common_match$scientificName), "itis") %>%
+      rename(altProviderName = input) %>%
+      drop_na(acceptedNameUsageID) %>%
+      left_join(common_match %>% select(scientificName, input),
+                by = c("altProviderName" = "scientificName"))
+
+    return(bind_rows(syn_res, sci_match))
+  }
 
 }
