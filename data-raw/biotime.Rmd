@@ -89,8 +89,8 @@ syn_res <- match_providers(biotime_data, "itis")
 ## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
 ## so we have to find duplicate ID's and then filter
 alt_dupes <- syn_res %>%
-  select(-taxonID) %>%
-  #filter(taxonRank == "species") %>%
+  select(acceptedNameUsageID, input) %>%
+  distinct() %>%
   group_by(input) %>%
   filter(n() > 1)
 
@@ -113,6 +113,8 @@ add_syn_res <- syn_res %>%
   filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
   select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
   distinct() %>%
+  group_by(sourceName) %>%
+  top_n(1, scientificName) %>% #some have multiple sci names for same id, just pick on 
   left_join(biotime_data%>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
   ungroup() %>%
   distinct()
