@@ -130,6 +130,58 @@ elton_mamm <- mammal_ids %>%
   rename(sourceName = input)
 ```
 
+Check against alternative providers, first for mammals
+```{r}
+syn_res <- match_providers(elton_mamm, "itis")
+
+#names that resolve to more than one id
+alt_dupes <- syn_res %>%
+  select(acceptedNameUsageID, input) %>%
+  distinct() %>%
+  group_by(input) %>%
+  filter(n() > 1)
+
+add_syn_res <- syn_res %>% 
+  filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
+  select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
+  distinct() %>%
+  group_by(sourceName) %>%
+  top_n(1, scientificName) %>%
+  left_join(elton_mamm %>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
+  ungroup() %>%
+  distinct()
+
+elton_mamm <- elton_mamm %>% 
+  filter(!sourceName %in% add_syn_res$sourceName) %>%
+  bind_rows(add_syn_res)
+```
+
+then birds
+```{r}
+syn_res <- match_providers(elton_bird, "itis")
+
+#names that resolve to more than one id
+alt_dupes <- syn_res %>%
+  select(acceptedNameUsageID, input) %>%
+  distinct() %>%
+  group_by(input) %>%
+  filter(n() > 1)
+
+add_syn_res <- syn_res %>% 
+  filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
+  select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
+  distinct() %>%
+  group_by(sourceName) %>%
+  top_n(1, scientificName) %>%
+  left_join(elton_bird %>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
+  ungroup() %>%
+  distinct()
+
+elton_bird <- elton_bird %>% 
+  filter(!sourceName %in% add_syn_res$sourceName) %>%
+  bind_rows(add_syn_res)
+```
+
 ```{r}
 usethis::use_data(elton_bird, elton_mamm)
 ```
