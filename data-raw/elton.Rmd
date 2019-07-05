@@ -114,7 +114,6 @@ comm_matches <- bird_ids  %>%
   distinct() %>%
   right_join(bird_trait %>% filter(!specid %in% sci_matches$specid) %>% select(.dots = -col_ex), by = c("input" = "english"), na_matches = "never") %>%
   distinct() %>%
-  rename(matchingName = input) %>%
   select(-scientific)
 
 #there are more rows after ID data is joined because for species that matched on common names there may be more than one scientificName 

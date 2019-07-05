@@ -64,6 +64,5 @@ match_providers <- function(data, original_provider, common = FALSE) {
                 by = c("altProviderName" = "scientificName"))
 
     return(bind_rows(syn_res, sci_match))
-  }
-
+  } else {return(syn_res)}
 }
