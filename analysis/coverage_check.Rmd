@@ -46,21 +46,40 @@ biotime_data %>%
 
 Are there any studies for which we have trait data for all species?
 ```{r}
-get_coverage <- function(taxa, trait_data){
-  taxa_data <- biotime_data %>%
+merge_data <- function(taxa, trait_data){
+  biotime_data %>%
     select(-sourceName, -scientificName) %>%
   filter(taxa == taxa) %>%
   left_join(trait_data, by = "id",
             na_matches = "never")
+}
 
+get_coverage <- function(taxa_data){
   coverage <- taxa_data %>%
   group_by(study_id) %>%
   summarise(perc = sum(!is.na(sourceName))/n()) %>%
   arrange(desc(perc))
 }
 
-get_coverage("Birds", elton_bird) %>% View()
-get_coverage("Mammals", elton_mamm) %>% View()
-get_coverage("Amphibians", amphibio) %>% View()
+get_coverage(merge_data("Birds", elton_bird)) %>% View
+get_coverage(merge_data("Mammals", elton_mamm)) %>% View()
+get_coverage(merge_data("Amphibians", amphibio)) %>% View()
+```
+
+Get data w/traits for all studies that have >85% trait coverage
+```{r}
+#set coverage threshold for analysis dataset
+perc <- 0.85
+
+traits <- list(elton_bird, elton_mamm, amphibio)
+taxa <- list("Birds", "Mammals", "Amphibians")
+
+biotime_traits_list <- map2(taxa, traits, ~merge_data(taxa = .x, trait_data = .y))
+coverage <- map_dfr(biotime_traits_list, get_coverage) %>%
+  filter(perc > perc)
+
+biotime_traits <- biotime_traits_list %>%
+  bind_rows() %>%
+  filter(study_id %in% coverage$study_id)
 ```
 
