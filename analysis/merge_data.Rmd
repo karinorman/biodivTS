@@ -83,3 +83,7 @@ biotime_traits <- map_dfr(biotime_traits_list, ~drop_na(., scientificName)) %>%
   filter(study_id %in% coverage$study_id)
 ```
 
+```{r}
+usethis::use_data(biotime_traits)
+```
+
