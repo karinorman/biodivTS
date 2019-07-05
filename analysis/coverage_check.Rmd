@@ -26,7 +26,7 @@ check if all bird & mammal biotime data w/id's has an elton match. There are 63 
 ```{r}
 no_trait <- biotime_data %>%
   filter(taxa %in% c("Birds", "Mammals")) %>%
-  select(id, matchingName, taxa) %>%
+  select(id, sourceName, taxa) %>%
   drop_na(id) %>%
   distinct() %>%
   filter(!id %in% elton_bird$id, !id %in% elton_mamm$id)
@@ -69,17 +69,17 @@ get_coverage(merge_data("Amphibians", amphibio)) %>% View()
 Get data w/traits for all studies that have >85% trait coverage
 ```{r}
 #set coverage threshold for analysis dataset
-perc <- 0.85
+percent <- 0.85
 
 traits <- list(elton_bird, elton_mamm, amphibio)
 taxa <- list("Birds", "Mammals", "Amphibians")
 
 biotime_traits_list <- map2(taxa, traits, ~merge_data(taxa = .x, trait_data = .y))
 coverage <- map_dfr(biotime_traits_list, get_coverage) %>%
-  filter(perc > perc)
+  filter(perc > percent)
 
-biotime_traits <- biotime_traits_list %>%
-  bind_rows() %>%
+biotime_traits <- map_dfr(biotime_traits_list, ~drop_na(., scientificName)) %>%
+  #bind_rows() %>%
   filter(study_id %in% coverage$study_id)
 ```
 
