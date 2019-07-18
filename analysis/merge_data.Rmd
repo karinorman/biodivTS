@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(FD)
 ```
 
 ```{r}
@@ -79,11 +80,61 @@ coverage <- map_dfr(biotime_traits_list, get_coverage) %>%
   filter(perc > percent)
 
 biotime_traits <- map_dfr(biotime_traits_list, ~drop_na(., scientificName)) %>%
-  #bind_rows() %>%
   filter(study_id %in% coverage$study_id)
 ```
 
 ```{r}
 usethis::use_data(biotime_traits)
+```
+
+Get FD metrics for each study 
+```{r}
+load(here::here("data", "biotime_traits.rda"))
+
+get_fd <- function(data){
+  species_mat <- data %>%
+    select(year, id) %>% 
+    arrange(year, id) %>%
+    mutate(present = 1) %>%
+    spread(id, value = present, fill = 0) %>%
+    select(-year)
+  
+  years <- data %>% 
+    select(year) %>%
+    distinct() %>%
+    arrange(year)
+  
+  trait_mat <- data %>%
+    select(id, diet_inv, diet_vend, diet_vect, diet_vfish, diet_vunk, diet_scav, diet_fruit, 
+           diet_nect, diet_seed, diet_planto, diet_certainty, forstrat_watbelowsurf,
+           forstrat_wataroundsurf, forstrat_ground, forstrat_understory, forstrat_midhigh,
+           forstrat_canopy, forstrat_aerial, pelagicspecialist, forstrat_speclevel, nocturnal, 
+           bodymass_value, bodymass_speclevel, forstrat_value, activity_nocturnal, activity_crepuscular, 
+           activity_diurnal, Fos, Ter, Aqu, Arb, Leaves, Flowers, Seeds, Fruits, Arthro, Vert, 
+           Diu, Noc, Crepu, Wet_warm, Wet_cold, Dry_warm, Dry_cold, Body_mass_g, Age_at_maturity_min_y, 
+           Age_at_maturity_max_y, Body_size_mm, Size_at_maturity_min_mm, Size_at_maturity_max_mm, 
+           Longevity_max_y , Litter_size_min_n, Litter_size_max_n, Reproductive_output_y, 
+           Offspring_size_min_mm, Offspring_size_max_mm, Dir, Lar, Viv, OBS 
+    ) %>%
+    distinct() %>%
+    select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
+    mutate_at(vars(-id), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
+    arrange(id) %>%
+    column_to_rownames("id")
+  
+  as.tibble(dbFD(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
+    cbind(years, .)
+}
+
+get_fd_safe <- possibly(get_fd, NA)
+
+test_data <- biotime_traits %>% 
+  filter(study_id %in% c(39, 46, 47, 51)) %>%
+  group_by(study_id) %>%
+  nest() %>%
+  mutate(metrics = map(data, ~get_fd_safe(.x))) %>%
+  filter(!is.na(metrics)) %>%
+  select(-data) %>%
+  unnest()
 ```
 
