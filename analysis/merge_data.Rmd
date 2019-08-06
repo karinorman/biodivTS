@@ -92,6 +92,7 @@ Get FD metrics for each study
 load(here::here("data", "biotime_traits.rda"))
 
 get_fd <- function(data){
+  #print(max(data$record_id))
   species_mat <- data %>%
     select(year, id) %>% 
     arrange(year, id) %>%
@@ -122,15 +123,14 @@ get_fd <- function(data){
     arrange(id) %>%
     column_to_rownames("id")
   
-  as.tibble(dbFD(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
+  as.tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
     cbind(years, .)
 }
 
 get_fd_safe <- possibly(get_fd, NA)
 
 test_data <- biotime_traits %>% 
-  filter(study_id %in% c(39, 46, 47, 51)) %>%
-  group_by(study_id) %>%
+  group_by(study_id, plot) %>%
   nest() %>%
   mutate(metrics = map(data, ~get_fd_safe(.x))) %>%
   filter(!is.na(metrics)) %>%
