@@ -181,6 +181,15 @@ elton_bird <- elton_bird %>%
   bind_rows(add_syn_res)
 ```
 
+Grab only the trait columns we're interested in, standardize column names
+```{r}
+elton_bird <- elton_bird %>% 
+  select(-specid, -ends_with("source"), -ends_with("enteredby"), -ends_with("certainty"), -ends_with("speclevel"), -ends_with("comment"))
+
+elton_mamm <- elton_mamm %>%
+  select(-msw3_id, -forstrat_value, -ends_with("source"), -ends_with("certainty"), -ends_with("speclevel"), -ends_with("comment"))
+```
+
 ```{r}
 usethis::use_data(elton_bird, elton_mamm)
 ```
