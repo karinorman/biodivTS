@@ -62,6 +62,12 @@ amphibio <- amphibio %>%
   bind_rows(add_syn_res)
 ```
 
+Select relevant trait columns
+```{r}
+amphibio <- amphibio %>%
+  select(-OBS)
+```
+
 Check for multiple matches to the same ID
 ```{r}
 amphibio <- undupe_ids(amphibio)

@@ -106,16 +106,8 @@ get_fd <- function(data){
     arrange(year)
   
   trait_mat <- data %>%
-    select(id, diet_inv, diet_vend, diet_vect, diet_vfish, diet_vunk, diet_scav, diet_fruit, 
-           diet_nect, diet_seed, diet_planto, diet_certainty, forstrat_watbelowsurf,
-           forstrat_wataroundsurf, forstrat_ground, forstrat_understory, forstrat_midhigh,
-           forstrat_canopy, forstrat_aerial, pelagicspecialist, forstrat_speclevel, nocturnal, 
-           bodymass_value, bodymass_speclevel, forstrat_value, activity_nocturnal, activity_crepuscular, 
-           activity_diurnal, Fos, Ter, Aqu, Arb, Leaves, Flowers, Seeds, Fruits, Arthro, Vert, 
-           Diu, Noc, Crepu, Wet_warm, Wet_cold, Dry_warm, Dry_cold, Body_mass_g, Age_at_maturity_min_y, 
-           Age_at_maturity_max_y, Body_size_mm, Size_at_maturity_min_mm, Size_at_maturity_max_mm, 
-           Longevity_max_y , Litter_size_min_n, Litter_size_max_n, Reproductive_output_y, 
-           Offspring_size_min_mm, Offspring_size_max_mm, Dir, Lar, Viv, OBS 
+    select(-c(id, taxa, record_id, day, month, year, sample_desc, id_species, 
+              latitude, longitude, sum_abundance, sum_biomass, sourceName, scientificName)
     ) %>%
     distinct() %>%
     select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
