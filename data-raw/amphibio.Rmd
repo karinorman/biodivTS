@@ -64,31 +64,7 @@ amphibio <- amphibio %>%
 
 Check for multiple matches to the same ID
 ```{r}
-#get ids that have more than one entry
-dupe_ids <- amphibio %>% 
-  select(id, sourceName) %>% 
-  drop_na(id) %>%
-  distinct() %>% 
-  group_by(id) %>% 
-  filter(n() > 1) %>%
-  pull(id)
-
-#get data associated with ids
-dupe_data <- amphibio %>% 
-  filter(id %in% dupe_ids)
-
-#resolve so that traits are averaged for species that need to be combined
-resolved <- dupe_data %>%
-  select(-scientificName, -sourceName) %>%
-  group_by(id) %>%
-  summarise_all(~ if (all(is.na(.))) {NA} else {mean(., na.rm = TRUE)}) %>%
-  mutate(scientificName = get_names(id))
-
-#remove unresolved data and replace with new resolved
-amphibio <-  amphibio %>% 
-  anti_join(dupe_data) %>% 
-  bind_rows(resolved)
-
+amphibio <- undupe_ids(amphibio)
 ```
 
 ```{r}

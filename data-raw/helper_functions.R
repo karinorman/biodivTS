@@ -66,3 +66,31 @@ match_providers <- function(data, original_provider, common = FALSE) {
     return(bind_rows(syn_res, sci_match))
   } else {return(syn_res)}
 }
+
+#Identify ids that have matched to multiple entries (for trait databases), and average within ID so there is only one entry
+undupe_ids <- function(data) {
+  #get ids that have more than one entry
+  dupe_ids <- data %>%
+    select(id, sourceName) %>%
+    drop_na(id) %>%
+    distinct() %>%
+    group_by(id) %>%
+    filter(n() > 1) %>%
+    pull(id)
+
+  #get data associated with ids
+  dupe_data <- data %>%
+    filter(id %in% dupe_ids)
+
+  #resolve so that traits are averaged for species that need to be combined
+  resolved <- dupe_data %>%
+    select(-scientificName,-sourceName) %>%
+    group_by(id) %>%
+    summarise_all( ~ if (all(is.na(.))) {NA} else {mean(., na.rm = TRUE)}) %>%
+    mutate(scientificName = get_names(id))
+
+  #remove unresolved data and replace with new resolved
+  resolved_data <- data %>%
+    anti_join(dupe_data) %>%
+    bind_rows(resolved)
+}

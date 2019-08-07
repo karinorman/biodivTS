@@ -190,6 +190,13 @@ elton_mamm <- elton_mamm %>%
   select(-msw3_id, -forstrat_value, -ends_with("source"), -ends_with("certainty"), -ends_with("speclevel"), -ends_with("comment"))
 ```
 
+Check for multiple matches to the same ID
+```{r}
+elton_bird <- undupe_ids(elton_bird)
+
+elton_mamm <- undupe_ids(elton_mamm)
+```
+
 ```{r}
 usethis::use_data(elton_bird, elton_mamm)
 ```
