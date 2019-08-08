@@ -467,7 +467,7 @@ dbFD_joggle <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani
                   "\n")
         }
         if (stand.FRic) {
-          hull.all <- convhulln(traits.FRic, "FA", "QJ")
+          hull.all <- convhulln(traits.FRic, c("FA", "QJ"))
           FRic.all <- hull.all$vol
         }
       }
@@ -625,7 +625,7 @@ dbFD_joggle <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani
           if (!warning)
             thresh <- 3
           if (nb.sp[i] >= thresh) {
-            convhull <- convhulln(tr.FRic, "FA", "QJ")
+            convhull <- convhulln(tr.FRic, c("FA", "QJ"))
             if (!stand.FRic)
               FRic[i] <- convhull$vol
             if (stand.FRic)
@@ -669,7 +669,7 @@ dbFD_joggle <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani
     if (calc.FDiv & calc.FRic) {
       if (any(x.class2 == "numeric") & dim(tr.FRic)[2] >
           1 & nb.sp[i] >= 3) {
-        vert0 <- convhulln(tr.FRic, "Fx TO 'vert.txt'", "QJ")
+        vert0 <- convhulln(tr.FRic, c("Fx TO 'vert.txt'", "QJ"))
         vert1 <- scan("vert.txt", quiet = T)
         vert2 <- vert1 + 1
         vertices <- vert2[-1]

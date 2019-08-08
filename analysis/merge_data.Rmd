@@ -106,12 +106,12 @@ get_fd <- function(data){
     arrange(year)
   
   trait_mat <- data %>%
-    select(-c(id, taxa, record_id, day, month, year, sample_desc, id_species, 
+    select(-c(taxa, record_id, day, month, year, sample_desc, id_species, 
               latitude, longitude, sum_abundance, sum_biomass, sourceName, scientificName)
     ) %>%
     distinct() %>%
     select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
-    mutate_at(vars(-id), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
+    mutate_at(vars(-id, -diet_5cat), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
     arrange(id) %>%
     column_to_rownames("id")
   
@@ -119,13 +119,12 @@ get_fd <- function(data){
     cbind(years, .)
 }
 
-get_fd_safe <- possibly(get_fd, NA)
+#get_fd_safe <- possibly(get_fd, NA)
 
 test_data <- biotime_traits %>% 
   group_by(study_id, plot) %>%
   nest() %>%
-  mutate(metrics = map(data, ~get_fd_safe(.x))) %>%
-  filter(!is.na(metrics)) %>%
+  mutate(metrics = map(data, ~get_fd(.x))) %>%
   select(-data) %>%
   unnest()
 ```
