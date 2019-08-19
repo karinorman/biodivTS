@@ -127,11 +127,19 @@ get_fd <- function(data, study, plot){
 get_fd_safe <- possibly(get_fd, NA)
 
 fd_data <- biotime_traits %>% 
-  filter(study_id == 56) %>%
+  filter(!is.na(-plot)) %>%
   group_by(study_id, year, plot) %>%
   filter(n_distinct(id) > 4) %>%
   ungroup() %>%
   group_by(study_id, plot) %>%
-  group_map(~get_fd(.x, study = .y$study_id, plot = .y$plot))
+  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
 ```
+
+Read data back in:
+```{r}
+fd_data <- dir(here::here("data", "fd_output"), "*.tsv") %>%
+  paste0(here::here("data", "fd_output"), "/", .) %>%
+  map_dfr(read_tsv)
+```
+
 
