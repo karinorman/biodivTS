@@ -6,3 +6,7 @@ manifest.json
 .Rhistory
 .RData
 .Ruserdata
+inst/extdata/*.csv
+inst/extdata/elton_traits/*.csv
+inst/extdata/biotime/*.csv
+inst/extdata/amphibio/*.csv
