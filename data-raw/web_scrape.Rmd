@@ -80,3 +80,12 @@ for (i in 1:length(fid_text)) {
 driver$server$stop()
 ```
 
+Move all the files to a folder in the appropriate place
+```{r}
+library(filesstrings)
+file_names <- list.files("~/Downloads", "fishtraits*")
+
+dir.create(here::here("inst", "extdata", "fishtraits"))
+file.move(paste0("~/Downloads/", file_names), here::here("inst", "extdata", "fishtraits"))
+```
+
