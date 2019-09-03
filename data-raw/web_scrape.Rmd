@@ -41,32 +41,37 @@ fid_text <- unlist(strsplit(unlist(fid_list$getElementText()), "\n"))
 Choose FID and Genus
 ```{r}
 
-for (i in 1:length(fid_text)) {
+for (i in 6:length(fid_text)) {
   #select and search the FID dropdown
   fid <- rd$findElement(using = 'css selector', "#fid-combo")
   fid$clearElement()
   #pass to search box
+  print(fid_text[i])
   fid$sendKeysToElement(list(fid_text[i]))
   #click matching one
+  Sys.sleep(0.15)
   clickObject("#ui-id-1")
   
   #get list of Genus's that are now possible
   clickObject(".ui-combobox2 .ui-icon-triangle-1-s")
+  Sys.sleep(0.15)
   genus_list <- rd$findElement('css selector', '#ui-id-2')
   genus_text <- unlist(strsplit(unlist(genus_list$getElementText()), "\n"))
+  print(genus_text)
   
   for (j in 1:length(genus_text)) {
     #select and search the Genus dropdown
     genus <- rd$findElement(using = 'css selector', "#genus-combo")
     genus$clearElement()
     genus$sendKeysToElement(list(genus_text[j]))
+    Sys.sleep(0.15)
     #click matching one
     clickObject('#ui-id-2')
     
     #make sure the appropriate column boxes are checked
-    columns <- rd$findElement(using = 'css selector', '#ui-accordion-ac1-header-1')
-    columns$clickElement()
-    
+    # columns <- rd$findElement(using = 'css selector', '#ui-accordion-ac1-header-1')
+    # columns$clickElement()
+    # 
     #selectors for all boxes that need to be checked
     
     
