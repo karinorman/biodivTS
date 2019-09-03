@@ -1,0 +1,85 @@
+---
+title: "fishtraits"
+author: "Kari Norman"
+date: "8/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(RSelenium)
+```
+
+```{r}
+clickObject <- function(selector){
+  object <- rd$findElement(using = 'css selector', selector)
+  object$clickElement()
+}
+```
+connect to Selenium server and navigate to the page
+```{r}
+driver <- rsDriver(browser = c("chrome"), chromever = "76.0.3809.126")
+rd <- driver[["client"]]
+rd$open()
+
+rd$navigate("http://www.fishtraits.info/search/taxo/")
+```
+
+see if we can get the list of all possible search items for the FID dropdown (second is dependent on the first input)
+```{r}
+#click on drop down element
+clickObject('.ui-combobox .ui-icon-triangle-1-s')
+
+#get text of the list
+fid_list <- rd$findElement('css selector', '#ui-id-1')
+fid_text <- unlist(strsplit(unlist(fid_list$getElementText()), "\n"))
+```
+
+Choose FID and Genus
+```{r}
+#select and search the FID dropdown
+fid <- rd$findElement(using = 'css selector', "#fid-combo")
+fid$clearElement()
+#pass to search box
+fid$sendKeysToElement(list(fid_text[1]))
+#click matching one
+clickObject("#ui-id-1")
+
+#get list of Genus's that are now possible
+clickObject(".ui-combobox2 .ui-icon-triangle-1-s")
+genus_list <- rd$findElement('css selector', '#ui-id-2')
+genus_text <- unlist(strsplit(unlist(genus_list$getElementText()), "\n"))
+
+#select and search the Genus dropdown
+genus <- rd$findElement(using = 'css selector', "#genus-combo")
+genus$clearElement()
+genus$sendKeysToElement(list(genus_text[1]))
+#click matching one
+clickObject('#ui-id-2')
+```
+
+Pick the columns we want
+```{r}
+#make sure the appropriate column boxes are checked
+columns <- rd$findElement(using = 'css selector', '#ui-accordion-ac1-header-1')
+columns$clickElement()
+
+#selectors for all boxes that need to be checked
+```
+
+Submit search and download
+```{r}
+#select search box
+clickObject("#searchSubmit")
+#and download
+clickObject("#downloadbtn")
+```
+
+
+```{r}
+driver$server$stop()
+```
+
