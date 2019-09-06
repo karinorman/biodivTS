@@ -1,0 +1,51 @@
+---
+title: "fishtraits"
+author: "Kari Norman"
+date: "9/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(taxadb)
+```
+
+Read in files
+```{r}
+fishtraits <- dir(here::here("inst", "extdata", "fishtraits"), "*.csv") %>%
+  paste0(here::here("inst", "extdata", "fishtraits"), "/", .) %>%
+  map_dfr(read_csv) %>% 
+  filter(id != 810) %>% #one species has a duplicate entry with no data for some reason
+  select(scientificName = scientificname, itistsn, commonName = commonname, altcommonName = othernames, 
+                      diet_nonfeed = nonfeed, diet_benthic = benthic, diet_surwcol = surwcol, diet_algphyto = algphyto, diet_macvascu = macvascu, 
+                      diet_detritus = detritus, diet_inv = invlvfsh, diet_fshcrcrb = fshcrcrb, diet_blood = blood, diet_eggs = eggs, diet_other = other, 
+                      max_length = maxtl, matuage, longevity, fecundity, serial, season, starts_with("a_"), starts_with("b_"), starts_with("c1_"),
+                      euryhaline, mintemp, maxtemp, muck, claysilt, sand, gravel, cobble, boulder, bedrock, vegetat, debrdetr, lwd,
+                      pelagic, preflot, preflen, largeriv, smallriv, creek, sprgsubt, lacustrine, potanadr, lowland, upland, montane,
+                      slowcurr, modcurr, fastcurr) 
+
+#find species without a TRUE habitat type 
+missing_hab <- fishtraits %>% 
+  #select(starts_with("a_"), starts_with("b_")) %>%
+  filter_at(vars(starts_with("a_"), starts_with("b_"), starts_with("c1_")),  ~ !. %in% TRUE) %>%
+  pull(itistsn) %>%
+  unique()
+  
+fishtraits_clean <- fishtraits %>%
+  gather(habitat, value, starts_with("a_"), starts_with("b_"), starts_with("c1_")) %>%
+  mutate(habitat = case_when(
+    itistsn %in% missing_hab ~ NA_character_,
+    TRUE ~ habitat
+    )
+  ) %>% 
+  filter(value == TRUE | is.na(habitat), itistsn != 0) %>%
+  select(-value) %>%
+  distinct()
+
+```
+
+
