@@ -16,11 +16,11 @@ library(taxadb)
 
 Read in files
 ```{r}
-fishtraits <- dir(here::here("inst", "extdata", "fishtraits"), "*.csv") %>%
+fishtraits_data <- dir(here::here("inst", "extdata", "fishtraits"), "*.csv") %>%
   paste0(here::here("inst", "extdata", "fishtraits"), "/", .) %>%
   map_dfr(read_csv) %>% 
   filter(id != 810) %>% #one species has a duplicate entry with no data for some reason
-  select(scientificName = scientificname, itistsn, commonName = commonname, altcommonName = othernames, 
+  select(scientificName = scientificname, itistsn,
                       diet_nonfeed = nonfeed, diet_benthic = benthic, diet_surwcol = surwcol, diet_algphyto = algphyto, diet_macvascu = macvascu, 
                       diet_detritus = detritus, diet_inv = invlvfsh, diet_fshcrcrb = fshcrcrb, diet_blood = blood, diet_eggs = eggs, diet_other = other, 
                       max_length = maxtl, matuage, longevity, fecundity, serial, season, starts_with("a_"), starts_with("b_"), starts_with("c1_"),
@@ -29,13 +29,13 @@ fishtraits <- dir(here::here("inst", "extdata", "fishtraits"), "*.csv") %>%
                       slowcurr, modcurr, fastcurr) 
 
 #find species without a TRUE habitat type 
-missing_hab <- fishtraits %>% 
+missing_hab <- fishtraits_data %>% 
   #select(starts_with("a_"), starts_with("b_")) %>%
   filter_at(vars(starts_with("a_"), starts_with("b_"), starts_with("c1_")),  ~ !. %in% TRUE) %>%
   pull(itistsn) %>%
   unique()
   
-fishtraits_clean <- fishtraits %>%
+fishtraits_clean <- fishtraits_data %>%
   gather(habitat, value, starts_with("a_"), starts_with("b_"), starts_with("c1_")) %>%
   mutate(habitat = case_when(
     itistsn %in% missing_hab ~ NA_character_,
@@ -44,8 +44,28 @@ fishtraits_clean <- fishtraits %>%
   ) %>% 
   filter(value == TRUE | is.na(habitat), itistsn != 0) %>%
   select(-value) %>%
-  distinct()
+  distinct() %>%
+  mutate_at(vars(-c(scientificName, itistsn, max_length, matuage, longevity, fecundity, 
+                    season, mintemp, maxtemp, habitat)), ~ as.integer(.x))
 
 ```
 
+Get id's! They seemingly already have ITIS id's, but let's double check that they're up to date with what we have through taxadb
+```{r}
+fishtraits <- fishtraits_clean %>%
+  mutate(itistsn = paste0("ITIS:", itistsn), 
+         id = get_ids(scientificName))
+
+#There are no instances where the database id doesn't match the id from taxadb
+fishtraits %>% filter(itistsn != id) %>% dim()
+
+#so we'll just keep that ID column
+fishtraits <- fishtraits %>%
+  mutate(id = itistsn) %>%
+  select(-itistsn)
+```
+
+```{r}
+usethis::use_data(fishtraits)
+```
 
