@@ -1,0 +1,49 @@
+---
+title: "marine traits"
+author: "Kari Norman"
+date: "9/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+mt <- list.files(system.file("extdata", "marinetraits", package = "biodivTS")) %>%
+  system.file("extdata", "marinetraits", ., package = "biodivTS") %>%
+  map_dfr(., read.csv) %>%
+  select(AphiaID, scientificName = ScientificName, taxonRank, taxonomicStatus, measurementID, 
+         measurementType, measurementValue, measurementUnit) %>%
+  filter(taxonRank == "Species") %>% 
+  distinct()
+
+#create ID column
+id_num <- 0
+obsID <- vector("list", length = length(mt$measurementType))
+
+for (i in 1:length(mt$measurementType)){
+  if (isTRUE(grepl(">", mt$measurementType[i]))){
+    obsID[i] <- id_num
+  } else{
+    id_num <- id_num + 1
+    obsID[i] <- id_num
+  }
+}
+
+mt <- cbind(mt, obsID = unlist(obsID)) %>% 
+  spread(measurementType, measurementValue) %>%
+  select(-c("Body size > Stage", "Feedingtype > Host", "Feedingtype > Stage", 
+            "Body size > Locality (MRGID)", "Body size > Dimension", "Body size > Gender"))
+
+coalesce_all_columns <- function(df) {
+  return(coalesce(!!! as.list(df)))
+}
+
+mt_clean <- mt %>%
+  group_by(obsID) %>%
+  summarise_all(coalesce_all_columns) %>% 
+  group_by(scientificName) %>%
+  summarise_all(coalesce_all_columns)
+```
+
