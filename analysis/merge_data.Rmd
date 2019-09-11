@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(FD)
+devtools::load_all()
 ```
 
 ```{r}
@@ -126,8 +127,8 @@ get_fd <- function(data, study, plot){
 
 get_fd_safe <- possibly(get_fd, NA)
 
-fd_data <- biotime_traits %>% 
-  filter(!is.na(-plot)) %>%
+fd <- biotime_traits %>% 
+  filter(!is.na(plot)) %>%
   group_by(study_id, year, plot) %>%
   filter(n_distinct(id) > 4) %>%
   ungroup() %>%
@@ -137,9 +138,24 @@ fd_data <- biotime_traits %>%
 
 Read data back in:
 ```{r}
-fd_data <- dir(here::here("data", "fd_output"), "*.tsv") %>%
+files <-  dir(here::here("data", "fd_output"), "*.tsv")
+
+fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
   map_dfr(read_tsv)
+
+fd <- biotime_traits %>% 
+  filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
+  anti_join(fd_data) %>%
+  group_by(study_id, year, plot) %>%
+  filter(n_distinct(id) > 4) %>%
+  ungroup() %>%
+  group_by(study_id, plot) %>%
+  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
+
+#4610981
+#7611121
+
 ```
 
 
