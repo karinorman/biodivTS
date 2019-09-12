@@ -1,0 +1,42 @@
+---
+title: "BIEN trait"
+author: "Kari Norman"
+date: "9/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(BIEN)
+library(taxadb)
+
+source(here::here("data-raw", "helper_functions.R"))
+```
+
+Let's get them traits
+```{r}
+trait_types <- na.omit(BIEN_trait_list())
+
+BIEN_data <- map_dfr(trait_types$trait_name, BIEN_trait_trait)
+
+bien <- BIEN_data %>%
+  select(scientificName = scrubbed_species_binomial, trait_name, trait_value, unit, method, latitude, longitude, elevation_m, obsID = id) %>%
+  spread()
+```
+
+Get id's for just the unique 
+```{r}
+bien_ids <- bien %>% 
+  select(scientifcName) %>%
+  distinct() %>%
+  mutate(id = get_ids(scientificName))
+```
+
+```{r}
+usethis::use_data(bien)
+```
+
