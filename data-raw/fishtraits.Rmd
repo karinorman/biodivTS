@@ -65,6 +65,55 @@ fishtraits <- fishtraits %>%
   select(-itistsn)
 ```
 
+Oh wait, we actually have the whole database now, sigh. (sciencebase.gov/catalog/item/5a7c6e8ce4b00f54eb2318c0)
+```{r}
+#system.file("extdata", "fishtraits_db", package = "biodivTS")
+
+ft <- read_csv(here::here("inst", "extdata", "fishtraits_db", "FishTraits_14.3.csv"), na = c("NA", "-999", "-555", "-999.0", "-555.0", "-555.00", "-999.00")) %>%
+  rename_all(tolower) %>%
+  unite(scientificName, genus, species, sep = " ") %>%
+  select(scientificName, itistsn,
+                      diet_nonfeed = nonfeed, diet_benthic = benthic, diet_surwcol = surwcol, diet_algphyto = algphyto, diet_macvascu = macvascu, 
+                      diet_detritus = detritus, diet_inv = invlvfsh, diet_fshcrcrb = fshcrcrb, diet_blood = blood, diet_eggs = eggs, diet_other = other, 
+                      max_length = maxtl, matuage, longevity, fecundity, serial, season, starts_with("a_"), starts_with("b_"), starts_with("c1_"),
+                      euryhaline, mintemp, maxtemp, muck, claysilt, sand, gravel, cobble, boulder, bedrock, vegetat, debrdetr, lwd,
+                      pelagic, preflot, preflen, largeriv, smallriv, creek, sprgsubt, lacustrine, potanadr, lowland, upland, montane,
+                      slowcurr, modcurr, fastcurr) %>%
+  filter(scientificName != "Salvelinus aureolus") #this isn't a real entry, all NA's
+
+missing_lh <- ft %>% 
+  #select(starts_with("a_"), starts_with("b_")) %>%
+  filter_at(vars(starts_with("a_"), starts_with("b_"), starts_with("c1_")),  ~ !. %in% TRUE) %>%
+  pull(itistsn) %>%
+  unique()
+
+ft_clean <- ft %>%
+  gather(lifehistory, value, starts_with("a_"), starts_with("b_"), starts_with("c1_")) %>%
+  mutate(lifehistory = case_when(
+    itistsn %in% missing_hab ~ NA_character_,
+    TRUE ~ lifehistory
+    )
+  ) %>% 
+  filter(value == TRUE | is.na(lifehistory), itistsn != 0) %>%
+  select(-value) %>%
+  distinct()
+```
+
+ids
+```{r}
+fishtraits <- ft_clean %>%
+  mutate(itistsn = paste0("ITIS:", itistsn), 
+         id = get_ids(scientificName))
+
+#There are no instances where the database id doesn't match the id from taxadb
+fishtraits %>% filter(itistsn != id) %>% dim()
+
+#so we'll just keep that ID column
+fishtraits <- fishtraits %>%
+  mutate(id = itistsn) %>%
+  select(-itistsn)
+```
+
 ```{r}
 usethis::use_data(fishtraits)
 ```
