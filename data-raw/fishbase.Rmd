@@ -20,6 +20,12 @@ Potential tables of interest: diet, ecology, ecosystem, fecundity, fooditems, ma
 other: morphdat, oxygen
 
 ```{r}
-docs(table = "diet")
+tables <- c("diet", "ecology", "ecosystem", "fecundity", "fooditems", "maturity", "popchar", "popgrowth", "reproduc", "spawning", "speed", "morphdat", "oxygen")
+columns <- purrr::map(tables, ~docs(table = .x)$column_name) %>% unlist()
+```
+
+download all the tables
+```{r}
+
 ```
 
