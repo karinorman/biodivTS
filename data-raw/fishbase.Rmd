@@ -1,0 +1,25 @@
+---
+title: "Fishbase"
+author: "Kari Norman"
+date: "9/19/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(rfishbase)
+
+```
+
+Potential tables of interest: diet, ecology, ecosystem, fecundity, fooditems, maturity, popchar, popgrowth, reproduc, spawning, speed
+
+other: morphdat, oxygen
+
+```{r}
+docs(table = "diet")
+```
+
