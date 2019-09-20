@@ -69,7 +69,7 @@ mammal_ids <- get_trait_ids(mamm_trait, "itis", "msw3_id", FALSE)
 ```
 
 
-Are there any unresolved ids for birds? Yes - just one, which matched to a species and a subspecies
+Are there any unresolved ids for birds? Yes - just one, which is a synonym to two different accepted id's
 ```{r}
 unres_trait <- get_dupe_ids(bird_ids, "specid") %>%
   left_join(bird_ids)
@@ -78,16 +78,20 @@ unres_trait
 
 #resolve to the desired ID (in this case the one with complete hierarchy data)
 bird_ids <- unres_trait %>% 
-  filter(taxonRank == "species") %>%
+  filter(!is.na(kingdom)) %>%
   bind_rows(bird_ids %>% filter(!sort %in% unres_trait$sort))
 ```
 
-What about for mammals? Nope!
+What about for mammals? Yes - also a synonym to two different accepted id's. Further research shows that the Callospermophilus saturatus uses the subgenus, so we'll keep the name with the genus 
 ```{r}
 unres_mamm_trait <- get_dupe_ids(mammal_ids, "msw3_id") %>% 
   left_join(mammal_ids)
 
 unres_mamm_trait
+
+mammal_ids <- unres_mamm_trait %>% 
+  filter(acceptedNameUsageID == "ITIS:632452") %>%
+  bind_rows(mammal_ids %>% filter(!sort %in% unres_mamm_trait$sort))
 ```
 
 Join bird ids back to original trait data
