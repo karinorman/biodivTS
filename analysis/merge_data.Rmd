@@ -23,7 +23,7 @@ load(here::here("data", "amphibio.rda"))
 
 #Checking Coverage of ID's and trait data -> biotime
 
-check if all bird & mammal biotime data w/id's has an elton match. There are 63 species without a match (54 are birds).
+check if all bird & mammal biotime data w/id's has an elton match. There are 73 species without a match (63 are birds).
 ```{r}
 no_trait <- biotime_data %>%
   filter(taxa %in% c("Birds", "Mammals")) %>%
@@ -35,7 +35,7 @@ no_trait <- biotime_data %>%
 dim(no_trait)
 ```
 
-and 19869 species without an ID, some of which are species codes
+and 20136 species without an ID, some of which are species codes
 ```{r}
 biotime_data %>%
   #filter(taxa == "Birds") %>%
