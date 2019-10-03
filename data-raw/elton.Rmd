@@ -24,7 +24,8 @@ source(here::here("data-raw", "helper_functions.R"))
 Get mammal and trait data
 ```{r}
 bird_trait <- read_csv(system.file("extdata", "elton_traits/elton_traits_BirdFuncDat.csv", package = "biodivTS"))
-mamm_trait <- read.csv(system.file("extdata", "elton_traits/elton_traits_MammFuncDat.csv", package = "biodivTS"))
+mamm_trait <- read.csv(system.file("extdata", "elton_traits/elton_traits_MammFuncDat.csv", package = "biodivTS")) %>%
+  rename(nocturnal = activity_nocturnal, crepuscular = activity_crepuscular, diurnal = activity_diurnal)
 ```
 
 Check which authority would result in the most matches 

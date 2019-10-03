@@ -1,0 +1,91 @@
+---
+title: "fishtraits"
+author: "Kari Norman"
+date: "8/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(RSelenium)
+```
+
+```{r}
+clickObject <- function(selector){
+  object <- rd$findElement(using = 'css selector', selector)
+  object$clickElement()
+}
+```
+connect to Selenium server and navigate to the page
+```{r}
+driver <- rsDriver(browser = c("chrome"), chromever = "76.0.3809.126")
+rd <- driver[["client"]]
+rd$open()
+
+rd$navigate("http://www.fishtraits.info/search/taxo/")
+```
+
+see if we can get the list of all possible search items for the FID dropdown (second is dependent on the first input)
+```{r}
+#click on drop down element
+clickObject('.ui-combobox .ui-icon-triangle-1-s')
+
+#get text of the list
+fid_list <- rd$findElement('css selector', '#ui-id-1')
+fid_text <- unlist(strsplit(unlist(fid_list$getElementText()), "\n"))
+```
+
+Choose FID and Genus. All the boxes under the "columns" header unfortunately need to be checked manually because css selectors couldn't be identified for each individual box. Only have to do it once though!
+```{r}
+
+for (i in 1:length(fid_text)) {
+  #select and search the FID dropdown
+  fid <- rd$findElement(using = 'css selector', "#fid-combo")
+  fid$clearElement()
+  #pass to search box
+  print(fid_text[i])
+  fid$sendKeysToElement(list(fid_text[i]))
+  #click matching one
+  Sys.sleep(0.25)
+  clickObject("#ui-id-1")
+  
+  #get list of Genus's that are now possible
+  clickObject(".ui-combobox2 .ui-icon-triangle-1-s")
+  Sys.sleep(0.25)
+  genus_list <- rd$findElement('css selector', '#ui-id-2')
+  genus_text <- unlist(strsplit(unlist(genus_list$getElementText()), "\n"))
+  print(genus_text)
+  
+  for (j in 1:length(genus_text)) {
+    #select and search the Genus dropdown
+    genus <- rd$findElement(using = 'css selector', "#genus-combo")
+    genus$clearElement()
+    genus$sendKeysToElement(list(genus_text[j]))
+    Sys.sleep(0.15)
+    #click matching one
+    clickObject('#ui-id-2')
+
+    #select search box
+    clickObject("#searchSubmit")
+    #and download
+    clickObject("#downloadbtn")
+  }
+}
+```
+
+```{r}
+driver$server$stop()
+```
+
+Move all the files to a folder in the appropriate place
+```{r}
+library(filesstrings)
+file_names <- list.files("~/Downloads", "fishtraits*")
+
+dir.create(here::here("inst", "extdata", "fishtraits"))
+file.move(paste0("~/Downloads/", file_names), here::here("inst", "extdata", "fishtraits"))
+```
+

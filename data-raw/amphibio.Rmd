@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(taxadb)
 
 source(here::here("data-raw", "helper_functions.R"))
 ```
@@ -19,16 +20,20 @@ Get id's for amphibio database from itis
 ```{r}
 #original data from https://figshare.com/articles/Oliveira_et_al_AmphiBIO_v1/4644424
 
-amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS"))
+amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS")) %>%
+  rename_all(tolower) %>%
+  rename(diet_leaves = leaves, diet_flowers = flowers, diet_seed = seeds, diet_fruit = fruits, diet_inv = arthro, diet_vert = vert,
+         diurnal = diu, nocturnal = noc, crepuscular = crepu, bodymass_value = body_mass_g) %>%
+  mutate(diet_seed = as.numeric(diet_seed))
 
 amphibio <- amph %>%
-  mutate(id = get_ids(Species, "itis")) %>%
+  mutate(id = get_ids(species, "itis")) %>%
   filter(!is.na(id)) %>%
   mutate(scientificName = get_names(id, "itis")) %>%
-  select(id, scientificName, Species) %>%
-  right_join(select(amph, -id), by = "Species") %>%
-  rename(sourceName = Species) %>%
-  select(-c("Order", "Family", "Genus")) 
+  select(id, scientificName, species) %>%
+  right_join(select(amph, -id), by = "species") %>%
+  rename(sourceName = species) %>%
+  select(-c("order", "family", "genus")) 
 
 # Using by_ doesn't give any additional ids
 # amphibio <- by_name(amph$Species, "itis") %>%
@@ -65,7 +70,7 @@ amphibio <- amphibio %>%
 Select relevant trait columns
 ```{r}
 amphibio <- amphibio %>%
-  select(-OBS)
+  select(-obs)
 ```
 
 Check for multiple matches to the same ID

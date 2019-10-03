@@ -23,7 +23,7 @@ get_dupe_ids <- function(data, orig_id){
   orig_id <- lazyeval::as_name(orig_id)
 
   data %>%
-    distinct(acceptedNameUsageID, input, !!orig_id) %>%
+    distinct(acceptedNameUsageID, !!orig_id) %>%
     group_by(!!orig_id) %>%
     filter(n()>1) %>%
     ungroup()
@@ -35,7 +35,7 @@ match_providers <- function(data, original_provider, common = FALSE) {
   providers <- c("itis", "ncbi", "col", "gbif", "fb", "wd", "ott", "iucn")
 
   #match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species
-  alt_names <-map_df(providers[providers != original_provider], function(name) synonyms(unmatched, name)) %>%
+  alt_names <-map_df(providers[providers != original_provider], function(name) taxadb::synonyms(unmatched, name)) %>%
     drop_na(acceptedNameUsageID) %>%
     #new matches can be in either the synonym or acceptedNameUsage column, so let's combine them
     gather(type, altProviderName, synonym, acceptedNameUsage) %>%

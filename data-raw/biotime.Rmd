@@ -28,6 +28,25 @@ data <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package 
   left_join(read_csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
 ```
 
+Many of the studies with only one plot have NA for the plot number, but we want to distinguish between NA's in studies that have multiple plots and unlabled studies.
+```{r}
+#find studies that only have one plot labeled NA
+sing_study <- data %>% 
+  select(study_id, plot) %>%
+  distinct() %>%
+  group_by(study_id) %>%
+  count() %>%
+  filter(n == 1) %>%
+  pull(study_id)
+
+#replace plot NA's that are really studies with only one plot with a plot label 
+data <- data %>% 
+  mutate(plot = case_when(
+    study_id %in% sing_study & is.na(plot) ~ 1,
+    TRUE ~ plot
+  ))
+```
+
 Check which authority would result in the most matches 
 ```{r}
 ##Counts show that OTT is the best authority 
