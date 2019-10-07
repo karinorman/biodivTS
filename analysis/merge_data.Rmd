@@ -48,24 +48,13 @@ biotime_data %>%
 
 Are there any studies for which we have trait data for all species?
 ```{r}
-merge_data <- function(taxa, trait_data){
+merge_data <- function(trait_data){
   biotime_data %>%
     select(-sourceName, -scientificName) %>%
-  filter(taxa == taxa) %>%
   left_join(trait_data, by = "id",
-            na_matches = "never")
+            na_matches = "never") %>%
+    drop_na(scientificName)
 }
-
-get_coverage <- function(taxa_data){
-  coverage <- taxa_data %>%
-  group_by(study_id) %>%
-  summarise(perc = sum(!is.na(sourceName))/n()) %>%
-  arrange(desc(perc))
-}
-
-get_coverage(merge_data("Birds", elton_bird)) %>% View
-get_coverage(merge_data("Mammals", elton_mamm)) %>% View()
-get_coverage(merge_data("Amphibians", amphibio)) %>% View()
 ```
 
 Get data w/traits for all studies that have >85% trait coverage
@@ -74,21 +63,23 @@ Get data w/traits for all studies that have >85% trait coverage
 percent <- 0.85
 
 traits <- list(elton_bird, elton_mamm, amphibio)
-taxa <- list("Birds", "Mammals", "Amphibians")
 
-biotime_traits_list <- map2(taxa, traits, ~merge_data(taxa = .x, trait_data = .y))
+comp_biotime_traits <- map_dfr(traits, merge_data) %>%
+  right_join(biotime_data %>% select(-sourceName, -scientificName))
+
+#always check that one species didn't match to multiple datasets, below should return and empty dataframe
+#comp_biotime_traits %>% group_by(record_id) %>% filter(n() > 1) %>% dim()
 
 #this gives a coverage for each trait dataset, so potentially a lot of coverage with one dataset and no coverage on all the rest
 #need to get rid of zeros when there is coverage from another dataset so we only have one entry per study
-coverage <- map_dfr(biotime_traits_list, get_coverage) %>% 
-  filter(perc > 0)%>%
-  right_join(biotime_data %>% select(study_id) %>% distinct()) %>%
-  mutate(perc = replace_na(perc, 0))
-
+coverage <- comp_biotime_traits %>%
+  group_by(study_id) %>%
+  summarise(perc = sum(!is.na(sourceName))/n()) %>%
+  arrange(desc(perc))
 
 inc_coverage <- coverage %>% filter(perc > percent)
 
-biotime_traits <- map_dfr(biotime_traits_list, ~drop_na(., scientificName)) %>%
+biotime_traits <- comp_biotime_traits %>%
   filter(study_id %in% inc_coverage$study_id)
 ```
 
