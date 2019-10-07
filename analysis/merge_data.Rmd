@@ -24,7 +24,7 @@ load(here::here("data", "amphibio.rda"))
 
 #Checking Coverage of ID's and trait data -> biotime
 
-check if all bird & mammal biotime data w/id's has an elton match. There are 73 species without a match (63 are birds).
+check if all bird & mammal biotime data w/id's has an elton match. There are 68 species without a match (63 are birds).
 ```{r}
 no_trait <- biotime_data %>%
   filter(taxa %in% c("Birds", "Mammals")) %>%
@@ -36,7 +36,7 @@ no_trait <- biotime_data %>%
 dim(no_trait)
 ```
 
-and 20136 species without an ID, some of which are species codes
+and 19869 species without an ID, some of which are species codes
 ```{r}
 biotime_data %>%
   #filter(taxa == "Birds") %>%
@@ -77,11 +77,19 @@ traits <- list(elton_bird, elton_mamm, amphibio)
 taxa <- list("Birds", "Mammals", "Amphibians")
 
 biotime_traits_list <- map2(taxa, traits, ~merge_data(taxa = .x, trait_data = .y))
-coverage <- map_dfr(biotime_traits_list, get_coverage) %>%
-  filter(perc > percent)
+
+#this gives a coverage for each trait dataset, so potentially a lot of coverage with one dataset and no coverage on all the rest
+#need to get rid of zeros when there is coverage from another dataset so we only have one entry per study
+coverage <- map_dfr(biotime_traits_list, get_coverage) %>% 
+  filter(perc > 0)%>%
+  right_join(biotime_data %>% select(study_id) %>% distinct()) %>%
+  mutate(perc = replace_na(perc, 0))
+
+
+inc_coverage <- coverage %>% filter(perc > percent)
 
 biotime_traits <- map_dfr(biotime_traits_list, ~drop_na(., scientificName)) %>%
-  filter(study_id %in% coverage$study_id)
+  filter(study_id %in% inc_coverage$study_id)
 ```
 
 ```{r}
@@ -132,30 +140,47 @@ fd <- biotime_traits %>%
   group_by(study_id, year, plot) %>%
   filter(n_distinct(id) > 4) %>%
   ungroup() %>%
+  filter(study_id == 516) %>%
   group_by(study_id, plot) %>%
-  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
+  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot)) %>%
+  bind_rows()
 ```
 
 Read data back in:
 ```{r}
-files <-  dir(here::here("data", "fd_output"), "*.tsv")
-
-fd_data <- files %>%
-  paste0(here::here("data", "fd_output"), "/", .) %>%
-  map_dfr(read_tsv)
-
-fd <- biotime_traits %>% 
-  filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
-  anti_join(fd_data) %>%
-  group_by(study_id, year, plot) %>%
-  filter(n_distinct(id) > 4) %>%
-  ungroup() %>%
-  group_by(study_id, plot) %>%
-  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
-
-#4610981
-#7611121
+# files <-  dir(here::here("data", "fd_output"), "*.tsv")
+# 
+# fd_data <- files %>%
+#   paste0(here::here("data", "fd_output"), "/", .) %>%
+#   map_dfr(read_tsv)
+# 
+# fd <- biotime_traits %>% 
+#   filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
+#   anti_join(fd_data) %>%
+#   group_by(study_id, year, plot) %>%
+#   filter(n_distinct(id) > 4) %>%
+#   ungroup() %>%
+#   group_by(study_id, plot) %>%
+#   group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
+# 
+# #4610981
+# #7611121
 
 ```
 
+Format tables
+```{r}
+fd_table <- fd %>% 
+  select(year, study_id, plot, richness = nbsp, everything(), -sing.sp) %>%
+  gather(metric, value, contains("F"), RaoQ) %>%
+  View()
+
+study_table <- biotime_data %>%
+  group_by(study_id) %>%
+  mutate(min_year = min(year), max_year = max(year)) %>% 
+  #select(study_id, plot, taxa, latitude, longitude, min_year, max_year) %>%
+  select(study_id, taxa, min_year, max_year) %>%
+  distinct() %>%
+  left_join(coverage, by = "study_id")
+```
 
