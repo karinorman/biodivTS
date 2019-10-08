@@ -80,11 +80,25 @@ coverage <- comp_biotime_traits %>%
 inc_coverage <- coverage %>% filter(perc > percent)
 
 biotime_traits <- comp_biotime_traits %>%
-  filter(study_id %in% inc_coverage$study_id)
+  filter(study_id %in% inc_coverage$study_id, !is.na(sourceName))
 ```
 
 ```{r}
 usethis::use_data(biotime_traits)
+```
+
+
+Create table of info for each study
+```{r}
+study_table <- biotime_data %>%
+  group_by(study_id) %>%
+  mutate(min_year = min(year), max_year = max(year)) %>% 
+  #select(study_id, plot, taxa, latitude, longitude, min_year, max_year) %>%
+  select(study_id, taxa, min_year, max_year) %>%
+  distinct() %>%
+  left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
+
+usethis::use_data(study_table)
 ```
 
 Get FD metrics for each study 
@@ -165,13 +179,5 @@ fd_table <- fd %>%
   select(year, study_id, plot, richness = nbsp, everything(), -sing.sp) %>%
   gather(metric, value, contains("F"), RaoQ) %>%
   View()
-
-study_table <- biotime_data %>%
-  group_by(study_id) %>%
-  mutate(min_year = min(year), max_year = max(year)) %>% 
-  #select(study_id, plot, taxa, latitude, longitude, min_year, max_year) %>%
-  select(study_id, taxa, min_year, max_year) %>%
-  distinct() %>%
-  left_join(coverage, by = "study_id")
 ```
 
