@@ -31,7 +31,7 @@ bien <- BIEN_data %>%
 Get id's for just the unique 
 ```{r}
 bien_ids <- bien %>% 
-  select(scientifcName) %>%
+  select(scientificName) %>%
   distinct() %>%
   mutate(id = get_ids(scientificName))
 ```
