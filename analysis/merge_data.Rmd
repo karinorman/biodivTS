@@ -135,12 +135,20 @@ get_fd <- function(data, study, plot_num){
     arrange(id) %>%
     column_to_rownames("id")
   
-  dir.create(paste0(here::here("data"), "/fd_output"), showWarnings = FALSE)
+  fs::dir_create(paste0(here::here("data"), "/fd_output"))
   
+  #the convexhull c code creates an output file of vertices, in order to not have multiple threads writing
+  #to the same file we have to create individual working directories
+  tmp_dir <- paste0(here::here("data", "fd_output", "tmp"), "/tmp_", study, plot_num)
+  fs::dir_create(tmp_dir)
+  setwd(tmp_dir)
+
   as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
     cbind(years, .) %>%
     mutate(study_id = unlist(study), plot = unlist(plot_num)) %>%
     write_tsv(paste0(here::here("data"), "/fd_output/", "s", study, "_p", plot_num, "_fd.tsv"))
+  
+  setwd(here::here())
 }
 
 get_fd_safe <- possibly(get_fd, NA)
