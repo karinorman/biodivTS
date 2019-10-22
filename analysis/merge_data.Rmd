@@ -105,8 +105,12 @@ Get FD metrics for each study
 ```{r}
 load(here::here("data", "biotime_traits.rda"))
 
-get_fd <- function(data, study, plot){
+get_fd <- function(data, study, plot_num){
   print(max(data$record_id))
+  
+  data <- data %>%
+    filter(study_id == study, plot == plot_num)
+  
   species_mat <- data %>%
     select(year, id) %>% 
     distinct() %>%
@@ -132,16 +136,16 @@ get_fd <- function(data, study, plot){
   
   dir.create(paste0(here::here("data"), "/fd_output"), showWarnings = FALSE)
   
-  as.tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
+  as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
     cbind(years, .) %>%
-    mutate(study_id = study, plot = plot, n_traits = ncol(trait_mat)) %>%
-    write_tsv(paste0(here::here("data"), "/fd_output/", "s", study, "_p", plot, "_fd.tsv"))
+    mutate(study_id = unlist(study), plot = unlist(plot_num)) %>%
+    write_tsv(paste0(here::here("data"), "/fd_output/", "s", study, "_p", plot_num, "_fd.tsv"))
 }
 
 get_fd_safe <- possibly(get_fd, NA)
 
 data <- biotime_traits %>% 
-  filter(!is.na(plot)) %>%
+  filter(!is.na(plot), !is.na(scientificName)) %>% #remove unlabeled plots and observations without traits
   group_by(study_id, year, plot) %>%
   filter(n_distinct(id) > 4) %>%
   ungroup() %>%
@@ -149,28 +153,28 @@ data <- biotime_traits %>%
 
 combs <- cross2(unique(data$study_id), unique(data$plot))
 
-fd <- map_df(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2]))  
+fd <- map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2]))  
 ```
 
 Read data back in:
 ```{r}
-# files <-  dir(here::here("data", "fd_output"), "*.tsv")
-# 
-# fd_data <- files %>%
-#   paste0(here::here("data", "fd_output"), "/", .) %>%
-#   map_dfr(read_tsv)
-# 
-# fd <- biotime_traits %>% 
-#   filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
-#   anti_join(fd_data) %>%
-#   group_by(study_id, year, plot) %>%
-#   filter(n_distinct(id) > 4) %>%
-#   ungroup() %>%
-#   group_by(study_id, plot) %>%
-#   group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
-# 
-# #4610981
-# #7611121
+files <-  dir(here::here("data", "fd_output"), "*.tsv")
+
+fd_data <- files %>%
+  paste0(here::here("data", "fd_output"), "/", .) %>%
+  map_dfr(read_tsv)
+
+fd <- biotime_traits %>%
+  filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
+  anti_join(fd_data) %>%
+  group_by(study_id, year, plot) %>%
+  filter(n_distinct(id) > 4) %>%
+  ungroup() %>%
+  group_by(study_id, plot) %>%
+  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
+
+#4610981
+#7611121
 
 ```
 
