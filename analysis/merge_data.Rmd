@@ -103,6 +103,7 @@ usethis::use_data(study_table)
 
 Get FD metrics for each study 
 ```{r}
+library(furrr)
 load(here::here("data", "biotime_traits.rda"))
 
 get_fd <- function(data, study, plot_num){
@@ -153,7 +154,8 @@ data <- biotime_traits %>%
 
 combs <- cross2(unique(data$study_id), unique(data$plot))
 
-fd <- map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2]))  
+plan(multiprocess)
+fd <- future_map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2]))  
 ```
 
 Read data back in:
