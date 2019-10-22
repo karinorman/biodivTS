@@ -145,7 +145,7 @@ get_fd <- function(data, study, plot_num){
 
   fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
     cbind(years, .) %>%
-    mutate(study_id = unlist(study), plot = unlist(plot_num)) %>%
+    mutate(study_id = unlist(study), plot = unlist(plot_num), trait_count = dim(trait_mat)[2]) %>%
     write_tsv(paste0(here::here("data"), "/fd_output/", "s", study, "_p", plot_num, "_fd.tsv"))
   
   setwd(here::here())
