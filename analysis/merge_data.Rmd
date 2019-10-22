@@ -143,12 +143,13 @@ get_fd <- function(data, study, plot_num){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
+  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
     cbind(years, .) %>%
     mutate(study_id = unlist(study), plot = unlist(plot_num)) %>%
     write_tsv(paste0(here::here("data"), "/fd_output/", "s", study, "_p", plot_num, "_fd.tsv"))
   
   setwd(here::here())
+  return(fd_out)
 }
 
 get_fd_safe <- possibly(get_fd, NA)
@@ -168,23 +169,23 @@ fd <- future_map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[
 
 Read data back in:
 ```{r}
-files <-  dir(here::here("data", "fd_output"), "*.tsv")
-
-fd_data <- files %>%
-  paste0(here::here("data", "fd_output"), "/", .) %>%
-  map_dfr(read_tsv)
-
-fd <- biotime_traits %>%
-  filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
-  anti_join(fd_data) %>%
-  group_by(study_id, year, plot) %>%
-  filter(n_distinct(id) > 4) %>%
-  ungroup() %>%
-  group_by(study_id, plot) %>%
-  group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
-
-#4610981
-#7611121
+# files <-  dir(here::here("data", "fd_output"), "*.tsv")
+# 
+# fd_data <- files %>%
+#   paste0(here::here("data", "fd_output"), "/", .) %>%
+#   map_dfr(read_tsv)
+# 
+# fd <- biotime_traits %>%
+#   filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
+#   anti_join(fd_data) %>%
+#   group_by(study_id, year, plot) %>%
+#   filter(n_distinct(id) > 4) %>%
+#   ungroup() %>%
+#   group_by(study_id, plot) %>%
+#   group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
+# 
+# #4610981
+# #7611121
 
 ```
 
