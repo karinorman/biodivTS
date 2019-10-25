@@ -159,12 +159,13 @@ data <- biotime_traits %>%
   group_by(study_id, year, plot) %>%
   filter(n_distinct(id) > 4) %>%
   ungroup() %>%
-  filter(study_id == 516)
+  filter(!study_id %in% c(195, 360), #exclude because they break
+         !study_id %in% c(217, 327)) #exclude to get the file size smaller
 
 combs <- cross2(unique(data$study_id), unique(data$plot))
 
 plan(multiprocess)
-fd <- future_map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2]))  
+system.time(fd <- future_map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2])))
 ```
 
 Read data back in:
