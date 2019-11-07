@@ -102,15 +102,19 @@ usethis::use_data(study_table)
 ```
 
 Get FD metrics for each study 
+
+FD function:
 ```{r}
 library(furrr)
 load(here::here("data", "biotime_traits.rda"))
 
 get_fd <- function(data, study, plot_num){
-  print(max(data$record_id))
+  require(FD)
   
   data <- data %>%
     filter(study_id == study, plot == plot_num)
+  
+  print(max(data$record_id))
   
   species_mat <- data %>%
     select(year, id) %>% 
@@ -153,7 +157,10 @@ get_fd <- function(data, study, plot_num){
 }
 
 get_fd_safe <- possibly(get_fd, NA)
+```
 
+First pass at calculating FD metrics
+```{r}
 data <- biotime_traits %>% 
   filter(!is.na(plot), !is.na(scientificName)) %>% #remove unlabeled plots and observations without traits
   group_by(study_id, year, plot) %>%
@@ -162,39 +169,50 @@ data <- biotime_traits %>%
   filter(!study_id %in% c(195, 360), #exclude because they break
          !study_id %in% c(217, 327)) #exclude to get the file size smaller
 
-combs <- cross2(unique(data$study_id), unique(data$plot))
+combs <- data %>%
+  select(study_id, plot) %>%
+  distinct()
 
 plan(multiprocess)
-system.time(fd <- future_map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2])))
+system.time(fd <- future_pmap_dfr(combs, ~ get_fd(data = data, study = .x, plot = .y)))
 ```
 
-Read data back in:
+Read data back in, excluding sites/plots as they become a problem:
 ```{r}
-# files <-  dir(here::here("data", "fd_output"), "*.tsv")
-# 
-# fd_data <- files %>%
-#   paste0(here::here("data", "fd_output"), "/", .) %>%
-#   map_dfr(read_tsv)
-# 
-# fd <- biotime_traits %>%
-#   filter(!is.na(plot), !study_id %in% c(195, 360)) %>%
-#   anti_join(fd_data) %>%
-#   group_by(study_id, year, plot) %>%
-#   filter(n_distinct(id) > 4) %>%
-#   ungroup() %>%
-#   group_by(study_id, plot) %>%
-#   group_map(~get_fd_safe(.x, study = .y$study_id, plot = .y$plot))
-# 
-# #4610981
-# #7611121
+files <-  dir(here::here("data", "fd_output"), "*.tsv")
 
+fd_data <- files %>%
+  paste0(here::here("data", "fd_output"), "/", .) %>%
+  map_dfr(read_tsv)
+
+remain <- biotime_traits %>%
+  filter(!is.na(plot), !is.na(scientificName)) %>% #remove unlabeled plots and observations without traits
+  filter(!is.na(plot), !study_id %in% c(195, 360),
+         !study_id %in% c(217, 327), #exclude to get the file size smaller
+         !study_id %in% c(59, 166, 337), #NA's in the distance matrix
+         study_id != 169,  #Zero distance error
+         !study_id %in% c(372,374), #Qhull error code 4
+         study_id != 333) %>% #species distance matrix not Euclidean after 'sqrt' correction
+  filter(study_id != 56 | plot != 24) %>% #NA's in the distance matrix
+  anti_join(fd_data, by = c("year", "study_id", "plot")) %>%
+  group_by(study_id, year, plot) %>%
+  filter(n_distinct(id) > 4) %>%
+  ungroup()
+
+combs <- remain %>%
+  select(study_id, plot) %>%
+  distinct()
+
+plan(multiprocess)
+system.time(fd <- future_pmap_dfr(combs, ~ get_fd(data = remain, study = .x, plot = .y)))
 ```
 
 Format tables
 ```{r}
-fd_table <- fd %>% 
+fd_table <- fd_data %>% 
   select(year, study_id, plot, richness = nbsp, everything(), -sing.sp) %>%
-  gather(metric, value, contains("F"), RaoQ) %>%
-  View()
+  gather(metric, value, contains("F"), RaoQ)
+
+usethis::use_data(fd_table)
 ```
 
