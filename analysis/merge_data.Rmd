@@ -165,7 +165,7 @@ data <- biotime_traits %>%
 combs <- cross2(unique(data$study_id), unique(data$plot))
 
 plan(multiprocess)
-system.time(fd <- future_map_dfr(combs, ~ get_fd_safe(data = data, study = .x[1], plot = .x[2])))
+system.time(fd <- future_map_dfr(combs, ~ get_fd_safe(study_id, plot, data = data)))
 ```
 
 Read data back in:
