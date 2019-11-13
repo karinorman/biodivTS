@@ -26,6 +26,20 @@ columns <- purrr::map(tables, ~docs(table = .x)$column_name) %>% unlist()
 
 download all the tables
 ```{r}
+#diet <- diet()
+
+eco <- ecology() %>% 
+  select(-c(autoctr, StockCode, EcologyRefNo, DietRemark, FoodRemark, AddRems, OutsideHost, OHRemarks, InsideHost),
+                            -ends_with("Ref"), -starts_with("Associations"))
+
+ecosys <- ecosystem() %>%
+  select(EcosystemType, Salinity, Climate, Polar, Boreal, Temperate)
+
+fec <- fecundity()
+
+food <- fooditems()
+
+mat <- maturity()
 
 ```
 

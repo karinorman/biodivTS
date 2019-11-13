@@ -118,11 +118,11 @@ dbFD_joggle <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani
           x.dist <- dist(x.s)
         }
         else {
-          x.dist <- gowdis(x, w = w, ord = ord, asym.bin = asym.bin)
+          x.dist <- FD::gowdis(x, w = w, ord = ord, asym.bin = asym.bin)
         }
       }
       else {
-        x.dist <- gowdis(x, w = w, ord = ord, asym.bin = asym.bin)
+        x.dist <- FD::gowdis(x, w = w, ord = ord, asym.bin = asym.bin)
       }
     }
     if (t.x == 1) {
@@ -225,7 +225,7 @@ dbFD_joggle <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani
     else x <- x
     x <- data.frame(x)
     dimnames(x) <- list(x.rn, "Trait")
-    x.dist <- gowdis(x, w = w, ord = ord, asym.bin = asym.bin)
+    x.dist <- FD::gowdis(x, w = w, ord = ord, asym.bin = asym.bin)
   }
   if (is.factor(x) & !is.ordered(x)) {
     if (any(is.na(x))) {
