@@ -223,3 +223,29 @@ fd_table <- fd_data %>%
 usethis::use_data(fd_table)
 ```
 
+#Correct FD for species richness
+
+First for one study, 311
+```{r}
+model_data <- fd_table %>% filter(metric == "FRic", study_id == 311)
+fit <- glm(value ~ year + richness, data = model_data)
+
+pred_vars <- model_data %>% 
+  select(richness, year) %>% 
+  distinct() %>%
+  mutate(fric_pred = predict(fit, ., type = "response"))
+
+plot_data <- left_join(model_data, pred_vars) %>%
+  mutate(fric_adj = value - fric_pred,
+         fric_adj = ifelse(fric_adj > 0, fric_adj, 0))
+
+plot_data %>%
+  ggplot() +
+  geom_line(aes(x = year, y = value), color = "blue") +
+  geom_line(aes(x = year, y = fric_pred), color = "red") +
+  geom_line(aes(x = year, y = fric_adj), color = "black") +
+  scale_x_continuous(breaks = scales::pretty_breaks()) +
+  theme(legend.position = "none") +
+  ylab("Fric")
+```
+
