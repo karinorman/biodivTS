@@ -1,0 +1,66 @@
+---
+title: "Visualization"
+author: "Kari Norman"
+date: "9/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+load(here::here("data", "biotime_data.rda"))
+```
+
+```{r}
+usa <- map_data("usa")
+
+plt <- ggplot() +
+  geom_polygon(data = usa, aes(x=long, y = lat, group = group), fill = NA, color = "black") +
+  coord_fixed(1.3)
+
+plt +
+  geom_point(data = biotime_data %>% filter(taxa == "Fish"), aes(x = longitude, y = latitude), color = "black", size = .25)
+
+```
+
+#Visualizing FD trends
+```{r}
+load(here::here("data", "fd_table.rda"))
+
+fric_plot <- fd_table %>%
+  filter(metric == "FRic") %>%
+  ggplot(aes(
+    x = year,
+    y = value,
+    colour = as.factor(plot)
+  )) +
+  geom_line() +
+  scale_x_continuous(breaks = scales::pretty_breaks()) +
+  facet_wrap( ~ as.factor(study_id), scales = "free") +
+  theme(legend.position = "none") +
+  ylab("Fric")
+
+ggsave("fric_trends.png", fric_plot)
+```
+
+Reproduce Dornelas figure
+```{r}
+#get climate classification
+metadata <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS"))
+
+fd_table %>%
+  filter(metric == "FRic") %>%
+  left_join(metadata %>% select(study_id, climate)) %>%
+  unite(id, study_id, plot) %>%
+  ggplot(aes(x = year, y = log(value))) +
+  geom_smooth(aes(color = climate, group = id), method = "glm", se = FALSE) +
+  geom_point(aes(color = climate, group = id)) +
+  geom_smooth(color = "black", method = "glm", se = FALSE) +
+  theme(legend.position = "none") 
+```
