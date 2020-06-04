@@ -148,6 +148,5 @@ barplot(euc.pco$eig)
 traits <- euc.pco$points
 row.names(traits) <- row.names(traits2)
 
-
 ```
 
