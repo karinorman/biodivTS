@@ -1,0 +1,104 @@
+---
+title: "null_model"
+author: "Kari Norman"
+date: "6/2/2020"
+output: html_document
+---
+
+```{r}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Create null models that would be transferable to any timeseries by treating the species pool as all species observed across the timeseries.
+
+Simulation functions
+```{r}
+load(here::here("data", "biotime_traits.rda"))
+
+get_plot_sample <- function(data, study, plot_id, n){
+  rich_levels <- data %>%
+    filter(study_id == study, plot == plot_id) %>%
+    select(year, id) %>%
+    distinct() %>%
+    count(year) %>%
+    pull(n) %>%
+    unique()
+  
+  species_pool <- data %>% 
+    filter(study_id == study, plot == plot_id) %>%
+    pull(id) %>%
+    unique() #get column of unique scientific names
+  
+  get_samp_species <- function(richness){
+    samp_species <- sample(species_pool, richness)
+    df <- cbind(richness, samp_species)
+    return(df)
+  }
+  
+  site_samples <- data.frame()
+  for (j in 1:n){
+    iter_samples <- data.frame()
+    for(i in rich_levels){
+    iter_samples <- rbind(iter_samples, get_samp_species(i))
+    }
+    site_samples <- rbind(site_samples, iter_samples %>% mutate(n = j))
+  }
+  site_samples %>%
+    mutate(study_id = study, plot = plot_id, value = 1) %>%
+    spread(samp_species, value)
+ # return(site_samples %>% mutate(study_id = study, plot = plot_id))
+}
+
+#drop trait columns that are the same value for every observation, and therefore providing no additional info
+clean_trait_matrix <- function(trait_matrix){
+  uniq_vals <- sapply(trait_matrix, function(x){length(unique(x))}) #get number of unique values of each trait
+  col_names <- names(which(uniq_vals == 1)) #find columns where there is only one value for all observations
+  return(select(trait_matrix, -col_names))
+}
+
+get_sample_FD <- function(data, n){
+  #get random sample for each region and richness level
+  plots <- data %>%
+    select(site_id, plot) %>%
+    distinct()
+  
+  sample_occurrence <- pmap_dfr(plots[1:10,], get_plot_sample) 
+  
+  sample_species_mat <- select(sample_occurrence, -richness, -site_id) %>% #want only species x site info
+    select(sort(current_vars())) #sort columns to be in alphabetical order, required for dbFDI()
+  sample_trait_mat <- clean_trait_matrix(get_trait_matrix(colnames(sample_species_mat)))
+
+  sample_fd <- as.data.frame(dbFD_joggle(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE))
+ 
+  df <- sample_occurrence %>%
+    select(region, richness) %>%
+    bind_cols(sample_fd) %>%
+    mutate(merge_test = case_when(
+      richness == nbsp ~ TRUE,
+      TRUE ~ FALSE
+    ))
+  
+  if(sum(df$merge_test) != dim(df)[1]) warning("richness and region columns may not have been appropriately joined with FD data")
+  
+  path <- paste0(here(), "/data/fd_site_samples/", x, "_tmp.tsv.bz2")
+  write_tsv(df, path)
+  #pb_upload(path)
+}
+```
+
+```{r}
+n <- 100 #sample size
+
+if(!dir.exists(here::here("data", "fd_site_samples"))){
+  dir.create(paste0(here::here(), "/data/fd_site_samples"))
+  system.time({out <- future_map(1:n, get_sample_FD)})
+}
+
+sim <- purrr::map_dfr(fs::dir_ls(path = here::here("data", "fd_samples"), glob="*.tsv.bz2"), readr::read_tsv, .id = "sample")
+
+```
+
+
+```
+
