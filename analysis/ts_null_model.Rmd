@@ -10,6 +10,10 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+```
+
 Create null models that would be transferable to any timeseries by treating the species pool as all species observed across the timeseries.
 
 Simulation functions
@@ -28,6 +32,7 @@ get_plot_sample <- function(data, study, plot_id, n){
   species_pool <- data %>% 
     filter(study_id == study, plot == plot_id) %>%
     pull(id) %>%
+    na.omit() %>%
     unique() #get column of unique scientific names
   
   get_samp_species <- function(richness){
@@ -46,8 +51,7 @@ get_plot_sample <- function(data, study, plot_id, n){
   }
   site_samples %>%
     mutate(study_id = study, plot = plot_id, value = 1) %>%
-    spread(samp_species, value)
- # return(site_samples %>% mutate(study_id = study, plot = plot_id))
+    pivot_wider(names_from = samp_species, values_from = value, values_fill = list(value = 0))
 }
 
 #drop trait columns that are the same value for every observation, and therefore providing no additional info
@@ -57,47 +61,57 @@ clean_trait_matrix <- function(trait_matrix){
   return(select(trait_matrix, -col_names))
 }
 
-get_sample_FD <- function(data, n){
-  #get random sample for each region and richness level
-  plots <- data %>%
-    select(site_id, plot) %>%
-    distinct()
-  
-  sample_occurrence <- pmap_dfr(plots[1:10,], get_plot_sample) 
-  
-  sample_species_mat <- select(sample_occurrence, -richness, -site_id) %>% #want only species x site info
-    select(sort(current_vars())) #sort columns to be in alphabetical order, required for dbFDI()
-  sample_trait_mat <- clean_trait_matrix(get_trait_matrix(colnames(sample_species_mat)))
-
-  sample_fd <- as.data.frame(dbFD_joggle(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE))
- 
-  df <- sample_occurrence %>%
-    select(region, richness) %>%
-    bind_cols(sample_fd) %>%
-    mutate(merge_test = case_when(
-      richness == nbsp ~ TRUE,
-      TRUE ~ FALSE
-    ))
-  
-  if(sum(df$merge_test) != dim(df)[1]) warning("richness and region columns may not have been appropriately joined with FD data")
-  
-  path <- paste0(here(), "/data/fd_site_samples/", x, "_tmp.tsv.bz2")
-  write_tsv(df, path)
-  #pb_upload(path)
+get_trait_matrix <- function(species_list, trait_list){ 
+  traits <- biotime_traits %>%
+    filter(id %in% species_list) %>%
+    dplyr::select(id, all_of(trait_list)) %>%
+    distinct() %>%
+    arrange(id) %>%
+    column_to_rownames(var = "id")
 }
 ```
+
+Get dataframe of samples for each plot and corresponding species and trait matrices
+```{r}
+n = 100
+
+plots <- biotime_traits %>%
+    select(study = study_id, plot_id = plot) %>%
+    distinct()
+
+sample_occurrence <- pmap_dfr(plots[1:10,], get_plot_sample, data = biotime_traits, n = n) %>%
+  replace(is.na(.), 0)
+
+sample_species_mat <- select(sample_occurrence, -c(richness, study_id, plot, n)) %>% #want only species x site info
+  select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
+
+traits <- colnames(biotime_traits)[17:64]
+sample_trait_mat <- clean_trait_matrix(get_trait_matrix(colnames(sample_species_mat), traits))
+```
+
+Explore different functional diversity approaches, starting with original FD application
 
 ```{r}
-n <- 100 #sample size
+library(FD)
 
-if(!dir.exists(here::here("data", "fd_site_samples"))){
-  dir.create(paste0(here::here(), "/data/fd_site_samples"))
-  system.time({out <- future_map(1:n, get_sample_FD)})
-}
+#get diversity metrics from FD package
+sample_fd <- as.data.frame(dbFD(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE))
 
-sim <- purrr::map_dfr(fs::dir_ls(path = here::here("data", "fd_samples"), glob="*.tsv.bz2"), readr::read_tsv, .id = "sample")
+ #checks for merging output with richness/study info
+df <- sample_occurrence %>%
+  select(richness, study_id, plot, n) %>%
+  bind_cols(sample_fd) %>%
+  mutate(merge_test = case_when(richness == nbsp ~ TRUE,
+                                TRUE ~ FALSE))
 
+if (sum(df$merge_test) != dim(df)[1])
+  warning("richness and region columns may not have been appropriately joined with FD data")
 ```
+
+BAT
+```{r}
+library(BAT)
+
 
 
 ```
