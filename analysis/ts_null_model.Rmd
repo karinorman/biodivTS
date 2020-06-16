@@ -5,35 +5,35 @@ date: "6/2/2020"
 output: html_document
 ---
 
-```{r}
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
 library(tidyverse)
+library(biodivTS)
 ```
 
 Create null models that would be transferable to any timeseries by treating the species pool as all species observed across the timeseries.
 
 Simulation functions
 ```{r}
-load(here::here("data", "biotime_traits.rda"))
-
-get_plot_sample <- function(data, study, plot_id, n){
-  rich_levels <- data %>%
-    filter(study_id == study, plot == plot_id) %>%
+get_plot_sample <- function(data, filter_plot, n){
+  plot_data <- data %>% filter(plot_id == filter_plot)
+  
+  rich_levels <- plot_data %>%
     select(year, id) %>%
     distinct() %>%
     count(year) %>%
     pull(n) %>%
     unique()
   
-  species_pool <- data %>% 
-    filter(study_id == study, plot == plot_id) %>%
+  species_pool <- plot_data %>%
     pull(id) %>%
     na.omit() %>%
     unique() #get column of unique scientific names
+  
+  if (length(species_pool) < max(rich_levels)) browser()
   
   get_samp_species <- function(richness){
     samp_species <- sample(species_pool, richness)
@@ -50,8 +50,8 @@ get_plot_sample <- function(data, study, plot_id, n){
     site_samples <- rbind(site_samples, iter_samples %>% mutate(n = j))
   }
   site_samples %>%
-    mutate(study_id = study, plot = plot_id, value = 1) %>%
-    pivot_wider(names_from = samp_species, values_from = value, values_fill = list(value = 0))
+    mutate(plot_id = filter_plot, value = 1) %>%
+    pivot_wider(names_from = samp_species, values_from = value)
 }
 
 #drop trait columns that are the same value for every observation, and therefore providing no additional info
@@ -61,8 +61,8 @@ clean_trait_matrix <- function(trait_matrix){
   return(select(trait_matrix, -col_names))
 }
 
-get_trait_matrix <- function(species_list, trait_list){ 
-  traits <- biotime_traits %>%
+get_trait_matrix <- function(data, species_list, trait_list){ 
+  traits <- data %>%
     filter(id %in% species_list) %>%
     dplyr::select(id, all_of(trait_list)) %>%
     distinct() %>%
@@ -73,45 +73,80 @@ get_trait_matrix <- function(species_list, trait_list){
 
 Get dataframe of samples for each plot and corresponding species and trait matrices
 ```{r}
+load(here::here("data", "biotime_traits.rda"))
+
+biotime_traits <- biotime_traits %>%
+  mutate(plot_id = paste0(study_id, plot)) %>%
+  filter(!is.na(id))
+
 n = 100
 
-plots <- biotime_traits %>%
-    select(study = study_id, plot_id = plot) %>%
-    distinct()
-
-sample_occurrence <- pmap_dfr(plots[1:10,], get_plot_sample, data = biotime_traits, n = n) %>%
+sample_occurrence <- map_dfr(unique(biotime_traits$plot_id), get_plot_sample, data = biotime_traits, n = n) %>%
   replace(is.na(.), 0)
 
-sample_species_mat <- select(sample_occurrence, -c(richness, study_id, plot, n)) %>% #want only species x site info
-  select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
+#colnames(biotime_traits)[17:64]
 
-traits <- colnames(biotime_traits)[17:64]
-sample_trait_mat <- clean_trait_matrix(get_trait_matrix(colnames(sample_species_mat), traits))
-```
+get_plot_FD <- function(data, trait_range, occ_df, filter_plot) {
+  sample_species_mat <- occ_df %>%
+    filter(plot_id == filter_plot) %>%
+    select(-c(richness, plot_id, n)) %>% #want only species x site info
+    select_if(!colSums(.) %in% c(0, NA)) %>% #remove species that don't occur in the plot
+    select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
+  
+  traits <- colnames(data)[trait_range]
+  sample_trait_mat <-
+    clean_trait_matrix(get_trait_matrix(data = data, colnames(sample_species_mat), traits))
+  
+  sample_fd <- as.data.frame(dbFD_joggle(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE))
+  
+  df <- occ_df %>%
+    filter(plot_id == filter_plot) %>%
+    select(richness, plot_id, n) %>%
+    bind_cols(sample_fd) %>%
+    mutate(merge_test = case_when(richness == nbsp ~ TRUE,
+                                  TRUE ~ FALSE))
+  
+  if (sum(df$merge_test) != dim(df)[1])
+    warning("richness and region columns may not have been appropriately joined with FD data")
+  
+  return(df %>% select(-merge_test))
+}
 
-Explore different functional diversity approaches, starting with original FD application
-
-```{r}
-library(FD)
-
-#get diversity metrics from FD package
-sample_fd <- as.data.frame(dbFD(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE))
-
- #checks for merging output with richness/study info
-df <- sample_occurrence %>%
-  select(richness, study_id, plot, n) %>%
-  bind_cols(sample_fd) %>%
-  mutate(merge_test = case_when(richness == nbsp ~ TRUE,
-                                TRUE ~ FALSE))
-
-if (sum(df$merge_test) != dim(df)[1])
-  warning("richness and region columns may not have been appropriately joined with FD data")
+test <- get_plot_FD(biotime_traits, 17:64, sample_occurrence, 5617)
 ```
 
 BAT
 ```{r}
 library(BAT)
 
+get_plot_BAT <- function(data, trait_range, occ_df, filter_plot) {
+  sample_species_mat <- occ_df %>%
+    filter(plot_id == filter_plot) %>%
+    select(-c(richness, plot_id, n)) %>% #want only species x site info
+    select_if(!colSums(.) %in% c(0, NA)) %>% #remove species that don't occur in the plot
+    select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
+  
+  traits <- colnames(data)[trait_range]
+  sample_trait_mat <-
+    clean_trait_matrix(get_trait_matrix(data = data, colnames(sample_species_mat), traits))
+  
+  #get distance matrix
+  dist_traits <-  gowdis(sample_trait_mat)
+  trait.pco <- dudi.pco(quasieuclid(dist_traits), scannf = FALSE, full = TRUE)
+  
+}
+
+test <- get_plot_BAT(biotime_traits, 17:64, sample_occurrence, 5617)
+
+
+ower.mat_spider <- gower.dist(traits)
+euc.pco <- pco(gower.mat_spider,k=3)
+
+barplot(euc.pco$eig)
+(euc.pco$eig[1]+euc.pco$eig[2]+euc.pco$eig[3])/sum(euc.pco$eig[euc.pco$eig > 0]) #0.955 variance explained by first 3 axes
+
+traits <- euc.pco$points
+row.names(traits) <- row.names(traits2)
 
 
 ```
