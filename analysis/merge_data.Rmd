@@ -263,7 +263,7 @@ get_BAT_fd <- function(data, filter_plot){
   #get PCA trait matrix
   trait_dist <- gower.dist(trait_mat)
   trait_pco <- pco(trait_dist, k = axes95(trait_dist))
-  
+
   traits <- trait_pco$points
   rownames(traits) <- rownames(trait_mat)
   
