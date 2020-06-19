@@ -21,6 +21,7 @@ Get id's for amphibio database from itis
 #original data from https://figshare.com/articles/Oliveira_et_al_AmphiBIO_v1/4644424
 
 amph <- read_csv(system.file("extdata", "amphibio/AmphiBIO_v1.csv", package = "biodivTS")) %>%
+  select(-id) %>%
   rename_all(tolower) %>%
   rename(diet_leaves = leaves, diet_flowers = flowers, diet_seed = seeds, diet_fruit = fruits, diet_inv = arthro, diet_vert = vert,
          diurnal = diu, nocturnal = noc, crepuscular = crepu, bodymass_value = body_mass_g) %>%
@@ -31,14 +32,25 @@ amphibio <- amph %>%
   filter(!is.na(id)) %>%
   mutate(scientificName = get_names(id, "itis")) %>%
   select(id, scientificName, species) %>%
-  right_join(select(amph, -id), by = "species") %>%
+  right_join(amph, by = "species") %>%
   rename(sourceName = species) %>%
   select(-c("order", "family", "genus")) 
 
-# Using by_ doesn't give any additional ids
-# amphibio <- by_name(amph$Species, "itis") %>%
-#   filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
-#   drop_na(acceptedNameUsageID)
+#two entries need to be resolved by hand
+add_ids <- amphibio %>%
+  filter(is.na(id)) %>%
+  pull(sourceName) %>%
+  filter_name(., "itis") %>%
+  filter(!is.na(acceptedNameUsageID)) %>%
+  select(scientificName, id = acceptedNameUsageID) %>%
+  distinct() %>%
+  left_join(amph, by = c("scientificName" = "species")) %>%
+  select(-c("order", "family", "genus")) %>%
+  mutate(sourceName = scientificName)
+  
+amphibio <- amphibio %>% 
+  filter(!sourceName %in% add_ids$sourceName) %>%
+  bind_rows(add_ids)
 ```
 
 Check for matches from other providers
@@ -54,12 +66,10 @@ alt_dupes <- syn_res %>%
 
 add_syn_res <- syn_res %>% 
   filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
-  select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
+  select(id = acceptedNameUsageID, sourceName = input) %>%
   distinct() %>%
-  group_by(sourceName) %>%
-  top_n(1, scientificName) %>%
+  mutate(scientificName = get_names(id, "itis")) %>%
   left_join(amphibio %>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
-  ungroup() %>%
   distinct()
 
 amphibio <- amphibio %>% 

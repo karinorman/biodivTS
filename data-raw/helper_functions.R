@@ -34,9 +34,11 @@ match_providers <- function(data, original_provider, common = FALSE) {
   unmatched <- data %>% filter(is.na(id)) %>% pull(sourceName) %>% unique()
   providers <- c("itis", "ncbi", "col", "gbif", "fb", "wd", "ott", "iucn")
 
+  synonyms <-
+
   #match all the un-ID'd names to other providers, check if synonyms given by those providers match known ITIS species
-  alt_names <-map_df(providers[providers != original_provider], function(name) taxadb::synonyms(unmatched, name)) %>%
-    drop_na(acceptedNameUsageID) %>%
+  alt_names <-map_df(providers[providers != original_provider], function(name) synonyms(unmatched, name)) %>%
+    drop_na(synonym) %>%
     #new matches can be in either the synonym or acceptedNameUsage column, so let's combine them
     gather(type, altProviderName, synonym, acceptedNameUsage) %>%
     select(altProviderName, input) %>%
@@ -44,7 +46,7 @@ match_providers <- function(data, original_provider, common = FALSE) {
     drop_na(altProviderName)
 
   #match accepted names from
-  syn_res <- by_name(na.omit(unique(alt_names$altProviderName)), original_provider) %>%
+  syn_res <- filter_name(na.omit(unique(alt_names$altProviderName)), original_provider) %>%
     drop_na(acceptedNameUsageID) %>%
     rename(altProviderName = input) %>%
     left_join(alt_names, na_matches = "never", by = "altProviderName")
@@ -54,10 +56,10 @@ match_providers <- function(data, original_provider, common = FALSE) {
     unmatched <- unmatched[unmatched %in% syn_res$input]
 
     common_match <- map_df(common_providers[common_providers != original_provider],
-           function(name) by_common(unmatched, name)) %>%
+           function(name) filter_common(unmatched, name)) %>%
       drop_na(acceptedNameUsageID)
 
-    sci_match <- by_name(unique(common_match$scientificName), "itis") %>%
+    sci_match <- filter_name(unique(common_match$scientificName), "itis") %>%
       rename(altProviderName = input) %>%
       drop_na(acceptedNameUsageID) %>%
       left_join(common_match %>% select(scientificName, input),
@@ -93,4 +95,101 @@ undupe_ids <- function(data) {
   resolved_data <- data %>%
     anti_join(dupe_data) %>%
     bind_rows(resolved)
+}
+
+#' synonyms
+#'
+#' Resolve provided list of names against all known synonyms
+#' @inheritParams filter_name
+#' @importFrom dplyr left_join
+#' @export
+#' @examples
+#' \donttest{
+#'   \dontshow{
+#'    ## All examples use a temporary directory
+#'    Sys.setenv(TAXADB_HOME=tempdir())
+#'   }
+#'
+#' sp <- c("Trochalopteron henrici gucenense",
+#'         "Trochalopteron elliotii")
+#' synonyms(sp)
+#'
+#' }
+#'
+synonyms <- function(name,
+                     provider = getOption("taxadb_default_provider", "itis"),
+                     #version = latest_version(),
+                     collect = TRUE,
+                     db = td_connect()){
+
+
+  the_id_table <- filter_name(name, provider = provider, db = db)
+
+  ## Get both accepted names & synonyms for anything with an acceptedNameUsageID
+
+    syn <-
+      taxa_tbl(provider = provider, db = db) %>%
+      safe_right_join(the_id_table %>%
+                        select("acceptedNameUsageID"),
+                      by = "acceptedNameUsageID",
+                      copy = TRUE) %>%
+      dplyr::select("scientificName", "acceptedNameUsageID",
+                    "taxonomicStatus", "taxonRank") %>%
+      syn_table()
+
+  ## Join that back onto the id table
+  out <- the_id_table %>%
+    dplyr::select("scientificName", "sort", "acceptedNameUsageID", "input") %>%
+    dplyr::left_join(syn, by = "acceptedNameUsageID", copy = TRUE) %>%
+    dplyr::select("acceptedNameUsage", "synonym", "taxonRank",
+                  "acceptedNameUsageID", "input") %>%
+    dplyr::distinct()
+
+  if (collect && inherits(out, "tbl_lazy")) {
+    return( dplyr::collect(out) )
+  }
+
+  out
+
+}
+
+
+globalVariables(c("taxonomicStatus", "scientificName", "taxonID",
+                  "taxonRank", "acceptedNameUsageID", "synonym", "input"))
+## A mapping in which synonym and accepted names are listed in the same row
+
+#' @importFrom dplyr full_join filter select
+syn_table <- function(taxon, accepted = "accepted"){
+
+  dplyr::full_join(
+    taxon %>%
+      dplyr::filter(taxonomicStatus != "accepted") %>%
+      dplyr::select(synonym = scientificName,
+                    acceptedNameUsageID),
+    taxon %>%
+      dplyr::filter(taxonomicStatus == "accepted") %>%
+      dplyr::select(acceptedNameUsage = scientificName,
+                    acceptedNameUsageID,
+                    taxonRank),
+    by = "acceptedNameUsageID")
+
+}
+
+
+## Manually copy query into DB, since RSQLite lacks right_join,
+## and dplyr `copy` can only copy table "y"
+#' @importFrom dbplyr remote_con
+#' @importFrom DBI dbWriteTable
+#' @importFrom dplyr left_join tbl
+safe_right_join <- function(x, y, by = NULL, copy = FALSE, ...){
+
+  if(copy){
+    con <- dbplyr::remote_con(x)
+    if(!is.null(con)){ ## only attempt on remote tables!
+      tmpname <-  paste0(sample(letters, 10, replace = TRUE), collapse = "")
+      DBI::dbWriteTable(con, tmpname, y, temporary = TRUE)
+      y <- dplyr::tbl(con, tmpname)
+    }
+  }
+  dplyr::left_join(y, x, by = by, ...)
 }
