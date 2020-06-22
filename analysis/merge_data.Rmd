@@ -50,14 +50,19 @@ Are there any studies for which we have trait data for all species?
 ```{r}
 merge_data <- function(trait_data){
   biotime_data %>%
-    select(-sourceName, -scientificName) %>%
-  left_join(trait_data, by = "id",
-            na_matches = "never") %>%
-    drop_na(scientificName)
+    select(-scientificName) %>%
+    rename(biotimeName = sourceName) %>%
+  left_join(trait_data %>% rename(traitName = sourceName), by = "id",
+            na_matches = "never") #%>%
+   # drop_na(scientificName)
 }
 ```
 
 Get data w/traits for all studies that have >85% trait coverage
+
+`id` is `NA` if there was no `id` match
+`biotimeName` or `traitName` is `NA` if that ID is the result of an average of multliple species matches
+`scientificName` is `NA` when there was no trait data for a given ID
 ```{r}
 #set coverage threshold for analysis dataset
 percent <- 0.85
@@ -73,14 +78,16 @@ comp_biotime_traits <- map_dfr(traits, merge_data) %>%
 #this gives a coverage for each trait dataset, so potentially a lot of coverage with one dataset and no coverage on all the rest
 #need to get rid of zeros when there is coverage from another dataset so we only have one entry per study
 coverage <- comp_biotime_traits %>%
+  select(study_id, scientificName) %>%
+  distinct() %>%
   group_by(study_id) %>%
-  summarise(perc = sum(!is.na(sourceName))/n()) %>%
+  summarise(perc = sum(!is.na(scientificName))/n()) %>%
   arrange(desc(perc))
 
 inc_coverage <- coverage %>% filter(perc > percent)
 
 biotime_traits <- comp_biotime_traits %>%
-  filter(study_id %in% inc_coverage$study_id, !is.na(sourceName))
+  filter(study_id %in% inc_coverage$study_id, !is.na(scientificName)) #get studies with appropriate coverage and drop observations that we don't have trait data for
 ```
 
 ```{r}
