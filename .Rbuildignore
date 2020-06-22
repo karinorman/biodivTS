@@ -2,3 +2,5 @@
 ^manifest\.json$
 ^biodivTS\.Rproj$
 ^\.Rproj\.user$
+^data-raw$
+^data$
