@@ -1,0 +1,200 @@
+---
+title: "Calculate FD"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(furrr)
+library(FD)
+```
+
+
+Get FD metrics for each study 
+
+FD function:
+```{r}
+load(here::here("data", "biotime_traits.rda"))
+
+get_fd <- function(data, filter_plot){
+  require(FD)
+  
+  data <- data %>%
+    filter(plot_id == filter_plot)
+  
+  print(filter_plot)
+  
+  species_mat <- data %>%
+    select(year, id) %>% 
+    distinct() %>%
+    arrange(year, id) %>%
+    mutate(present = 1) %>%
+    spread(id, value = present, fill = 0) %>%
+    select(-year)
+  
+  years <- data %>% 
+    select(year) %>%
+    distinct() %>%
+    arrange(year)
+  
+  trait_mat <- data %>%
+    select(-c(taxa, record_id, day, month, year, sample_desc, id_species, 
+              latitude, longitude, sum_abundance, sum_biomass, traitName, 
+              biotimeName, scientificName)
+    ) %>%
+    distinct() %>%
+    select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
+    mutate_at(vars(-id, -ends_with("5cat")), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
+    arrange(id) %>%
+    column_to_rownames("id")
+  
+  fs::dir_create(paste0(here::here("data"), "/fd_output"))
+  
+  #the convexhull c code creates an output file of vertices, in order to not have multiple threads writing
+  #to the same file we have to create individual working directories
+  tmp_dir <- paste0(here::here("data", "fd_output", "tmp"), "/tmp_", filter_plot)
+  fs::dir_create(tmp_dir)
+  setwd(tmp_dir)
+
+  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
+    cbind(years, .) %>%
+    mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2]) %>%
+    write_tsv(paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
+  
+  setwd(here::here())
+  return(fd_out)
+}
+
+get_fd_safe <- possibly(get_fd, NA)
+```
+
+First pass at calculating FD metrics from FD package:
+```{r}
+data <- biotime_traits %>% 
+  filter(!is.na(plot)) %>% #remove unlabeled plots 
+  group_by(plot_id, year) %>%
+  filter(n_distinct(id) > 4) %>%
+  ungroup()# %>%
+  #filter(!study_id %in% c(195, 360), #exclude because they break
+         #!study_id %in% c(217, 327)) #exclude to get the file size smaller
+
+plots <- data %>%
+  pull(plot_id) %>%
+  unique()
+
+library(furrr)
+future::plan(multiprocess)
+system.time(fd <- future_map_dfr(plots, get_fd_safe, data = data))
+```
+
+Read data back in, excluding sites/plots as they become a problem:
+```{r}
+files <-  dir(here::here("data", "fd_output"), "*.tsv")
+
+fd_data <- files %>%
+  paste0(here::here("data", "fd_output"), "/", .) %>%
+  map_dfr(read_tsv)
+
+remain <- biotime_traits %>%
+  filter(!is.na(plot), !is.na(scientificName)) %>% #remove unlabeled plots and observations without traits
+  filter(!is.na(plot), !study_id %in% c(195, 360),
+         !study_id %in% c(217, 327), #exclude to get the file size smaller
+         !study_id %in% c(59, 166, 337), #NA's in the distance matrix
+         study_id != 169,  #Zero distance error
+         !study_id %in% c(372,374), #Qhull error code 4
+         study_id != 333) %>% #species distance matrix not Euclidean after 'sqrt' correction
+  filter(study_id != 56 | plot != 24) %>% #NA's in the distance matrix
+  anti_join(fd_data, by = c("year", "study_id", "plot")) %>%
+  group_by(study_id, year, plot) %>%
+  filter(n_distinct(id) > 4) %>%
+  ungroup()
+
+plots <- remain %>%
+  pull(plot_id) %>%
+  unique()
+
+library(furrr)
+future::plan(multiprocess)
+system.time(fd <- future_map_dfr(plots, get_fd_safe, data = data))
+```
+
+Let's also do the functions from BAT package
+```{r}
+#function for getting PCA axes with at least 95% coverage
+axes95 <- function(mat){
+  axes <- pco(mat)
+  eigen <- axes$eig
+  
+  threshold <- sum(eigen[eigen > 0]) * 0.95
+  
+  sums <- cumsum(eigen)
+  num_axes <- Position(function(x) x > threshold, sums)
+  
+  return(num_axes)
+}
+
+get_BAT_fd <- function(data, filter_plot){
+  require(BAT)
+  require(StatMatch)
+  require(labdsv)
+  
+  data <- data %>% filter(plot_id == filter_plot)
+  
+  print(max(data$record_id))
+  
+  species_mat <- data %>%
+    select(year, id) %>% 
+    distinct() %>%
+    arrange(year, id) %>%
+    mutate(present = 1) %>%
+    spread(id, value = present, fill = 0) %>%
+    column_to_rownames("year")
+  
+  trait_mat <- data %>%
+    select(-c(taxa, record_id, day, month, year, sample_desc, id_species, 
+              latitude, longitude, sum_abundance, sum_biomass, biotimeName, 
+              traitName, scientificName)
+    ) %>%
+    distinct() %>%
+    select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
+    mutate_at(vars(-id, -ends_with("5cat")), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
+    arrange(id) %>%
+    column_to_rownames("id")
+  
+  #get PCA trait matrix
+  trait_dist <- gower.dist(trait_mat)
+  trait_pco <- pco(trait_dist, k = axes95(trait_dist))
+
+  traits <- trait_pco$points
+  rownames(traits) <- rownames(trait_mat)
+  
+  #getFD metrics
+  kernelFD <- kernel.alpha(comm=as.matrix(species_mat),trait=traits,abund=FALSE,method="gaussian",return.hv=TRUE)
+  hv <- kernelFD[[2]]
+  
+  disp <- kernel.dispersion(comm=hv,frac=0.1,func='dissimilarity') 
+  div <- kernel.dispersion(comm=hv,frac=0.6, func='divergence')
+  even <- kernel.evenness(comm=hv)
+  
+  results <- data.frame(richness = as.numeric(kernelFD[[1]]), disp, div, even) %>% 
+    mutate(plot_id = filter_plot)
+  
+  return(results)
+}
+
+get_BAT_fd(biotime_traits, 376300153)
+```
+
+
+Format tables
+```{r}
+fd_table <- fd_data %>% 
+  select(year, study_id, plot, richness = nbsp, everything(), -sing.sp) %>%
+  gather(metric, value, contains("F"), RaoQ)
+
+usethis::use_data(fd_table)
+```
