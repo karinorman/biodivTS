@@ -1,7 +1,5 @@
 ---
-title: "Check Coverage"
-author: "Kari Norman"
-date: "5/20/2019"
+title: "Calculate FD"
 output: html_document
 ---
 
@@ -11,110 +9,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(furrr)
 library(FD)
-devtools::load_all()
 ```
 
-```{r}
-load(here::here("data", "biotime_data.rda"))
-load(here::here("data", "elton_mamm.rda"))
-load(here::here("data", "elton_bird.rda"))
-load(here::here("data", "amphibio.rda"))
-```
-
-#Checking Coverage of ID's and trait data -> biotime
-
-check if all bird & mammal biotime data w/id's has an elton match. There are 68 species without a match (63 are birds).
-```{r}
-no_trait <- biotime_data %>%
-  filter(taxa %in% c("Birds", "Mammals")) %>%
-  select(id, sourceName, taxa) %>%
-  drop_na(id) %>%
-  distinct() %>%
-  filter(!id %in% elton_bird$id, !id %in% elton_mamm$id)
-
-dim(no_trait)
-```
-
-and 19869 species without an ID, some of which are species codes
-```{r}
-biotime_data %>%
-  #filter(taxa == "Birds") %>%
-  select(id, sourceName, taxa) %>%
-  filter(is.na(id)) %>%
-  distinct() %>%
-  dim()
-```
-
-Are there any studies for which we have trait data for all species?
-```{r}
-merge_data <- function(trait_data){
-  biotime_data %>%
-    select(-scientificName) %>%
-    rename(biotimeName = sourceName) %>%
-  left_join(trait_data %>% rename(traitName = sourceName), by = "id",
-            na_matches = "never") #%>%
-   # drop_na(scientificName)
-}
-```
-
-Get data w/traits for all studies that have >85% trait coverage
-
-`id` is `NA` if there was no `id` match
-`biotimeName` or `traitName` is `NA` if that ID is the result of an average of multliple species matches
-`scientificName` is `NA` when there was no trait data for a given ID
-```{r}
-#set coverage threshold for analysis dataset
-percent <- 0.85
-
-traits <- list(elton_bird, elton_mamm, amphibio)
-
-comp_biotime_traits <- map_dfr(traits, merge_data) %>%
-  right_join(biotime_data %>% select(-sourceName, -scientificName))
-
-#always check that one species didn't match to multiple datasets, below should return and empty dataframe
-#comp_biotime_traits %>% group_by(record_id) %>% filter(n() > 1) %>% dim()
-
-#this gives a coverage for each trait dataset, so potentially a lot of coverage with one dataset and no coverage on all the rest
-#need to get rid of zeros when there is coverage from another dataset so we only have one entry per study
-coverage <- comp_biotime_traits %>%
-  select(study_id, scientificName) %>%
-  distinct() %>%
-  group_by(study_id) %>%
-  summarise(perc = sum(!is.na(scientificName))/n()) %>%
-  arrange(desc(perc))
-
-inc_coverage <- coverage %>% filter(perc > percent)
-
-biotime_traits <- comp_biotime_traits %>%
-  #get studies with appropriate coverage and drop observations that we don't have trait data for
-  filter(study_id %in% inc_coverage$study_id, !is.na(scientificName)) %>% 
-  mutate(plot_id = paste0(study_id, plot))
-```
-
-```{r}
-usethis::use_data(biotime_traits)
-```
-
-
-Create table of info for each study
-```{r}
-study_table <- biotime_data %>%
-  group_by(study_id) %>%
-  mutate(min_year = min(year), max_year = max(year)) %>% 
-  #select(study_id, plot, taxa, latitude, longitude, min_year, max_year) %>%
-  select(study_id, taxa, min_year, max_year) %>%
-  distinct() %>%
-  left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
-
-usethis::use_data(study_table)
-```
 
 Get FD metrics for each study 
 
 FD function:
 ```{r}
-library(furrr)
 load(here::here("data", "biotime_traits.rda"))
 
 get_fd <- function(data, filter_plot){
@@ -183,8 +86,9 @@ plots <- data %>%
   pull(plot_id) %>%
   unique()
 
-plan(multiprocess)
-system.time(fd <- future_map_dfr(plots[1:10], get_fd, data = data))
+library(furrr)
+future::plan(multiprocess)
+system.time(fd <- future_map_dfr(plots, get_fd_safe, data = data))
 ```
 
 Read data back in, excluding sites/plots as they become a problem:
@@ -209,12 +113,13 @@ remain <- biotime_traits %>%
   filter(n_distinct(id) > 4) %>%
   ungroup()
 
-combs <- remain %>%
-  select(study_id, plot) %>%
-  distinct()
+plots <- remain %>%
+  pull(plot_id) %>%
+  unique()
 
-plan(multiprocess)
-system.time(fd <- future_pmap_dfr(combs, ~ get_fd(data = remain, study = .x, plot = .y)))
+library(furrr)
+future::plan(multiprocess)
+system.time(fd <- future_map_dfr(plots, get_fd_safe, data = data))
 ```
 
 Let's also do the functions from BAT package
@@ -292,36 +197,4 @@ fd_table <- fd_data %>%
   gather(metric, value, contains("F"), RaoQ)
 
 usethis::use_data(fd_table)
-```
-
-#Correct FD for species richness
-
-First for one study, 311
-```{r}
-glm_correction <- function(study, plot_num){
-  model_data <- fd_table %>% filter(metric == "FRic", study_id == study, plot == plot_num)
-  fit <- glm(value ~ richness, data = model_data)
-  
-  pred_vars <- model_data %>% 
-    select(richness) %>% 
-    distinct() %>%
-    mutate(fric_pred = predict(fit, ., type = "response"))
-  
-  plot_data <- left_join(model_data, pred_vars) %>%
-    mutate(fric_adj = value - fric_pred,
-           fric_adj = ifelse(fric_adj > 0, fric_adj, 0))
-  
-  return(plot_data)
-}
-
-plot_data <- glm_correction(311, 1)
-
-plot_data %>%
-  ggplot() +
-  geom_line(aes(x = year, y = value), color = "blue") +
-  geom_line(aes(x = year, y = fric_pred), color = "red") +
-  geom_line(aes(x = year, y = fric_adj), color = "black") +
-  scale_x_continuous(breaks = scales::pretty_breaks()) +
-  theme(legend.position = "none") +
-  ylab("Fric")
 ```
