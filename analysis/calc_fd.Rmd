@@ -20,10 +20,10 @@ FD function:
 ```{r}
 load(here::here("data", "biotime_traits.rda"))
 
-get_fd <- function(data, filter_plot){
+get_fd <- function(obs_data, filter_plot){
   require(FD)
   
-  data <- data %>%
+  data <- obs_data %>%
     filter(plot_id == filter_plot)
   
   print(filter_plot)
@@ -66,6 +66,7 @@ get_fd <- function(data, filter_plot){
     write_tsv(paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
   
   setwd(here::here())
+  print(filter_plot)
   return(fd_out)
 }
 
@@ -78,6 +79,8 @@ data <- biotime_traits %>%
   filter(!is.na(plot)) %>% #remove unlabeled plots 
   group_by(plot_id, year) %>%
   filter(n_distinct(id) > 4) %>%
+  group_by(plot_id) %>%
+  filter(n_distinct(year) > 4) %>% 
   ungroup()# %>%
   #filter(!study_id %in% c(195, 360), #exclude because they break
          #!study_id %in% c(217, 327)) #exclude to get the file size smaller
@@ -89,6 +92,30 @@ plots <- data %>%
 library(furrr)
 future::plan(multiprocess)
 system.time(fd <- future_map_dfr(plots, get_fd_safe, data = data))
+```
+
+The dataset is too big to copy to each parallel thread, so we split the dataset into chunks 
+```{r}
+#number of chunks to split original dataset into 
+num_groups = 4
+
+plot_sizes <- data %>%
+  count(plot_id) %>%
+  arrange(desc(n)) %>%
+  mutate(group = rep_len(1:num_groups, dim(.)[1]))
+
+get_parallel_FD <- function(data, group_num){
+  group_plots <- plot_sizes %>% filter(group == group_num)
+  group_data <- data %>% filter(plot_id %in% group_plots$plot_id)
+  
+  future::plan(multiprocess)
+  fd <- future_map_dfr(group_plots$plot_id, get_fd_safe, data = group_data)
+  
+  print(group_num)
+  return(FD)
+}
+
+fd <- map_dfr(1:num_groups, get_parallel_FD, data = data)
 ```
 
 Read data back in, excluding sites/plots as they become a problem:
