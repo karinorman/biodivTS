@@ -1,0 +1,362 @@
+"study_id","taxa","min_year","max_year","coverage"
+10,"Terrestrial plants",1984,1996,0
+18,"Terrestrial plants",1923,1973,0
+33,"Marine plants",1992,2009,0
+39,"Birds",1970,2015,0.947862356621481
+41,"Birds",1923,1940,0.741626794258373
+45,"Fish",2005,2010,0
+46,"Birds",1928,1979,1
+47,"Birds",1952,1977,1
+51,"Birds",1964,1977,1
+52,"Mammals",1968,1980,1
+53,"Mammals",1966,1976,0.590909090909091
+54,"Terrestrial invertebrates",1991,2014,0
+56,"Mammals",1989,2008,0.998379059854716
+57,"Fish",1981,2012,0
+58,"Birds",1991,2008,0.953885567890692
+59,"Mammals",1977,2002,0.899297423887588
+60,"Terrestrial plants",1982,2015,0
+63,"Terrestrial invertebrates",1959,1988,0
+67,"Birds",1983,2006,0.859163152773273
+68,"Marine invertebrates",1988,2000,0
+69,"Birds",1994,2003,0.999427161364237
+70,"Terrestrial invertebrates",1983,1996,0
+71,"Marine plants",1993,2003,0
+72,"Marine invertebrates",1998,2003,0
+73,"Marine invertebrates",1966,1969,0
+74,"Marine invertebrates",1970,1975,0
+75,"Marine invertebrates",1985,1987,0
+76,"Benthos",1992,1996,0
+77,"Birds",1999,2002,1
+78,"Benthos",1980,2005,0
+81,"Mammals",1997,2010,1
+84,"Marine plants",1967,2007,0
+85,"Marine invertebrates",1992,2003,0
+86,"Marine plants",1985,1998,0
+87,"Marine plants",1982,1990,0
+90,"Marine invertebrates",1995,2004,0
+91,"Birds",1992,1999,0.946343779677113
+92,"Benthos",1981,2010,0
+96,"Marine invertebrates",1997,2001,0
+97,"Marine invertebrates",1921,1973,0
+98,"Benthos",1971,1975,0
+99,"Fish",1978,1997,0
+108,"Birds",1977,2006,0.846086320409656
+110,"Benthos",1954,2000,5.77262870452172e-05
+112,"Fish",1973,2005,0
+113,"Marine invertebrates",1965,1999,0
+117,"Marine invertebrates",1956,2003,0
+119,"Fish",1970,2010,0
+120,"Marine plants",2002,2008,0
+121,"Fish",2000,2010,0
+122,"Marine invertebrates",2007,2010,0
+123,"Fish",2000,2009,0
+124,"Marine invertebrates",1903,1909,0
+125,"Fish",1988,2000,0
+126,"Fish",1973,1980,0
+127,"Fish",1980,1989,0
+128,"Marine invertebrates",1995,1999,0
+129,"Marine invertebrates",1974,1978,0
+133,"Marine invertebrates",1954,1961,0
+135,"Fish",1972,1986,0
+142,"Fish",1997,2002,0
+143,"Marine invertebrates",2002,2009,0
+147,"Marine invertebrates",1874,2003,0
+148,"Fish",1964,2005,0
+150,"Marine invertebrates",1979,1986,0
+152,"Marine invertebrates",1977,2002,0
+162,"Benthos",1990,2004,0
+163,"Benthos",1993,2004,0.0112572143315196
+164,"Marine invertebrates",2000,2005,0
+166,"All",1965,1992,0.904067506860584
+169,"All",1987,2006,0.880479507532804
+171,"Mammals",1988,2008,0.950963956412406
+172,"All",1998,2009,0.814297735618115
+173,"Marine invertebrates",1996,2012,0
+176,"Marine invertebrates",1998,2010,0
+178,"Fish",1963,2007,7.79356407478704e-06
+180,"Fish",1970,1995,0
+182,"All",1988,2009,0
+183,"Marine invertebrates",1999,2011,0
+184,"Marine invertebrates",2006,2010,0
+186,"Benthos",2003,2006,0
+187,"Benthos",1991,2006,0
+189,"Fish",2001,2010,0
+190,"Fish",2001,2010,0
+191,"Marine invertebrates",1900,1975,0
+192,"Mammals",1932,1980,1
+194,"Terrestrial invertebrates",1994,2004,0
+195,"Birds",1978,2007,0.981281927738405
+196,"Benthos",1976,2012,0
+199,"Fish",2000,2003,0
+200,"Marine invertebrates",1956,1989,0
+201,"Terrestrial plants",1987,2000,0
+202,"Terrestrial plants",1988,2000,0
+204,"Benthos",1976,2001,0
+211,"Fish",1980,1987,0
+212,"Fish",1973,1980,0
+213,"Benthos",1948,2008,0
+214,"Terrestrial plants",1910,2010,0
+217,"Birds",1992,2006,0.934749016391494
+221,"Terrestrial plants",1975,2008,0
+224,"Terrestrial plants",1995,2005,0
+225,"Birds",2000,2011,8.18984050285621e-05
+226,"Birds",1998,2000,0.825202266263971
+227,"Fish",1990,1993,0
+228,"Benthos",1990,1993,0
+229,"Fish",1988,2013,0
+230,"Marine plants",2006,2008,0
+231,"All",2000,2005,0.0281899109792285
+232,"Fish",1968,1999,0
+233,"Terrestrial plants",1999,2001,0
+234,"Terrestrial plants",1965,2002,0
+235,"Terrestrial plants",1982,1999,0
+236,"Fish",1995,2006,0
+237,"Freshwater invertebrates",1976,1994,0
+238,"Freshwater invertebrates",1995,2014,0
+239,"Terrestrial plants",1999,2001,0
+240,"Terrestrial plants",2003,2015,0
+241,"Terrestrial plants",1996,2009,0
+242,"Terrestrial plants",1998,2006,0
+243,"Terrestrial plants",1992,2014,0
+245,"Fish",2007,2010,0
+246,"Fish",2000,2014,0
+247,"Freshwater invertebrates",1975,2006,0
+248,"Terrestrial plants",2000,2012,0
+249,"Terrestrial invertebrates",1992,2015,0
+252,"Fish",1977,1989,0
+253,"Freshwater invertebrates",1986,2014,0
+254,"Freshwater plants",1995,2014,0
+255,"Terrestrial plants",1989,2007,0
+257,"Freshwater invertebrates",1991,1994,0
+270,"Terrestrial plants",1999,2002,0
+271,"Fish",2000,2014,0
+272,"Marine invertebrates",2000,2014,0
+273,"Marine invertebrates",2000,2014,0
+274,"All",2000,2014,0
+275,"Reptiles",2009,2014,0
+276,"Freshwater invertebrates",1917,2012,0
+278,"Fish",1961,2005,0
+280,"Benthos",1971,1975,0
+281,"Marine invertebrates",1974,1978,0
+282,"Marine invertebrates",1984,1987,0
+283,"Marine invertebrates",1985,1986,0
+284,"Fish",1972,1986,0
+285,"Fish",1972,1989,0
+286,"Fish",2000,2009,0
+287,"Fish",2001,2009,0
+288,"Fish",1970,2006,0
+289,"Fish",1995,2010,0
+290,"Fish",1978,1995,0
+291,"Fish",1978,1990,0
+292,"Fish",1978,1995,0.000117882824472474
+294,"Terrestrial invertebrates",2003,2013,0
+295,"Fish",2008,2016,0
+296,"Marine invertebrates",2008,2016,0
+297,"Marine invertebrates",2005,2015,0
+298,"Terrestrial plants",1903,1972,0
+299,"Terrestrial invertebrates",1898,1998,0
+300,"Terrestrial invertebrates",1989,2013,0
+301,"Terrestrial invertebrates",1982,2013,0
+302,"Terrestrial plants",2002,2011,0
+303,"Terrestrial plants",2008,2016,0
+304,"Terrestrial plants",1966,1996,0
+305,"Amphibians",1976,1990,1
+306,"Reptiles",1975,1992,0
+307,"Terrestrial plants",1993,2002,0
+308,"Mammals",1979,1999,0.973077575004238
+310,"Marine invertebrates",1992,2002,0
+311,"Mammals",1981,2013,1
+312,"Mammals",1959,1984,0.852173913043478
+313,"Terrestrial invertebrates",1989,2006,0
+314,"Mammals",1983,1985,1
+315,"Terrestrial invertebrates",1983,1985,0
+316,"Reptiles",1989,2006,0
+317,"Terrestrial plants",1995,2005,0
+319,"All",1989,2003,0.0646551724137931
+321,"Mammals",1995,2007,0.995749799518845
+322,"Terrestrial plants",1983,2004,0
+323,"Reptiles",1989,1992,0
+324,"Terrestrial plants",2003,2007,0
+325,"Terrestrial plants",2003,2007,0
+326,"Terrestrial plants",2003,2007,0
+327,"Mammals",1989,2005,0.970397981822364
+328,"Amphibians",1979,2008,0.707865168539326
+329,"Terrestrial plants",1990,2010,0
+330,"Marine invertebrates",1938,2014,0
+332,"Fish",1984,1995,0
+333,"Birds",1981,2009,0.999352121801101
+334,"Terrestrial plants",1982,2000,0
+335,"Fish",1962,1974,0
+336,"Terrestrial plants",1989,2002,0
+337,"Birds",2000,2010,0.925729442970822
+338,"Fish",1979,1981,0
+339,"Birds",1953,2009,0.999173553719008
+340,"Terrestrial plants",1995,2009,0
+341,"Amphibians",2014,2016,0.795984807379273
+342,"Terrestrial plants",1992,2010,0
+343,"Terrestrial plants",1992,2009,0
+344,"Terrestrial plants",1992,2004,0
+345,"Terrestrial plants",1993,2005,0
+346,"Terrestrial plants",2002,2011,0
+347,"Marine invertebrates",1998,2000,0
+348,"Mammals",2006,2016,0.928994082840237
+349,"Benthos",1991,2011,0
+350,"Benthos",1989,2011,0
+351,"Benthos",1989,2004,0
+352,"Terrestrial plants",1999,2002,0
+353,"Terrestrial plants",1997,2003,0
+354,"Marine plants",1928,2015,0
+355,"Terrestrial plants",1983,2015,0
+356,"Terrestrial plants",1971,2013,0
+357,"Mammals",1994,2006,1
+358,"Birds",1977,1992,0.857142857142857
+359,"Fish",2000,2012,0
+360,"Birds",1975,2014,0.997113853503185
+361,"Birds",1962,1983,0.901408450704225
+362,"Mammals",2009,2012,0.672188317349608
+363,"Birds",1963,1999,0.998425196850394
+364,"Freshwater plants",1990,2007,0
+365,"Fish",1997,2002,0
+366,"Mammals",1989,2013,0.976099144290351
+367,"Marine invertebrates",2008,2013,0
+368,"Freshwater invertebrates",2010,2011,0
+369,"Terrestrial invertebrates",2009,2014,0
+370,"Marine plants",2008,2014,0
+371,"Marine plants",2008,2014,0
+372,"Birds",2005,2013,0.920460408811272
+373,"Mammals",2005,2012,0.855640578153667
+374,"Birds",2004,2014,0.999224285049387
+375,"Terrestrial invertebrates",2004,2014,0
+376,"Birds",2004,2008,0.932996687842754
+377,"Birds",2008,2013,0.928117771842613
+378,"Marine invertebrates",1991,2006,0
+379,"Marine invertebrates",1991,2014,0
+380,"Terrestrial invertebrates",1978,1987,0
+381,"All",1986,1992,0.11875
+382,"Mammals",1955,1967,0.939252336448598
+383,"Terrestrial plants",1972,2010,0
+384,"Terrestrial plants",1973,2006,0
+385,"Terrestrial plants",1972,2011,0
+386,"Terrestrial plants",1994,2009,0
+387,"Terrestrial plants",1958,2009,0
+388,"Terrestrial plants",1957,2014,0
+389,"Terrestrial plants",1973,2006,0
+390,"Terrestrial plants",1972,2009,0
+391,"Terrestrial plants",1974,2007,0
+392,"Terrestrial plants",1974,2013,0
+393,"Terrestrial plants",1976,2013,0
+394,"Terrestrial plants",1974,2011,0
+395,"Terrestrial plants",1975,2008,0
+396,"Terrestrial plants",2006,2016,0
+397,"Terrestrial plants",2002,2010,0
+398,"Terrestrial plants",1973,1995,0
+399,"Terrestrial plants",1973,2000,0
+400,"Terrestrial plants",1978,1999,0
+401,"Terrestrial plants",1978,1998,0
+402,"Fish",2010,2015,0
+403,"Amphibians",1989,1995,0.916666666666667
+404,"Terrestrial plants",2014,2016,0
+405,"Terrestrial plants",2009,2011,0
+406,"Terrestrial plants",2005,2007,0
+407,"Fish",2012,2013,0
+408,"Marine invertebrates",2012,2013,0
+409,"Fish",2012,2013,0
+412,"Fish",1995,2000,0
+413,"Birds",1927,1976,0.748327759197324
+414,"Birds",1924,1976,0.754932502596054
+415,"Birds",1949,1967,0.812903225806452
+416,"Birds",1946,1971,0.823759791122715
+418,"Fish",1992,2015,0
+419,"Birds",1993,2011,0.592191601049869
+420,"Birds",1964,2001,0.932673267326733
+421,"Terrestrial invertebrates",1999,2000,0
+422,"Terrestrial invertebrates",2009,2014,0
+423,"Terrestrial invertebrates",2009,2014,0
+424,"Terrestrial invertebrates",2010,2014,0
+425,"Benthos",2009,2010,0
+426,"Freshwater invertebrates",1976,2010,0
+427,"Freshwater invertebrates",1977,2008,0
+428,"Fish",1919,2015,0.00746880588020272
+429,"Marine invertebrates",2013,2016,0
+430,"Fish",1985,2016,0
+431,"Fish",1984,2016,0
+432,"Fish",1998,2016,0
+433,"Freshwater invertebrates",1983,2002,0
+434,"Freshwater invertebrates",1992,2001,0
+435,"Marine invertebrates",2009,2016,0
+436,"Fish",2005,2012,0
+437,"Fish",2010,2016,0
+438,"Fish",2006,2014,0
+439,"Birds",1985,1997,0.996428571428571
+440,"Birds",1985,1997,0.991886409736308
+441,"Birds",1985,1997,0.986979166666667
+442,"Birds",1980,1985,0.862068965517241
+443,"Birds",1980,1983,0.873563218390805
+444,"Birds",1983,1987,0.983050847457627
+445,"Birds",1976,1978,1
+446,"Mammals",2007,2011,0.888888888888889
+447,"Mammals",2006,2014,1
+448,"Mammals",1979,1982,0.898305084745763
+449,"Mammals",2000,2009,1
+450,"Fish",2005,2012,0
+451,"Fish",2005,2012,0
+452,"Fish",2004,2012,0
+453,"Freshwater invertebrates",1969,2010,0
+454,"Freshwater invertebrates",2014,2016,0
+455,"Marine invertebrates",2003,2005,0
+456,"Marine invertebrates",2003,2010,0
+457,"Marine invertebrates",2003,2014,0
+458,"Terrestrial invertebrates",2008,2011,0
+459,"Birds",2010,2014,1
+460,"Terrestrial plants",2007,2011,0
+461,"Terrestrial plants",2007,2011,0
+462,"Terrestrial plants",2007,2011,0
+463,"Terrestrial plants",2007,2011,0
+464,"Terrestrial plants",2007,2011,0
+465,"Terrestrial plants",2007,2012,0
+466,"Fish",1986,2008,0
+467,"Fish",1987,1999,0
+468,"Benthos",1980,2011,0
+469,"Benthos",1982,2011,0
+471,"Terrestrial plants",2004,2013,0
+473,"Terrestrial plants",1932,1945,0
+475,"Birds",1960,1972,0.944954128440367
+476,"Terrestrial invertebrates",1993,1997,0
+477,"Marine invertebrates",1998,2012,0
+478,"Freshwater invertebrates",1969,2005,0
+479,"Terrestrial plants",1999,2008,0
+480,"Terrestrial plants",1998,2008,0
+481,"Terrestrial plants",2001,2008,0
+482,"Terrestrial plants",1999,2009,0
+483,"Terrestrial plants",1986,2009,0
+484,"Terrestrial plants",1995,2008,0
+485,"Terrestrial plants",1997,2005,0
+486,"Terrestrial plants",1994,2009,0
+487,"Terrestrial plants",1992,2009,0
+488,"Terrestrial plants",1991,2005,0
+489,"Terrestrial plants",2000,2008,0
+490,"Terrestrial plants",2000,2003,0
+491,"Terrestrial plants",1994,2008,0
+492,"Terrestrial plants",1982,2006,0
+493,"Terrestrial plants",2003,2008,0
+494,"Terrestrial plants",1997,2008,0
+495,"Terrestrial plants",1999,2008,0
+496,"Terrestrial plants",2000,2008,0
+497,"Terrestrial plants",1981,2009,0
+498,"Terrestrial plants",2007,2010,0
+499,"Marine invertebrates",1979,1999,0
+500,"Marine invertebrates",2001,2012,0
+501,"Marine invertebrates",2004,2012,0
+502,"Terrestrial plants",1962,2009,0
+503,"Marine invertebrates",2015,2016,0
+504,"Fish",2003,2007,0
+505,"All",1990,2012,0
+507,"Fish",1976,2010,0
+508,"Terrestrial plants",2003,2005,0
+509,"Terrestrial plants",1989,2008,0
+510,"Terrestrial invertebrates",1987,2015,0
+511,"Fish",2005,2015,0
+512,"Terrestrial plants",1964,1994,0
+515,"Mammals",2003,2005,0.897160883280757
+516,"Mammals",1997,2013,0.865217391304348

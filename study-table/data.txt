@@ -1,0 +1,12 @@
+path:
+- data.csv
+- data.rds
+rows: 361
+cols: 5
+columns:
+  study_id: numeric
+  taxa: character
+  min_year: numeric
+  max_year: numeric
+  coverage: numeric
+type: table
