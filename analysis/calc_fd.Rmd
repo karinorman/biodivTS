@@ -109,13 +109,14 @@ get_parallel_FD <- function(data, group_num){
   group_data <- data %>% filter(plot_id %in% group_plots$plot_id)
   
   future::plan(multiprocess)
-  fd <- future_map_dfr(group_plots$plot_id, get_fd_safe, data = group_data)
+  fd <- future_map(group_plots$plot_id, get_fd_safe, data = group_data) %>%
+    rbind()
   
   print(group_num)
   return(FD)
 }
 
-fd <- map_dfr(1:num_groups, get_parallel_FD, data = data)
+fd <- map(1:num_groups, get_parallel_FD, data = data)
 ```
 
 Read data back in, excluding sites/plots as they become a problem:
@@ -126,27 +127,25 @@ fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
   map_dfr(read_tsv)
 
-remain <- biotime_traits %>%
-  filter(!is.na(plot), !is.na(scientificName)) %>% #remove unlabeled plots and observations without traits
-  filter(!is.na(plot), !study_id %in% c(195, 360),
-         !study_id %in% c(217, 327), #exclude to get the file size smaller
-         !study_id %in% c(59, 166, 337), #NA's in the distance matrix
-         study_id != 169,  #Zero distance error
-         !study_id %in% c(372,374), #Qhull error code 4
-         study_id != 333) %>% #species distance matrix not Euclidean after 'sqrt' correction
-  filter(study_id != 56 | plot != 24) %>% #NA's in the distance matrix
-  anti_join(fd_data, by = c("year", "study_id", "plot")) %>%
-  group_by(study_id, year, plot) %>%
-  filter(n_distinct(id) > 4) %>%
-  ungroup()
+# remain <- data %>%
+#   filter(!is.na(plot)) %>% #remove unlabeled plots 
+#   filter(!is.na(plot), !study_id %in% c(195, 360),
+#          !study_id %in% c(217, 327), #exclude to get the file size smaller
+#          !study_id %in% c(59, 166, 337), #NA's in the distance matrix
+#          study_id != 169,  #Zero distance error
+#          !study_id %in% c(372,374), #Qhull error code 4
+#          study_id != 333) %>% #species distance matrix not Euclidean after 'sqrt' correction
+#   filter(study_id != 56 | plot != 24) %>% #NA's in the distance matrix
+#   anti_join(fd_data, by = c("year", "study_id", "plot")) %>%
+#   group_by(study_id, year, plot) %>%
+#   filter(n_distinct(id) > 4) %>%
+#   ungroup()
 
-plots <- remain %>%
-  pull(plot_id) %>%
-  unique()
+plots_left <- plots[!plots %in% fd_data$plot_id]
 
 library(furrr)
 future::plan(multiprocess)
-system.time(fd <- future_map_dfr(plots, get_fd_safe, data = data))
+system.time(fd <- future_map(plots_left, get_fd_safe, data = data))
 ```
 
 Let's also do the functions from BAT package
