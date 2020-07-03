@@ -62,8 +62,8 @@ get_fd <- function(obs_data, filter_plot){
 
   fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
     cbind(years, .) %>%
-    mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2]) %>%
-    write_tsv(paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
+    mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2])
+    write_tsv(fd_out, paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
   
   setwd(here::here())
   print(filter_plot)

@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(biodivTS)
+library(FD)
 ```
 
 Create null models that would be transferable to any timeseries by treating the species pool as all species observed across the timeseries.
@@ -56,18 +57,21 @@ get_plot_sample <- function(data, filter_plot, n){
 
 #drop trait columns that are the same value for every observation, and therefore providing no additional info
 clean_trait_matrix <- function(trait_matrix){
-  uniq_vals <- sapply(trait_matrix, function(x){length(unique(x))}) #get number of unique values of each trait
-  col_names <- names(which(uniq_vals == 1)) #find columns where there is only one value for all observations
-  return(select(trait_matrix, -col_names))
+  # uniq_vals <- sapply(trait_matrix, function(x){length(unique(x))}) #get number of unique values of each trait
+  # col_names <- names(which(uniq_vals == 1)) #find columns where there is only one value for all observations
+  # return(select(trait_matrix, -col_names))
+  trait_matrix %>%
+  select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
+  mutate_at(vars(-id, -ends_with("5cat")), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
+  arrange(id) %>%
+  column_to_rownames(var = "id")
 }
 
 get_trait_matrix <- function(data, species_list, trait_list){ 
   traits <- data %>%
     filter(id %in% species_list) %>%
     dplyr::select(id, all_of(trait_list)) %>%
-    distinct() %>%
-    arrange(id) %>%
-    column_to_rownames(var = "id")
+    distinct()
 }
 ```
 
@@ -75,20 +79,27 @@ Get dataframe of samples for each plot and corresponding species and trait matri
 ```{r}
 load(here::here("data", "biotime_traits.rda"))
 
-biotime_traits <- biotime_traits %>%
-  mutate(plot_id = paste0(study_id, plot)) %>%
-  filter(!is.na(id))
-
 n = 100
 
-sample_occurrence <- map_dfr(unique(biotime_traits$plot_id), get_plot_sample, data = biotime_traits, n = n) %>%
+#get the plots that meet our criteria for calculating FD
+sample_plots <- biotime_traits %>%
+  filter(!is.na(plot)) %>% #remove unlabeled plots 
+  group_by(plot_id, year) %>%
+  filter(n_distinct(id) > 4) %>%
+  group_by(plot_id) %>%
+  filter(n_distinct(year) > 4) %>% 
+  ungroup()
+
+sample_occurrence <- map_dfr(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
   replace(is.na(.), 0)
 
 #colnames(biotime_traits)[17:64]
 
 get_plot_FD <- function(data, trait_range, occ_df, filter_plot) {
-  sample_species_mat <- occ_df %>%
-    filter(plot_id == filter_plot) %>%
+  plot_samples <- occ_df %>%
+    filter(plot_id == filter_plot)
+    
+  sample_species_mat <- plot_samples %>%
     select(-c(richness, plot_id, n)) %>% #want only species x site info
     select_if(!colSums(.) %in% c(0, NA)) %>% #remove species that don't occur in the plot
     select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
@@ -97,7 +108,21 @@ get_plot_FD <- function(data, trait_range, occ_df, filter_plot) {
   sample_trait_mat <-
     clean_trait_matrix(get_trait_matrix(data = data, colnames(sample_species_mat), traits))
   
-  sample_fd <- as.data.frame(dbFD_joggle(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE))
+  fs::dir_create(paste0(here::here("data"), "/fd_output"))
+  
+  #the convexhull c code creates an output file of vertices, in order to not have multiple threads writing
+  #to the same file we have to create individual working directories
+  tmp_dir <- paste0(here::here("data", "fd_output", "tmp"), "/tmp_", filter_plot)
+  fs::dir_create(tmp_dir)
+  setwd(tmp_dir)
+  
+  print(filter_plot)
+  sample_fd <- as.data.frame(dbFD_joggle(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE)) %>%
+    cbind(plot_samples %>% select(richness, plot_id, n))
+  
+  save_dir <- paste0(here::here("data", "fd_output", "null"))
+  fs::dir_create(save_dir)
+  write_tsv(sample_fd, paste0(save_dir, "/null", filter_plot, ".csv"))
   
   df <- occ_df %>%
     filter(plot_id == filter_plot) %>%
@@ -112,7 +137,9 @@ get_plot_FD <- function(data, trait_range, occ_df, filter_plot) {
   return(df %>% select(-merge_test))
 }
 
-test <- get_plot_FD(biotime_traits, 17:64, sample_occurrence, 5617)
+#test <- get_plot_FD(sample_plots, 18:65, sample_occurrence, 391)
+null_FD <- map_dfr(unique(sample_plots$plot_id)[1:3], get_plot_FD, 
+                   data = sample_plots, trait_range = 18:65, occ_df = sample_occurrence)
 ```
 
 BAT
