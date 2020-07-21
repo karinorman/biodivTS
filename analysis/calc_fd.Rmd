@@ -112,7 +112,7 @@ get_parallel_FD <- function(data, group_num){
   fd <- future_map_dfr(group_plots$plot_id, get_fd_safe, data = group_data)
   
   print(group_num)
-  return(FD)
+  return(fd)
 }
 
 fd <- map_dfr(1:num_groups, get_parallel_FD, data = data)
