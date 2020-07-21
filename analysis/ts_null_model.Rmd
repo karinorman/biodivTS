@@ -142,6 +142,32 @@ null_FD <- map_dfr(unique(sample_plots$plot_id)[1:3], get_plot_FD,
                    data = sample_plots, trait_range = 18:65, occ_df = sample_occurrence)
 ```
 
+Calculate null models in parallel
+```{r}
+#number of chunks to split original dataset into 
+num_groups = 4
+
+plot_sizes <- sample_plots %>%
+  count(plot_id) %>%
+  arrange(desc(n)) %>%
+  mutate(group = rep_len(1:num_groups, dim(.)[1]))
+
+get_parallel_FD <- function(data, group_num){
+  group_plots <- plot_sizes %>% filter(group == group_num)
+  group_data <- data %>% filter(plot_id %in% group_plots$plot_id)
+  
+  future::plan(multiprocess)
+  fd <- map_dfr(group_plots$plot_id[1:3], get_plot_FD, 
+                   data = group_data, trait_range = 18:65, occ_df = sample_occurrence)
+    #future_map(group_plots$plot_id, get_fd_safe, data = group_data)
+  
+  print(group_num)
+  return(fd)
+}
+
+fd <- map_dfr(1:num_groups, get_parallel_FD, data = data)
+```
+
 BAT
 ```{r}
 library(BAT)
