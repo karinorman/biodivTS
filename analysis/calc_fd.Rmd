@@ -109,14 +109,14 @@ get_parallel_FD <- function(data, group_num){
   group_data <- data %>% filter(plot_id %in% group_plots$plot_id)
   
   future::plan(multiprocess)
-  fd <- future_map(group_plots$plot_id, get_fd_safe, data = group_data) %>%
+  fd <- future_map(group_plots$plot_id, get_fd_safe, obs_data = group_data) %>%
     rbind()
   
   print(group_num)
   return(fd)
 }
 
-fd <- map(1:num_groups, get_parallel_FD, data = data)
+fd <- map(1:num_groups, get_parallel_FD, obs_data = data)
 ```
 
 Read data back in, excluding sites/plots as they become a problem:
@@ -145,7 +145,7 @@ plots_left <- plots[!plots %in% fd_data$plot_id]
 
 library(furrr)
 future::plan(multiprocess)
-system.time(fd <- future_map(plots_left, get_fd_safe, data = data))
+system.time(fd <- future_map(plots_left, get_fd_safe, obs_data = data))
 ```
 
 Let's also do the functions from BAT package
