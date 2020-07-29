@@ -26,7 +26,8 @@ get_fd <- function(obs_data, filter_plot){
   data <- obs_data %>%
     filter(plot_id == filter_plot)
   
-  print(filter_plot)
+  fs::dir_create(paste0(here::here("data"), "/fd_attempt"))
+  write_tsv(data.frame(), paste0(here::here("data"), "/fd_attempt/", filter_plot, ".tsv"))
   
   species_mat <- data %>%
     select(year, id) %>% 
@@ -125,8 +126,14 @@ fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
   map_dfr(read_tsv)
 
+attempted <- dir(here::here("data", "fd_attempt"), "*.tsv") %>%
+  str_replace(".tsv", "") %>%
+  as.numeric()
+
 remain <- data %>%
-  filter(!plot_id %in% fd_data$plot_id, !plot_id %in% c(1661, 196456, 3721, 3601))
+  filter(!plot_id %in% fd_data$plot_id, 
+         !plot_id %in% attempted,
+         !plot_id %in% c(1661, 196456, 3721, 3601, 2171))#1952507
 
 plot_sizes <- remain %>%
   count(plot_id) %>%
