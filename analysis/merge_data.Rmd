@@ -298,7 +298,6 @@ usethis::use_data(fd_table)
 
 First for one study, 311
 ```{r}
-
 glm_correction <- function(study, plot_num){
   model_data <- fd_table %>% filter(metric == "FRic", study_id == study, plot == plot_num)
   fit <- glm(value ~ richness, data = model_data)
