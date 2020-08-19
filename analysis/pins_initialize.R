@@ -7,6 +7,9 @@ getOption("pins.github.release") == 0
 #if above expression is FALSE, change .Rprofile option to (usethis::edit_r_profile):
 #options(pins.github.release = 0)
 
+#make sure the github PAT is set
+#usethis::edit_r_environ()
+
 board_register_github(repo = "karinorman/biodivTS", branch = "master")
 
 #to pin:
