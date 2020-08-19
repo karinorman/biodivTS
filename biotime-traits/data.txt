@@ -1,0 +1,73 @@
+path:
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-c6f883b/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-c6f883b/data.rds
+rows: 1986000
+cols: 66
+columns:
+  id: character
+  biotimeName: character
+  study_id: numeric
+  taxa: character
+  record_id: numeric
+  day: logical
+  month: logical
+  year: numeric
+  sample_desc: character
+  plot: numeric
+  id_species: numeric
+  latitude: numeric
+  longitude: numeric
+  sum_abundance: numeric
+  sum_biomass: numeric
+  traitName: character
+  scientificName: character
+  diet_inv: numeric
+  diet_vend: numeric
+  diet_vect: numeric
+  diet_vfish: numeric
+  diet_vunk: numeric
+  diet_scav: numeric
+  diet_fruit: numeric
+  diet_nect: numeric
+  diet_seed: numeric
+  diet_planto: numeric
+  diet_5cat: character
+  forstrat_watbelowsurf: numeric
+  forstrat_wataroundsurf: numeric
+  forstrat_ground: numeric
+  forstrat_understory: numeric
+  forstrat_midhigh: numeric
+  forstrat_canopy: numeric
+  forstrat_aerial: numeric
+  pelagicspecialist: numeric
+  nocturnal: numeric
+  bodymass_value: numeric
+  crepuscular: numeric
+  diurnal: numeric
+  fos: numeric
+  ter: numeric
+  aqu: numeric
+  arb: numeric
+  diet_leaves: numeric
+  diet_flowers: numeric
+  diet_vert: numeric
+  wet_warm: numeric
+  wet_cold: numeric
+  dry_warm: numeric
+  dry_cold: numeric
+  age_at_maturity_min_y: numeric
+  age_at_maturity_max_y: numeric
+  body_size_mm: numeric
+  size_at_maturity_min_mm: numeric
+  size_at_maturity_max_mm: numeric
+  longevity_max_y: numeric
+  litter_size_min_n: numeric
+  litter_size_max_n: numeric
+  reproductive_output_y: numeric
+  offspring_size_min_mm: numeric
+  offspring_size_max_mm: numeric
+  dir: numeric
+  lar: numeric
+  viv: numeric
+  plot_id: character
+type: table
