@@ -31,7 +31,8 @@ plt +
 
 #Visualizing FD trends
 ```{r}
-load(here::here("data", "fd_table.rda"))
+#load(here::here("data", "fd_table.rda"))
+fd_table <- pins::pin_get("fd_table", board = "github")
 
 fric_plot <- fd_table %>%
   filter(metric == "FRic") %>%
@@ -42,7 +43,7 @@ fric_plot <- fd_table %>%
   )) +
   geom_line() +
   scale_x_continuous(breaks = scales::pretty_breaks()) +
-  facet_wrap( ~ as.factor(study_id), scales = "free") +
+  facet_wrap( ~ as.factor(plot_id), scales = "free") +
   theme(legend.position = "none") +
   ylab("Fric")
 
@@ -54,13 +55,178 @@ Reproduce Dornelas figure
 #get climate classification
 metadata <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS"))
 
-fd_table %>%
+fric_trend <- fd_table %>%
   filter(metric == "FRic") %>%
   left_join(metadata %>% select(study_id, climate)) %>%
-  unite(id, study_id, plot) %>%
   ggplot(aes(x = year, y = log(value))) +
-  geom_smooth(aes(color = climate, group = id), method = "glm", se = FALSE) +
-  geom_point(aes(color = climate, group = id)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = plot_id), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = plot_id) ,color = "grey") +
   geom_smooth(color = "black", method = "glm", se = FALSE) +
   theme(legend.position = "none") 
+ggsave("fric_trends.png", fric_plot)
 ```
+
+metric plotting function
+```{r}
+library(lme4)
+
+plot_metric <- function(metric_name, ylabel){
+  data <- fd_table %>%
+    filter(metric == metric_name) %>%
+    mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+  
+  mod <- lmer(logvalue ~ year + (1|plot_id), data = data)
+  coefs <- summary(mod)$coefficients
+  
+  print(metric_name) 
+  confint(mod)
+  
+  pred <- data.frame(year = min(data$year):max(data$year)) %>%
+    mutate(pred = coefs[1,1] + year * coefs[2,1])
+  
+  print()
+  trend_plot <- data %>%
+    left_join(pred, by = "year") %>%
+    #left_join(metadata %>% select(study_id, climate)) %>%
+    ggplot(aes(x = year, y = logvalue)) +
+    # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+    # geom_point(aes(color = climate, group = plot_id)) +
+    geom_point(aes(group = plot_id) ,color = "grey") +
+    geom_smooth(aes(group = plot_id), color = "darkgrey", method = "glm", se = FALSE) +
+    #geom_smooth(color = "black", method = "glm", se = FALSE) +
+    geom_line(mapping = aes(y = pred)) +
+    theme(legend.position = "none") +
+    theme_classic() +
+    ylab(ylabel)
+  
+  ggsave(paste0(metric_name, "_trend.png"), trend_plot)
+  return(trend_plot)
+}
+
+plot_metric("FRic", "log(FD)")
+
+plot_map <- tibble(metric_name = c("FRic", "FEve", "FDiv", "FDis"), 
+           ylabel = c("log(FD)", "log(Evenness)", "log(Divergence)", "log(Dispersion)"))
+pmap(plot_map, plot_metric)
+```
+
+get model info
+```{r}
+get_metric_conint <- function(metric_name){
+ data <- fd_table %>%
+    filter(metric == metric_name) %>%
+    mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+  
+  mod <- lmer(logvalue ~ year + (1|plot_id), data = data)
+  coefs <- summary(mod)$coefficients
+  
+  confint(mod)
+  # as_tibble(confint(mod)) %>%
+  #   mutate(metric = metric_name)
+}
+
+map(c("FRic", "FEve", "FDiv", "FDis"), get_metric_conint)
+```
+
+```{r}
+library(lme4)
+
+fric_data <- fd_table %>%
+  filter(metric == "FRic") %>%
+  mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+
+fric_mod <- lmer(logvalue ~ year + (1|plot_id), data = fric_data)
+coefs <- summary(fric_mod)$coefficients
+
+pred <- data.frame(year = min(fric_data$year):max(fric_data$year)) %>%
+                     mutate(pred = coefs[1,1] + year * coefs[2,1])
+
+fric_trend <- fric_data %>%
+  left_join(pred, by = "year") %>%
+  #left_join(metadata %>% select(study_id, climate)) %>%
+  ggplot(aes(x = year, y = logvalue)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = plot_id), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = plot_id) ,color = "grey") +
+  #geom_smooth(color = "black", method = "glm", se = FALSE) +
+  geom_line(mapping = aes(y = pred)) +
+  theme(legend.position = "none") +
+  ylab("log(FD)")
+ggsave("fric_trend.png", fric_trend)
+```
+
+```{r}
+feve_data <- fd_table %>%
+  filter(metric == "FEve") %>%
+  mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+
+feve_mod <- glm(logvalue ~ year + plot_id, data = feve_data)
+
+#df3 = cbind(df3, pred = predict(fm1))
+
+feve_trend <- feve_data %>%
+  #cbind(pred = predict(fric_mod)) %>%
+  #left_join(metadata %>% select(study_id, climate)) %>%
+  ggplot(aes(x = year, y = logvalue)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = plot_id), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = plot_id) ,color = "grey") +
+  geom_smooth(color = "black", method = "glm", se = FALSE) +
+  #geom_line(mapping = aes(y = pred)) +
+  theme(legend.position = "none") +
+  ylab("log(Evenness)")
+ggsave("feve_trend.png", feve_trend)
+```
+
+```{r}
+fdis_data <- fd_table %>%
+  filter(metric == "FDis") %>%
+  mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+
+fdis_mod <- glm(logvalue ~ year + plot_id, data = fdis_data)
+
+#df3 = cbind(df3, pred = predict(fm1))
+
+fdis_trend <- fdis_data %>%
+  #cbind(pred = predict(fric_mod)) %>%
+  #left_join(metadata %>% select(study_id, climate)) %>%
+  ggplot(aes(x = year, y = logvalue)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = plot_id), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = plot_id) ,color = "grey") +
+  geom_smooth(color = "black", method = "glm", se = FALSE) +
+  #geom_line(mapping = aes(y = pred)) +
+  theme(legend.position = "none") +
+  ylab("log(Dispersion)")
+ggsave("fdis_trend.png", fdis_trend)
+```
+
+```{r}
+fdiv_data <- fd_table %>%
+  filter(metric == "FDiv") %>%
+  mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+
+fdiv_mod <- glm(logvalue ~ year + plot_id, data = fdiv_data)
+
+#df3 = cbind(df3, pred = predict(fm1))
+
+fdiv_trend <- fdiv_data %>%
+  #cbind(pred = predict(fric_mod)) %>%
+  #left_join(metadata %>% select(study_id, climate)) %>%
+  ggplot(aes(x = year, y = logvalue)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = plot_id), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = plot_id) ,color = "grey") +
+  geom_smooth(color = "black", method = "glm", se = FALSE) +
+  #geom_line(mapping = aes(y = pred)) +
+  theme(legend.position = "none") +
+  ylab("log(Dispersion)")
+ggsave("fdis_trend.png", fdiv_trend)
+```
+
