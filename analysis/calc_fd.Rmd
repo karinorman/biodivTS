@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(furrr)
 library(FD)
+library(biodivTS)
 ```
 
 
@@ -18,7 +19,7 @@ Get FD metrics for each study
 
 FD function:
 ```{r}
-load(here::here("data", "biotime_traits.rda"))
+biotime_traits <- pins::pin_get("biotime-traits", board = "github")
 
 get_fd <- function(obs_data, filter_plot){
   require(FD)
@@ -30,11 +31,10 @@ get_fd <- function(obs_data, filter_plot){
   write_tsv(data.frame(), paste0(here::here("data"), "/fd_attempt/", filter_plot, ".tsv"))
   
   species_mat <- data %>%
-    select(year, id) %>% 
+    select(year, id, sum_abundance) %>% 
     distinct() %>%
     arrange(year, id) %>%
-    mutate(present = 1) %>%
-    spread(id, value = present, fill = 0) %>%
+    spread(id, value = sum_abundance, fill = 0) %>%
     select(-year)
   
   years <- data %>% 
@@ -48,8 +48,14 @@ get_fd <- function(obs_data, filter_plot){
               biotimeName, scientificName)
     ) %>%
     distinct() %>%
-    select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
-    mutate_at(vars(-id, -ends_with("5cat")), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
+    select_if(~ length(unique(na.omit(.))) > 1) #remove columns that have the same value for all columns
+  
+  #get binary variables so they can be excluded from rescaling 
+  bin_vars <- map(trait_mat, ~ all(na.omit(.) %in% 0:1))
+    
+  trait_mat <- trait_mat %>%
+    mutate_at(vars(-c(id, names(bin_vars[bin_vars == TRUE])), -ends_with("5cat")), 
+              list(~as.numeric(scale(.)))) %>% #rescale variables, not binary or categorical
     arrange(id) %>%
     column_to_rownames("id")
   
