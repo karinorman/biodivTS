@@ -94,6 +94,7 @@ biotime_traits <- comp_biotime_traits %>%
 
 ```{r}
 usethis::use_data(biotime_traits)
+pins::pin(biotime_traits, board = "github")
 ```
 
 

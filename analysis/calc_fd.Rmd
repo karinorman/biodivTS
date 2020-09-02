@@ -96,7 +96,7 @@ plots <- data %>%
   pull(plot_id) %>%
   unique()
 
-#system.time(fd <- future_map(plots[1:3], get_fd_safe, obs_data = data))
+system.time(fd <- map(plots, get_fd_safe, obs_data = data))
 ```
 
 The dataset is too big to copy to each parallel thread, so we split the dataset into chunks 
