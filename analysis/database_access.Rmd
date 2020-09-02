@@ -34,7 +34,9 @@ dupes <- biotime_sql %>% group_by(study_id, plot, id_species, year, month, day) 
 year_biotime <- biotime_sql %>% 
   group_by(id_species, plot, year, study_id) %>% 
   summarise(year_abun = sum(na.omit(abundance)), 
-            year_biomass = sum(na.omit(biomass)))
+            year_biomass = sum(na.omit(biomass))) %>%
+  left_join(tbl(con, "datasets") %>% select(taxa = TAXA, study_id = STUDY_ID) %>% collect()) %>%
+  left_join(tbl(con, "species") %>% select(id_species = ID_SPECIES, genus_species = GENUS_SPECIES) %>% collect())
 
 #should be zero to be appropriately aggregated
 #year_biotime %>% group_by(study_id, plot, year, id_species) %>% filter(n()>1) %>% View()
