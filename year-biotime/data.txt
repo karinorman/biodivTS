@@ -1,8 +1,8 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/year-biotime-e9c3bdf/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/year-biotime-e9c3bdf/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/year-biotime-d26e3b5/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/year-biotime-d26e3b5/data.rds
 rows: 2357443
-cols: 7
+cols: 8
 columns:
   id_species: integer
   plot: character
@@ -11,4 +11,5 @@ columns:
   year_abun: numeric
   year_biomass: numeric
   taxa: character
+  genus_species: character
 type: table
