@@ -1,1 +1,5 @@
-[]
+- path: biotime-traits
+  name: biotime-traits
+  rows: 836746
+  cols: 60
+  type: table
