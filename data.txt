@@ -3,11 +3,6 @@
   rows: 361
   cols: 5
   type: table
-- path: amphibio
-  name: amphibio
-  rows: 6667
-  cols: 35
-  type: table
 - path: fd_table
   name: fd_table
   rows: 15816
