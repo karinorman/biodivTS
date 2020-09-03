@@ -3,3 +3,8 @@
   rows: 836746
   cols: 60
   type: table
+- path: year-biotime
+  name: year-biotime
+  rows: 2357443
+  cols: 8
+  type: table
