@@ -1,24 +1,18 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-c6f883b/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-c6f883b/data.rds
-rows: 1986000
-cols: 66
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-fe3ffa2/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-fe3ffa2/data.rds
+rows: 836746
+cols: 60
 columns:
   id: character
   biotimeName: character
-  study_id: numeric
+  id_species: integer
+  plot: character
+  year: integer
+  study_id: integer
+  year_abun: numeric
+  year_biomass: numeric
   taxa: character
-  record_id: numeric
-  day: logical
-  month: logical
-  year: numeric
-  sample_desc: character
-  plot: numeric
-  id_species: numeric
-  latitude: numeric
-  longitude: numeric
-  sum_abundance: numeric
-  sum_biomass: numeric
   traitName: character
   scientificName: character
   diet_inv: numeric
