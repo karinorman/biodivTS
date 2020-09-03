@@ -12,6 +12,8 @@ library(tidyverse)
 library(furrr)
 library(FD)
 library(biodivTS)
+
+pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
 ```
 
 
@@ -21,7 +23,7 @@ FD function:
 ```{r}
 biotime_traits <- pins::pin_get("biotime-traits", board = "github")
 
-get_fd <- function(obs_data, filter_plot){
+get_fd <- function(obs_data, filter_plot, ...){
   require(FD)
   
   data <- obs_data %>%
@@ -31,10 +33,12 @@ get_fd <- function(obs_data, filter_plot){
   write_tsv(data.frame(), paste0(here::here("data"), "/fd_attempt/", filter_plot, ".tsv"))
   
   species_mat <- data %>%
-    select(year, id, sum_abundance) %>% 
-    distinct() %>%
-    arrange(year, id) %>%
-    spread(id, value = sum_abundance, fill = 0) %>%
+    group_by(year, id) %>%
+    summarise(abun = sum(sum_abundance)) %>%
+    ungroup() %>%
+    arrange(year) %>%
+    arrange(id) %>%
+    pivot_wider(names_from = id, values_from = abun, values_fill = 0) %>%
     select(-year)
   
   years <- data %>% 
@@ -67,7 +71,7 @@ get_fd <- function(obs_data, filter_plot){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = FALSE))[,1:8] %>%
+  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = TRUE, m = "min", ...))[,1:8] %>%
     cbind(years, .) %>%
     mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2])
     write_tsv(fd_out, paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
@@ -132,23 +136,15 @@ fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
   map_dfr(read_tsv)
 
-attempted <- dir(here::here("data", "fd_attempt"), "*.tsv") %>%
-  str_replace(".tsv", "") %>%
-  as.numeric()
-
 remain <- data %>%
-  filter(!plot_id %in% fd_data$plot_id, 
-         !plot_id %in% attempted,
-         !plot_id %in% c(1661, 196456, 3721, 3601, 2171))#1952507
+  filter(!plot_id %in% fd_data$plot_id)
 
 plot_sizes <- remain %>%
-  count(plot_id) %>%
-  arrange(desc(n)) %>%
-  mutate(group = rep_len(1:num_groups, dim(.)[1]))
+  count(plot_id) 
 
-#fd <- map(1:num_groups, get_parallel_FD, df = remain)
-
-system.time(fd <- map(plot_sizes$plot_id, get_fd_safe, obs_data = data))
+#get_fd_error <- safely(get_fd)
+#system.time(fd <- map(plot_sizes$plot_id, get_fd_error, obs_data = data, corr = "cailliez"))
+system.time(fd <- map(plot_sizes$plot_id, get_fd_safe, obs_data = data, corr = "cailliez"))
 ```
 
 Let's also do the functions from BAT package
@@ -230,4 +226,5 @@ fd_table <- fd_data %>%
                        distinct())
 
 usethis::use_data(fd_table)
+pins::pin(fd_table, board = "github")
 ```
