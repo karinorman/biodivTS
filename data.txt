@@ -8,8 +8,3 @@
   rows: 15816
   cols: 8
   type: table
-- path: biotime-traits
-  name: biotime-traits
-  rows: 836746
-  cols: 60
-  type: table
