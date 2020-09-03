@@ -8,3 +8,8 @@
   rows: 2357443
   cols: 8
   type: table
+- path: study-table
+  name: study-table
+  rows: 361
+  cols: 5
+  type: table
