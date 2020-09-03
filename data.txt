@@ -3,8 +3,3 @@
   rows: 361
   cols: 5
   type: table
-- path: fd_table
-  name: fd_table
-  rows: 15816
-  cols: 8
-  type: table
