@@ -95,6 +95,12 @@ data <- biotime_traits %>%
   ungroup() #%>%
   #filter(#!study_id %in% c(195, 360), #exclude because they break
          #!study_id %in% c(217, 327, 195)) #exclude to get the file size smaller
+
+plots <- data %>%
+  pull(plot_id) %>%
+  unique()
+
+system.time(fd <- map(plots, get_fd_safe, obs_data = data))
 ```
 
 The dataset is too big to copy to each parallel thread, so we split the dataset into chunks 

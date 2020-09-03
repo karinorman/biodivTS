@@ -52,7 +52,7 @@ match_providers <- function(data, original_provider, common = FALSE) {
     left_join(alt_names, na_matches = "never", by = "altProviderName")
 
   if (common == TRUE){
-    common_providers <- c("col", "fb", "gbif", "itis", "iucn", "ncbi", "slb")
+    common_providers <- c("fb", "gbif", "itis", "iucn", "ncbi", "slb")
     unmatched <- unmatched[unmatched %in% syn_res$input]
 
     common_match <- map_df(common_providers[common_providers != original_provider],

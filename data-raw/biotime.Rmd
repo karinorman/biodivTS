@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here)
 library(tidyverse)
 library(lazyeval)
-library(rdataretriever)
 library(taxadb)
 
 source(here::here("data-raw", "helper_functions.R"))
@@ -22,10 +21,12 @@ source(here::here("data-raw", "helper_functions.R"))
 Import occurence data from Biotime
 ```{r}
 #rdataretriever::install("biotime", connection = "csv", data_dir = here("data"))
+# 
+# data <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>%
+#   select(study_id, taxa) %>%
+#   left_join(read_csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
 
-data <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>% 
-  select(study_id, taxa) %>%
-  left_join(read_csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
+data <- pins::pin_get("year-biotime", board = "github")
 ```
 
 Many of the studies with only one plot have NA for the plot number, but we want to distinguish between NA's in studies that have multiple plots and unlabled studies.
@@ -34,15 +35,14 @@ Many of the studies with only one plot have NA for the plot number, but we want 
 sing_study <- data %>% 
   select(study_id, plot) %>%
   distinct() %>%
-  group_by(study_id) %>%
-  count() %>%
+  count(study_id) %>%
   filter(n == 1) %>%
   pull(study_id)
 
 #replace plot NA's that are really studies with only one plot with a plot label 
 data <- data %>% 
   mutate(plot = case_when(
-    study_id %in% sing_study & is.na(plot) ~ 1,
+    study_id %in% sing_study & is.na(plot) ~ "A",
     TRUE ~ plot
   ))
 ```
@@ -68,8 +68,8 @@ OTT is the best authority but doesn't have common names, so we use the next best
 #   left_join(data, by = "genus_species")
 
 #Getting matches by sci name and common name 
-biotime_ids <- by_name(unique(data$genus_species), "itis") %>%
-  bind_rows(by_common(unique(data$genus_species), "itis")) %>%
+biotime_ids <- filter_name(unique(data$genus_species), "itis") %>%
+  bind_rows(filter_common(unique(data$genus_species), "itis")) %>%
   filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
   drop_na(acceptedNameUsageID)
 ```
@@ -85,6 +85,13 @@ Add the unresolved ID to all the other ids and join with biotime data
 biotime_ids <- unres %>%
   left_join(biotime_ids) %>% #join ID's back with all the columns
   filter(acceptedNameUsageID %in% c(
+    "ITIS:1026896", #accepted on the ITIS website
+    "ITIS:172921",
+    "ITIS:683209",
+    "ITIS:527684",
+    "ITIS:782604",
+    "ITIS:28107",
+    "ITIS:508923",
     "ITIS:159807", #Heterodontus zebra, all the studies including it are using sci names, so we should match to the sci name match not common name match
     "ITIS:175125" #The Redhead is coming from bird studies, so choose the bird match, 
     #the rest can't be match due to too little information
@@ -94,7 +101,7 @@ biotime_ids <- unres %>%
 biotime_data <- biotime_ids %>%
   select(id = acceptedNameUsageID,input, scientificName) %>%
   distinct() %>%
-  right_join(data %>% select(-species, -genus), by = c("input" = "genus_species")) %>%
+  right_join(data, by = c("input" = "genus_species")) %>%
   rename(sourceName = input)
 ```
 
