@@ -33,12 +33,10 @@ get_fd <- function(obs_data, filter_plot, ...){
   write_tsv(data.frame(), paste0(here::here("data"), "/fd_attempt/", filter_plot, ".tsv"))
   
   species_mat <- data %>%
-    group_by(year, id) %>%
-    summarise(abun = sum(sum_abundance)) %>%
-    ungroup() %>%
+    select(year, id, year_abun) %>%
     arrange(year) %>%
     arrange(id) %>%
-    pivot_wider(names_from = id, values_from = abun, values_fill = 0) %>%
+    pivot_wider(names_from = id, values_from = year_abun, values_fill = 0) %>%
     select(-year)
   
   years <- data %>% 
@@ -47,19 +45,20 @@ get_fd <- function(obs_data, filter_plot, ...){
     arrange(year)
   
   trait_mat <- data %>%
-    select(-c(taxa, record_id, day, month, year, sample_desc, id_species, 
-              latitude, longitude, sum_abundance, sum_biomass, traitName, 
-              biotimeName, scientificName)
+    select(-c(biotimeName, taxa, id_species, plot, year, year_abun, 
+              year_biomass, traitName, scientificName, plot_id, study_id)
     ) %>%
     distinct() %>%
-    select_if(~ length(unique(na.omit(.))) > 1) #remove columns that have the same value for all columns
+    select_if(~ length(unique(na.omit(.))) > 1)  #remove columns that have the same value for all columns
   
   #get binary variables so they can be excluded from rescaling 
   bin_vars <- map(trait_mat, ~ all(na.omit(.) %in% 0:1))
+  bin_vars <- names(bin_vars[bin_vars == TRUE])
     
   trait_mat <- trait_mat %>%
-    mutate_at(vars(-c(id, names(bin_vars[bin_vars == TRUE])), -ends_with("5cat")), 
+    mutate_at(vars(-c(id, bin_vars), -ends_with("5cat")), 
               list(~as.numeric(scale(.)))) %>% #rescale variables, not binary or categorical
+    mutate_at(vars(bin_vars), as.character(.)) %>%
     arrange(id) %>%
     column_to_rownames("id")
   
@@ -100,7 +99,7 @@ plots <- data %>%
   pull(plot_id) %>%
   unique()
 
-system.time(fd <- map(plots, get_fd_safe, obs_data = data))
+system.time(fd <- map(plots, get_fd_safe, obs_data = data, m = "min", corr = "cailliez"))
 ```
 
 The dataset is too big to copy to each parallel thread, so we split the dataset into chunks 
