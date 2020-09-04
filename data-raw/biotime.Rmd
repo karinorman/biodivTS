@@ -42,7 +42,7 @@ sing_study <- data %>%
 #replace plot NA's that are really studies with only one plot with a plot label 
 data <- data %>% 
   mutate(plot = case_when(
-    study_id %in% sing_study & is.na(plot) ~ "A",
+    study_id %in% sing_study & plot %in% c(NA, "", "#REF!") ~ "A",
     TRUE ~ plot
   ))
 ```
