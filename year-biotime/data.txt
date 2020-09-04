@@ -1,6 +1,6 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/year-biotime-520a973/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/year-biotime-520a973/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/year-biotime-cfc8f67/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/year-biotime-cfc8f67/data.rds
 rows: 2357443
 cols: 8
 columns:
