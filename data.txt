@@ -1,10 +1,15 @@
 - path: biotime-traits
   name: biotime-traits
-  rows: 836746
+  rows: 2546579
   cols: 60
   type: table
 - path: year-biotime
   name: year-biotime
   rows: 2357443
   cols: 8
+  type: table
+- path: study-table
+  name: study-table
+  rows: 361
+  cols: 5
   type: table
