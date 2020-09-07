@@ -70,7 +70,8 @@ percent <- 0.85
 traits <- list(elton_bird, elton_mamm, amphibio)
 
 comp_biotime_traits <- map_dfr(traits, merge_data) %>%
-  right_join(biotime_data %>% select(-sourceName, -scientificName))
+  right_join(biotime_data %>% select(-sourceName, -scientificName)) %>%
+  distinct()
 
 #always check that one species didn't match to multiple datasets, below should return and empty dataframe
 #comp_biotime_traits %>% group_by(record_id) %>% filter(n() > 1) %>% dim()
@@ -109,4 +110,5 @@ study_table <- biotime_data %>%
   left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
 
 usethis::use_data(study_table)
+pins::pin(study_table, board = "github")
 ```
