@@ -1,6 +1,6 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/study-table-79ffac5/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/study-table-79ffac5/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/study-table-c8a3fc6/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/study-table-c8a3fc6/data.rds
 rows: 361
 cols: 5
 columns:
