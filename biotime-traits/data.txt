@@ -1,7 +1,7 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-2eb7f9c/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-2eb7f9c/data.rds
-rows: 2546579
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-e8971fe/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-e8971fe/data.rds
+rows: 829991
 cols: 60
 columns:
   id: character
