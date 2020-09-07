@@ -105,49 +105,65 @@ biotime_data <- biotime_ids %>%
   rename(sourceName = input)
 ```
 
-Do any unmatched species have matches with other providers?
+Some ID's matched to more than one species in biotime, so we need to consolidate those entries so there is only one per ID (by removing the sourceName) 
 ```{r}
+#find the entries for species that match to the same ID as another species
+dupe_id_entry <- biotime_data %>% 
+  group_by(id) %>% 
+  filter(n_distinct(sourceName) > 1) 
 
-#Check for potential matches from synonyms found in the other providers
-syn_res <- match_providers(biotime_data, "itis", common = TRUE)
+biotime_data <- setdiff(biotime_data, dupe_id_entry) %>%
+  bind_rows(dupe_id_entry %>% 
+              select(-sourceName, id_species) %>% 
+              group_by(id, scientificName, plot, year, study_id, taxa) %>% 
+              summarize(year_abun = sum(year_abun), year_biomass = sum(year_biomass)))
+```
 
-#some names have multiple matches (same ID but multiple scinames), have to pick one
-## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
-## so we have to find duplicate ID's and then filter
-alt_dupes <- syn_res %>%
-  select(acceptedNameUsageID, input) %>%
-  distinct() %>%
-  group_by(input) %>%
-  filter(n() > 1)
+Do any unmatched species have matches with other providers?
 
-# #filter duplicates for accepted, and replace old entries 
-# syn_res <- alt_dupes %>% 
-#   filter(acceptedNameUsageID %in% c(
-#     ITIS:331277, 
-#   )) %>% 
-#   bind_rows(syn_res %>% 
-#               filter(!acceptedNameUsageID %in% alt_dupes$acceptedNameUsageID)) %>%
-# #then finish clean up 
-#   select(id = acceptedNameUsageID, input, scientificName) %>% 
+NOT EXECUTED FOR CURRENT ITERATION (9/4/20)
+```{r}
+# 
+# #Check for potential matches from synonyms found in the other providers
+# syn_res <- match_providers(biotime_data, "itis", common = TRUE)
+# 
+# #some names have multiple matches (same ID but multiple scinames), have to pick one
+# ## in this case all the duplicates have an accepted and a synonym, but there are some single matches that are just synonyms
+# ## so we have to find duplicate ID's and then filter
+# alt_dupes <- syn_res %>%
+#   select(acceptedNameUsageID, input) %>%
 #   distinct() %>%
-#   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
-#   rename(sourceName = input) %>%
-#   ungroup()
-
-#Just get rid of those with duplicates, deal with them later
-add_syn_res <- syn_res %>% 
-  filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
-  select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
-  distinct() %>%
-  group_by(sourceName) %>%
-  top_n(1, scientificName) %>% #some have multiple sci names for same id, just pick on 
-  left_join(biotime_data%>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
-  ungroup() %>%
-  distinct()
-
-biotime_data <- biotime_data %>% 
-  filter(!sourceName %in% add_syn_res$sourceName) %>%
-  bind_rows(add_syn_res)
+#   group_by(input) %>%
+#   filter(n() > 1)
+# 
+# # #filter duplicates for accepted, and replace old entries 
+# # syn_res <- alt_dupes %>% 
+# #   filter(acceptedNameUsageID %in% c(
+# #     ITIS:331277, 
+# #   )) %>% 
+# #   bind_rows(syn_res %>% 
+# #               filter(!acceptedNameUsageID %in% alt_dupes$acceptedNameUsageID)) %>%
+# # #then finish clean up 
+# #   select(id = acceptedNameUsageID, input, scientificName) %>% 
+# #   distinct() %>%
+# #   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
+# #   rename(sourceName = input) %>%
+# #   ungroup()
+# 
+# #Just get rid of those with duplicates, deal with them later
+# add_syn_res <- syn_res %>% 
+#   filter(!input %in% alt_dupes$input) %>% #excluding duplicate matched species
+#   select(id = acceptedNameUsageID, sourceName = input, scientificName) %>%
+#   distinct() %>%
+#   group_by(sourceName) %>%
+#   top_n(1, scientificName) %>% #some have multiple sci names for same id, just pick on 
+#   left_join(biotime_data%>% select(-c(id, scientificName)), by = "sourceName", na_matches =  "never") %>%
+#   ungroup() %>%
+#   distinct()
+# 
+# biotime_data <- biotime_data %>% 
+#   filter(!sourceName %in% add_syn_res$sourceName) %>%
+#   bind_rows(add_syn_res)
 
 ```
 

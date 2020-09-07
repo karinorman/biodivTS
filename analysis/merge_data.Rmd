@@ -24,7 +24,7 @@ load(here::here("data", "amphibio.rda"))
 
 #Checking Coverage of ID's and trait data -> biotime
 
-check if all bird & mammal biotime data w/id's has an elton match. There are 24 species without a match.
+check if all bird & mammal biotime data w/id's has an elton match. There are 18 species without a match.
 ```{r}
 no_trait <- biotime_data %>%
   filter(taxa %in% c("Birds", "Mammals")) %>%
@@ -81,7 +81,7 @@ coverage <- comp_biotime_traits %>%
   select(study_id, scientificName) %>%
   distinct() %>%
   group_by(study_id) %>%
-  summarise(perc = sum(!is.na(scientificName))/n()) %>%
+  summarise(perc = sum(!is.na(id))/n()) %>%
   arrange(desc(perc))
 
 inc_coverage <- coverage %>% filter(perc > percent)
@@ -102,7 +102,7 @@ Create table of info for each study
 ```{r}
 study_table <- biotime_data %>%
   group_by(study_id) %>%
-  mutate(min_year = min(year), max_year = max(year)) %>% 
+  mutate(min_year = min(year), max_year = max(year), n_year = n_distinct(year)) %>% 
   #select(study_id, plot, taxa, latitude, longitude, min_year, max_year) %>%
   select(study_id, taxa, min_year, max_year) %>%
   distinct() %>%
