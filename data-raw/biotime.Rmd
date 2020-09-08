@@ -22,9 +22,9 @@ Import occurence data from Biotime
 ```{r}
 #rdataretriever::install("biotime", connection = "csv", data_dir = here("data"))
 # 
-# data <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>%
+# data <- read.csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>%
 #   select(study_id, taxa) %>%
-#   left_join(read_csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
+#   left_join(read.csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
 
 data <- pins::pin_get("year-biotime", board = "github")
 ```
