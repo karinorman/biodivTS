@@ -1,12 +1,13 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/study-table-9bdfc40/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/study-table-9bdfc40/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/study-table-43439f5/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/study-table-43439f5/data.rds
 rows: 361
-cols: 5
+cols: 6
 columns:
   study_id: integer
   taxa: character
   min_year: integer
   max_year: integer
+  plots: integer
   coverage: numeric
 type: table
