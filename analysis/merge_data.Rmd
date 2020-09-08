@@ -103,9 +103,8 @@ Create table of info for each study
 ```{r}
 study_table <- biotime_data %>%
   group_by(study_id) %>%
-  mutate(min_year = min(year), max_year = max(year), n_year = n_distinct(year)) %>% 
-  #select(study_id, plot, taxa, latitude, longitude, min_year, max_year) %>%
-  select(study_id, taxa, min_year, max_year) %>%
+  mutate(min_year = min(year), max_year = max(year), n_year = n_distinct(year), plots = n_distinct(plot)) %>% 
+  select(study_id, taxa, min_year, max_year, plots) %>%
   distinct() %>%
   left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
 
