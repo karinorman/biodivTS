@@ -99,10 +99,11 @@ biotime_ids <- unres %>%
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
-  select(id = acceptedNameUsageID,input, scientificName) %>%
+  select(id = acceptedNameUsageID,input) %>%
   distinct() %>%
   right_join(data, by = c("input" = "genus_species")) %>%
-  rename(sourceName = input)
+  rename(sourceName = input) %>%
+  mutate(scientificName = taxadb::get_names(id))
 ```
 
 Some ID's matched to more than one species in biotime, so we need to consolidate those entries so there is only one per ID (by removing the sourceName) 
