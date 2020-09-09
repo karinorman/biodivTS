@@ -52,25 +52,6 @@ get_plot_sample <- function(data, filter_plot, n){
     mutate(plot_id = filter_plot) %>%
     pivot_wider(names_from = samp_species, values_from = samp_abun)
 }
-
-#drop trait columns that are the same value for every observation, and therefore providing no additional info
-clean_trait_matrix <- function(trait_matrix){
-  # uniq_vals <- sapply(trait_matrix, function(x){length(unique(x))}) #get number of unique values of each trait
-  # col_names <- names(which(uniq_vals == 1)) #find columns where there is only one value for all observations
-  # return(select(trait_matrix, -col_names))
-  trait_matrix %>%
-  select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
-  mutate_at(vars(-id, -ends_with("5cat")), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
-  arrange(id) %>%
-  column_to_rownames(var = "id")
-}
-
-get_trait_matrix <- function(data, species_list, trait_list){ 
-  traits <- data %>%
-    filter(id %in% species_list) %>%
-    dplyr::select(id, all_of(trait_list)) %>%
-    distinct()
-}
 ```
 
 Get dataframe of samples for each plot and corresponding species and trait matrices
@@ -88,13 +69,18 @@ sample_plots <- biotime_traits %>%
   filter(n_distinct(year) > 4) %>%
   ungroup()
 
+trait_data <- biotime_traits %>% 
+  select(-c(biotimeName, taxa, id_species, plot, year, year_abun, 
+              year_biomass, traitName, scientificName, plot_id, study_id)) %>%
+  distinct()
+
 # sample_occurrence <- map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
 #   bind_rows() %>%
 #   replace(is.na(.), 0)
 # pins::pin(sample_occurrence, board = "github")
 sample_occurrence <- pins::pin_get("sample_occurrence", board = "github")
 
-get_plot_FD <- function(data, occ_df, filter_plot, ...) {
+get_plot_FD <- function(traits, occ_df, filter_plot, ...) {
   plot_samples <- occ_df %>%
     filter(plot_id == filter_plot)
     
@@ -103,12 +89,8 @@ get_plot_FD <- function(data, occ_df, filter_plot, ...) {
     select_if(!colSums(na.omit(.)) %in% c(0, NA)) %>% #remove species that don't occur in the plot
     select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
   
-  trait_mat <- data %>%
+  trait_mat <- traits %>%
     filter(id %in% colnames(sample_species_mat)) %>%
-    select(-c(biotimeName, taxa, id_species, plot, year, year_abun, 
-              year_biomass, traitName, scientificName, plot_id, study_id)
-    ) %>%
-    distinct() %>%
     select_if(~ length(unique(na.omit(.))) > 1)  #remove columns that have the same value for all columns
   
   #get binary variables so they can be excluded from rescaling 
@@ -150,7 +132,7 @@ get_plot_FD <- function(data, occ_df, filter_plot, ...) {
 }
 
 null_FD <- map_dfr(unique(sample_plots$plot_id)[1:3], get_plot_FD, 
-                   data = sample_plots, occ_df = sample_occurrence,
+                   traits = trait_data, occ_df = sample_occurrence,
                    m = "min", corr = "cailliez")
 ```
 
@@ -164,20 +146,21 @@ plot_sizes <- sample_plots %>%
   arrange(desc(n)) %>%
   mutate(group = rep_len(1:num_groups, dim(.)[1]))
 
-get_parallel_FD <- function(data, group_num){
+get_parallel_FD <- function(group_num){
+  browser()
   group_plots <- plot_sizes %>% filter(group == group_num)
-  group_data <- data %>% filter(plot_id %in% group_plots$plot_id)
+  group_data <- sample_occurrence %>% filter(plot_id %in% group_plots$plot_id)
   
   future::plan(multiprocess)
   fd <- map_dfr(group_plots$plot_id[1:3], get_plot_FD, 
-                   data = group_data, trait_range = 18:65, occ_df = sample_occurrence)
+                   traits = group_trait_data, occ_df = group_data)
     #future_map(group_plots$plot_id, get_fd_safe, data = group_data)
   
   print(group_num)
   return(fd)
 }
 
-fd <- map_dfr(1:num_groups, get_parallel_FD, data = data)
+fd <- map_dfr(1:num_groups, get_parallel_FD)
 ```
 
 BAT
