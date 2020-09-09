@@ -13,8 +13,3 @@
   rows: 361
   cols: 6
   type: table
-- path: sample-occurrence
-  name: sample-occurrence
-  rows: 296015
-  cols: 1177
-  type: table
