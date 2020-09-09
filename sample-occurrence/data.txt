@@ -1,6 +1,6 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/sample-occurrence-7e11211/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/sample-occurrence-7e11211/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/sample-occurrence-7aaf68c/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/sample-occurrence-7aaf68c/data.rds
 rows: 296015
 cols: 1177
 columns:
