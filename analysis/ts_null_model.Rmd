@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(biodivTS)
 library(FD)
+
+pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
 ```
 
 Create null models that would be transferable to any timeseries by treating the species pool as all species observed across the timeseries.
@@ -20,39 +22,35 @@ Create null models that would be transferable to any timeseries by treating the 
 Simulation functions
 ```{r}
 get_plot_sample <- function(data, filter_plot, n){
-  plot_data <- data %>% filter(plot_id == filter_plot)
-  
-  rich_levels <- plot_data %>%
-    select(year, id) %>%
-    distinct() %>%
-    count(year) %>%
-    pull(n) %>%
-    unique()
+  print(filter_plot)
+  plot_data <- data %>% filter(plot_id == filter_plot) %>%
+    select(year, id, year_abun)
   
   species_pool <- plot_data %>%
     pull(id) %>%
     na.omit() %>%
     unique() #get column of unique scientific names
   
-  if (length(species_pool) < max(rich_levels)) browser()
-  
-  get_samp_species <- function(richness){
-    samp_species <- sample(species_pool, richness)
-    df <- cbind(richness, samp_species)
+  get_samp_species <- function(data){
+    samp_species <- sample(species_pool, n_distinct(data$id))
+    samp_abun <- sample(data$year_abun)
+      
+    df <- as_tibble(cbind(samp_species, samp_abun)) %>% mutate(year = unique(data$year))
     return(df)
   }
   
   site_samples <- data.frame()
   for (j in 1:n){
     iter_samples <- data.frame()
-    for(i in rich_levels){
-    iter_samples <- rbind(iter_samples, get_samp_species(i))
+    for(i in unique(plot_data$year)){
+      year_data <- plot_data %>% filter(year == i)
+      iter_samples <- rbind(iter_samples, get_samp_species(year_data))
     }
     site_samples <- rbind(site_samples, iter_samples %>% mutate(n = j))
   }
   site_samples %>%
-    mutate(plot_id = filter_plot, value = 1) %>%
-    pivot_wider(names_from = samp_species, values_from = value)
+    mutate(plot_id = filter_plot) %>%
+    pivot_wider(names_from = samp_species, values_from = samp_abun)
 }
 
 #drop trait columns that are the same value for every observation, and therefore providing no additional info
@@ -77,7 +75,7 @@ get_trait_matrix <- function(data, species_list, trait_list){
 
 Get dataframe of samples for each plot and corresponding species and trait matrices
 ```{r}
-load(here::here("data", "biotime_traits.rda"))
+biotime_traits <- pins::pin_get("biotime-traits", board = "github")
 
 n = 100
 
@@ -87,59 +85,73 @@ sample_plots <- biotime_traits %>%
   group_by(plot_id, year) %>%
   filter(n_distinct(id) > 4) %>%
   group_by(plot_id) %>%
-  filter(n_distinct(year) > 4) %>% 
+  filter(n_distinct(year) > 4) %>%
   ungroup()
 
-sample_occurrence <- map_dfr(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
-  replace(is.na(.), 0)
+# sample_occurrence <- map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
+#   bind_rows() %>%
+#   replace(is.na(.), 0)
+# pins::pin(sample_occurrence, board = "github")
+sample_occurrence <- pins::pin_get("sample_occurrence", board = "github")
 
-#colnames(biotime_traits)[17:64]
-
-get_plot_FD <- function(data, trait_range, occ_df, filter_plot) {
+get_plot_FD <- function(data, occ_df, filter_plot, ...) {
   plot_samples <- occ_df %>%
     filter(plot_id == filter_plot)
     
   sample_species_mat <- plot_samples %>%
-    select(-c(richness, plot_id, n)) %>% #want only species x site info
-    select_if(!colSums(.) %in% c(0, NA)) %>% #remove species that don't occur in the plot
+    select(-c(year, plot_id, n)) %>% #want only species x site info
+    select_if(!colSums(na.omit(.)) %in% c(0, NA)) %>% #remove species that don't occur in the plot
     select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
   
-  traits <- colnames(data)[trait_range]
-  sample_trait_mat <-
-    clean_trait_matrix(get_trait_matrix(data = data, colnames(sample_species_mat), traits))
+  trait_mat <- data %>%
+    filter(id %in% colnames(sample_species_mat)) %>%
+    select(-c(biotimeName, taxa, id_species, plot, year, year_abun, 
+              year_biomass, traitName, scientificName, plot_id, study_id)
+    ) %>%
+    distinct() %>%
+    select_if(~ length(unique(na.omit(.))) > 1)  #remove columns that have the same value for all columns
   
-  fs::dir_create(paste0(here::here("data"), "/fd_output"))
+  #get binary variables so they can be excluded from rescaling 
+  bin_vars <- map(trait_mat, ~ all(na.omit(.) %in% 0:1))
+    
+  trait_mat <- trait_mat %>%
+    mutate_at(vars(-c(id, names(bin_vars[bin_vars == TRUE])), -ends_with("5cat")), 
+              list(~as.numeric(scale(.)))) %>% #rescale variables, not binary or categorical
+    arrange(id) %>%
+    column_to_rownames("id")
+  
+  save_dir <- here::here("data", "fd_null_output")
+  fs::dir_create(save_dir)
   
   #the convexhull c code creates an output file of vertices, in order to not have multiple threads writing
   #to the same file we have to create individual working directories
-  tmp_dir <- paste0(here::here("data", "fd_output", "tmp"), "/tmp_", filter_plot)
+  tmp_dir <- paste0(save_dir, "/tmp", "/tmp_", filter_plot)
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
   
   print(filter_plot)
-  sample_fd <- as.data.frame(dbFD_joggle(x = sample_trait_mat, a = sample_species_mat, w.abun = FALSE)) %>%
-    cbind(plot_samples %>% select(richness, plot_id, n))
+  sample_fd <- as.data.frame(dbFD_joggle(x = trait_mat, a = sample_species_mat, w.abun = TRUE, ...)) %>%
+    cbind(plot_samples %>% select(year, plot_id, n))
   
-  save_dir <- paste0(here::here("data", "fd_output", "null"))
-  fs::dir_create(save_dir)
+  setwd(here::here())
   write_tsv(sample_fd, paste0(save_dir, "/null", filter_plot, ".csv"))
   
-  df <- occ_df %>%
-    filter(plot_id == filter_plot) %>%
-    select(richness, plot_id, n) %>%
-    bind_cols(sample_fd) %>%
-    mutate(merge_test = case_when(richness == nbsp ~ TRUE,
-                                  TRUE ~ FALSE))
+  # df <- occ_df %>%
+  #   filter(plot_id == filter_plot) %>%
+  #   select(richness, plot_id, n) %>%
+  #   bind_cols(sample_fd) %>%
+  #   mutate(merge_test = case_when(richness == nbsp ~ TRUE,
+  #                                 TRUE ~ FALSE))
+  # 
+  # if (sum(df$merge_test) != dim(df)[1])
+  #   warning("richness and region columns may not have been appropriately joined with FD data")
   
-  if (sum(df$merge_test) != dim(df)[1])
-    warning("richness and region columns may not have been appropriately joined with FD data")
-  
-  return(df %>% select(-merge_test))
+  return(sample_fd)
 }
 
-#test <- get_plot_FD(sample_plots, 18:65, sample_occurrence, 391)
 null_FD <- map_dfr(unique(sample_plots$plot_id)[1:3], get_plot_FD, 
-                   data = sample_plots, trait_range = 18:65, occ_df = sample_occurrence)
+                   data = sample_plots, occ_df = sample_occurrence,
+                   m = "min", corr = "cailliez")
 ```
 
 Calculate null models in parallel
