@@ -32,11 +32,14 @@ get_fd <- function(obs_data, filter_plot, ...){
   fs::dir_create(paste0(here::here("data"), "/fd_attempt"))
   write_tsv(data.frame(), paste0(here::here("data"), "/fd_attempt/", filter_plot, ".tsv"))
   
+  # #check which column the abundaces weights are stored in (abundance or biomass)
+  # if (sum(data$year_abun) == 0) {weight <- "year_biomass"} else {weight <- "year_abun"}
+  
   species_mat <- data %>%
-    select(year, id, year_abun) %>%
+    select(year, id, weight) %>%
     arrange(year) %>%
     arrange(id) %>%
-    pivot_wider(names_from = id, values_from = year_abun, values_fill = 0) %>%
+    pivot_wider(names_from = id, values_from = weight, values_fill = 0) %>%
     select(-year)
   
   years <- data %>% 
@@ -45,20 +48,18 @@ get_fd <- function(obs_data, filter_plot, ...){
     arrange(year)
   
   trait_mat <- data %>%
-    select(-c(biotimeName, taxa, id_species, plot, year, year_abun, 
-              year_biomass, traitName, scientificName, plot_id, study_id)
+    select(-c(biotimeName, taxa, id_species, plot, year, weight, 
+              traitName, scientificName, plot_id, study_id)
     ) %>%
     distinct() %>%
     select_if(~ length(unique(na.omit(.))) > 1)  #remove columns that have the same value for all columns
   
   #get binary variables so they can be excluded from rescaling 
   bin_vars <- map(trait_mat, ~ all(na.omit(.) %in% 0:1))
-  bin_vars <- names(bin_vars[bin_vars == TRUE])
     
   trait_mat <- trait_mat %>%
-    mutate_at(vars(-c(id, bin_vars), -ends_with("5cat")), 
+    mutate_at(vars(-c(id, names(bin_vars[bin_vars == TRUE])), -ends_with("5cat")), 
               list(~as.numeric(scale(.)))) %>% #rescale variables, not binary or categorical
-    mutate_at(vars(bin_vars), as.character(.)) %>%
     arrange(id) %>%
     column_to_rownames("id")
   
@@ -70,7 +71,7 @@ get_fd <- function(obs_data, filter_plot, ...){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = TRUE, m = "min", ...))[,1:8] %>%
+  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = TRUE, ...))[,1:8] %>%
     cbind(years, .) %>%
     mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2])
     write_tsv(fd_out, paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
@@ -91,6 +92,7 @@ data <- biotime_traits %>%
   filter(n_distinct(id) > 4) %>%
   group_by(plot_id) %>%
   filter(n_distinct(year) > 4) %>% 
+  filter(plot_id != "169A") %>% #soemthing strange going on with this one, a duplicate species obs in 2006
   ungroup() #%>%
   #filter(#!study_id %in% c(195, 360), #exclude because they break
          #!study_id %in% c(217, 327, 195)) #exclude to get the file size smaller
@@ -133,7 +135,7 @@ files <-  dir(here::here("data", "fd_output"), "*.tsv")
 
 fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
-  map_dfr(read_tsv)
+  map_dfr(~read_tsv(.x, col_types = "dddddddddcd")) #%>% mutate(plot_id = as.character(plot_id)))
 
 remain <- data %>%
   filter(!plot_id %in% fd_data$plot_id)
@@ -141,9 +143,9 @@ remain <- data %>%
 plot_sizes <- remain %>%
   count(plot_id) 
 
-#get_fd_error <- safely(get_fd)
-#system.time(fd <- map(plot_sizes$plot_id, get_fd_error, obs_data = data, corr = "cailliez"))
-system.time(fd <- map(plot_sizes$plot_id, get_fd_safe, obs_data = data, corr = "cailliez"))
+get_fd_error <- safely(get_fd)
+system.time(fd <- map(plot_sizes$plot_id, get_fd_error, obs_data = data, m = "min", corr = "cailliez"))
+system.time(fd <- map(plot_sizes$plot_id, get_fd_safe, obs_data = data,  m = "min", corr = "cailliez"))
 ```
 
 Let's also do the functions from BAT package
@@ -220,8 +222,7 @@ fd_table <- fd_data %>%
   select(year, plot_id, richness = nbsp, everything(), -sing.sp) %>%
   gather(metric, value, contains("F"), RaoQ) %>%
   left_join(biotime_traits %>% 
-              select(plot_id, study_id, plot) %>% 
-              mutate(plot_id = as.numeric(plot_id)) %>%
+              select(plot_id, study_id, plot) %>%
                        distinct())
 
 usethis::use_data(fd_table)
