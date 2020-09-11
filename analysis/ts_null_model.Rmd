@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(biodivTS)
 library(FD)
+library(furrr)
 
 pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
 ```
@@ -24,7 +25,7 @@ Simulation functions
 get_plot_sample <- function(data, filter_plot, n){
   print(filter_plot)
   plot_data <- data %>% filter(plot_id == filter_plot) %>%
-    select(year, id, year_abun)
+    select(year, id, weight)
   
   species_pool <- plot_data %>%
     pull(id) %>%
@@ -33,7 +34,7 @@ get_plot_sample <- function(data, filter_plot, n){
   
   get_samp_species <- function(data){
     samp_species <- sample(species_pool, n_distinct(data$id))
-    samp_abun <- sample(data$year_abun)
+    samp_abun <- sample(data$weight)
       
     df <- as_tibble(cbind(samp_species, samp_abun)) %>% mutate(year = unique(data$year))
     return(df)
@@ -74,10 +75,10 @@ trait_data <- sample_plots %>%
             traitName, scientificName, plot_id, study_id)) %>%
   distinct()
 
-# sample_occurrence <- map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
-#   bind_rows() %>%
-#   replace(is.na(.), 0)
-# pins::pin(sample_occurrence, board = "github")
+sample_occurrence <- future_map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
+  bind_rows() %>%
+  replace(is.na(.), 0)
+pins::pin(sample_occurrence, board = "github")
 sample_occurrence <- pins::pin_get("sample_occurrence", board = "github")
 
 get_plot_FD <- function(traits, occ_df, filter_plot, ...) {
