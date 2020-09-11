@@ -93,6 +93,16 @@ biotime_traits <- comp_biotime_traits %>%
   mutate(plot_id = paste0(study_id, plot))
 ```
 
+Create one weight column 
+```{r}
+biotime_traits <- biotime_traits %>%
+  mutate(weight = case_when(
+    year_abun != 0 ~ year_abun,
+    TRUE ~ year_biomass
+  )) %>%
+  select(-c(year_abun, year_biomass))
+```
+
 ```{r}
 usethis::use_data(biotime_traits)
 pins::pin(biotime_traits, board = "github")
