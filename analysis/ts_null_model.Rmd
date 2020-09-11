@@ -69,9 +69,9 @@ sample_plots <- biotime_traits %>%
   filter(n_distinct(year) > 4) %>%
   ungroup()
 
-trait_data <- biotime_traits %>% 
-  select(-c(biotimeName, taxa, id_species, plot, year, year_abun, 
-              year_biomass, traitName, scientificName, plot_id, study_id)) %>%
+trait_data <- sample_plots %>% 
+  select(-c(biotimeName, taxa, id_species, plot, year, weight, 
+            traitName, scientificName, plot_id, study_id)) %>%
   distinct()
 
 # sample_occurrence <- map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
