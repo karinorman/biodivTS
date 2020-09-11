@@ -1,8 +1,8 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-612e6ae/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-612e6ae/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-194c23f/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-194c23f/data.rds
 rows: 829762
-cols: 60
+cols: 59
 columns:
   id: character
   biotimeName: character
@@ -10,8 +10,6 @@ columns:
   plot: character
   year: integer
   study_id: integer
-  year_abun: numeric
-  year_biomass: numeric
   taxa: character
   traitName: character
   scientificName: character
@@ -64,4 +62,5 @@ columns:
   lar: numeric
   viv: numeric
   plot_id: character
+  weight: numeric
 type: table
