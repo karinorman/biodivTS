@@ -18,3 +18,8 @@
   rows: 296015
   cols: 1177
   type: table
+- path: fd-table
+  name: fd-table
+  rows: 107142
+  cols: 8
+  type: table
