@@ -148,13 +148,14 @@ plot_sizes <- sample_plots %>%
   mutate(group = rep_len(1:num_groups, dim(.)[1]))
 
 get_parallel_FD <- function(group_num){
-  browser()
   group_plots <- plot_sizes %>% filter(group == group_num)
   group_data <- sample_occurrence %>% filter(plot_id %in% group_plots$plot_id)
+  group_trait_data <- trait_data %>% filter(id %in% colnames(group_data)[-(1:3)])
   
   future::plan(multiprocess)
-  fd <- map_dfr(group_plots$plot_id[1:3], get_plot_FD, 
-                   traits = group_trait_data, occ_df = group_data)
+  fd <- map_dfr(group_plots$plot_id[1:3], get_plot_FD,
+                traits = group_trait_data, occ_df = group_data,
+                m = "min", corr = "cailliez")
     #future_map(group_plots$plot_id, get_fd_safe, data = group_data)
   
   print(group_num)
