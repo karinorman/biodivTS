@@ -49,9 +49,15 @@ get_plot_sample <- function(data, filter_plot, n){
     }
     site_samples <- rbind(site_samples, iter_samples %>% mutate(n = j))
   }
-  site_samples %>%
+  plot_samples <- site_samples %>%
     mutate(plot_id = filter_plot) %>%
     pivot_wider(names_from = samp_species, values_from = samp_abun)
+  
+  save_dir <- here::here("data", "null_samples")
+  fs::dir_create(save_dir)
+  write.csv(plot_samples, paste0(save_dir, "/", filter_plot, "_samps.csv"))
+  
+  return(plot_samples)
 }
 ```
 
@@ -74,13 +80,25 @@ trait_data <- sample_plots %>%
   select(-c(biotimeName, taxa, id_species, plot, year, weight, 
             traitName, scientificName, plot_id, study_id)) %>%
   distinct()
+```
 
+Get sample dataframe
+```{r}
+future::plan(multiprocess)
 sample_occurrence <- future_map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
   bind_rows() %>%
   replace(is.na(.), 0)
+
+files <-  dir(here::here("data", "null_samples"), "*.csv")
+sample_occurrence <- files %>%
+  paste0(here::here("data", "null_samples"), "/", .) %>%
+  map_dfr(~read_csv(.x) %>% mutate(plot_id = as.character(plot_id)) %>% replace(is.na(.), 0))
+
 pins::pin(sample_occurrence, board = "github")
 sample_occurrence <- pins::pin_get("sample_occurrence", board = "github")
+```
 
+```{r}
 get_plot_FD <- function(traits, occ_df, filter_plot, ...) {
   plot_samples <- occ_df %>%
     filter(plot_id == filter_plot)
