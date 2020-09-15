@@ -140,3 +140,43 @@ plan(multiprocess)
 null_FD <- future_map_dfr(files, get_nullplot_FD, traits = trait_data,
                    m = "min", corr = "cailliez")
 ```
+
+Create Null table
+```{r}
+path <- here::here("data", "fd_null_output")
+null_files <-  dir(path, "*.csv") %>%
+  paste0(path, "/", .)
+
+process_nulls <- function(file_path){
+  data <- read_tsv(file_path) %>%
+    mutate(plot_id = as.character(plot_id)) %>%
+    select(year, plot_id, richness = nbsp, everything(), -sing.sp, -starts_with("CWM"), -n) %>%
+    group_by(year)
+  
+  means <- data %>%
+    select(-plot_id, -richness) %>%
+    summarise(across(everything(), mean)) %>%
+    pivot_longer(cols = -year, names_to = "metric", values_to = "mean")
+  
+  sds <- data %>%
+    select(-plot_id, -richness) %>%
+    summarise(across(everything(), sd)) %>%
+    pivot_longer(cols = -year, names_to = "metric", values_to = "sd")
+  
+  stats <- left_join(means, sds, by = c("year", "metric")) %>%
+    left_join(data %>% select(year, plot_id, richness) %>% distinct(), by = "year") %>%
+    mutate(se = sd/sqrt(n),
+           lowerCI = mean - qt(0.975, n - 1) * se, 
+           upperCI = mean + qt(0.975, n - 1) * se)  %>%
+    select(year, plot_id, everything())
+  
+  return(stats)
+}
+
+plan(multiprocess)
+null_table <- future_map_dfr(null_files, process_nulls)
+
+usethis::use_data(null_table)
+pins::pin(null_table, board = "github")
+```
+
