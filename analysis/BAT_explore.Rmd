@@ -1,0 +1,48 @@
+---
+title: "BAT"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+BAT
+```{r}
+library(BAT)
+
+get_plot_BAT <- function(data, trait_range, occ_df, filter_plot) {
+  sample_species_mat <- occ_df %>%
+    filter(plot_id == filter_plot) %>%
+    select(-c(richness, plot_id, n)) %>% #want only species x site info
+    select_if(!colSums(.) %in% c(0, NA)) %>% #remove species that don't occur in the plot
+    select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
+  
+  traits <- colnames(data)[trait_range]
+  sample_trait_mat <-
+    clean_trait_matrix(get_trait_matrix(data = data, colnames(sample_species_mat), traits))
+  
+  #get distance matrix
+  dist_traits <-  gowdis(sample_trait_mat)
+  trait.pco <- dudi.pco(quasieuclid(dist_traits), scannf = FALSE, full = TRUE)
+  
+}
+
+test <- get_plot_BAT(biotime_traits, 17:64, sample_occurrence, 5617)
+
+
+ower.mat_spider <- gower.dist(traits)
+euc.pco <- pco(gower.mat_spider,k=3)
+
+barplot(euc.pco$eig)
+(euc.pco$eig[1]+euc.pco$eig[2]+euc.pco$eig[3])/sum(euc.pco$eig[euc.pco$eig > 0]) #0.955 variance explained by first 3 axes
+
+traits <- euc.pco$points
+row.names(traits) <- row.names(traits2)
+```
+
