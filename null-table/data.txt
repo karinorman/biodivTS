@@ -1,0 +1,16 @@
+path:
+- https://github.com/karinorman/biodivTS/releases/download/null-table-ec1e514/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/null-table-ec1e514/data.rds
+rows: 107262
+cols: 9
+columns:
+  year: numeric
+  plot_id: character
+  metric: character
+  mean: numeric
+  sd: numeric
+  richness: numeric
+  se: numeric
+  lowerCI: numeric
+  upperCI: numeric
+type: table

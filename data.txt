@@ -18,3 +18,8 @@
   rows: 107142
   cols: 8
   type: table
+- path: null-table
+  name: null-table
+  rows: 107262
+  cols: 9
+  type: table
