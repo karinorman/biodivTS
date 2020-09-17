@@ -16,7 +16,7 @@
 - path: fd-table
   name: fd-table
   rows: 107142
-  cols: 8
+  cols: 11
   type: table
 - path: null-table
   name: null-table

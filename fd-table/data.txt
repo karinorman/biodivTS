@@ -1,8 +1,8 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/fd-table-77aa174/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/fd-table-77aa174/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/fd-table-6362f8d/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/fd-table-6362f8d/data.rds
 rows: 107142
-cols: 8
+cols: 11
 columns:
   year: numeric
   plot_id: character
@@ -12,4 +12,7 @@ columns:
   value: numeric
   study_id: integer
   plot: character
+  mean: numeric
+  sd: numeric
+  SES: numeric
 type: table
