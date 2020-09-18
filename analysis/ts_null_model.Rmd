@@ -95,7 +95,7 @@ sample_occurrence <- future_map(unique(sample_plots$plot_id), get_plot_sample, d
 ```{r}
 get_nullplot_FD <- function(file_path, traits, ...) {
   
-  plot_samples <- read_csv(file_path) %>% mutate(plot_id = as.character(plot_id)) %>% replace(is.na(.), 0)
+  plot_samples <- read_csv(file_path, col_types = cols(plot_id = "c")) %>% mutate(plot_id = as.character(plot_id)) %>% replace(is.na(.), 0)
 
   sample_species_mat <- plot_samples %>%
     select(-c(X1, year, plot_id, n)) %>% #want only species x site info
@@ -128,7 +128,7 @@ get_nullplot_FD <- function(file_path, traits, ...) {
     cbind(plot_samples %>% select(year, plot_id, n))
   
   setwd(here::here())
-  write_tsv(sample_fd, paste0(save_dir, "/null", unique(plot_samples$plot_id), ".csv"))
+  write_tsv(sample_fd, paste0(save_dir, "/null", unique(plot_samples$plot_id), ".tsv"))
   
   return(sample_fd)
 }
@@ -144,12 +144,11 @@ null_FD <- future_map_dfr(files, get_nullplot_FD, traits = trait_data,
 Create Null table
 ```{r}
 path <- here::here("data", "fd_null_output")
-null_files <-  dir(path, "*.csv") %>%
+null_files <-  dir(path, "*.tsv") %>%
   paste0(path, "/", .)
 
-process_nulls <- function(file_path){
-  data <- read_tsv(file_path) %>%
-    mutate(plot_id = as.character(plot_id)) %>%
+process_nulls <- function(file_path, n){
+  data <- read_tsv(file_path, col_types = cols(plot_id = "c")) %>%
     select(year, plot_id, richness = nbsp, everything(), -sing.sp, -starts_with("CWM"), -n) %>%
     group_by(year)
   
@@ -174,7 +173,7 @@ process_nulls <- function(file_path){
 }
 
 plan(multiprocess)
-null_table <- future_map_dfr(null_files, process_nulls)
+null_table <- future_map_dfr(null_files, process_nulls, n = n)
 
 usethis::use_data(null_table)
 pins::pin(null_table, board = "github")

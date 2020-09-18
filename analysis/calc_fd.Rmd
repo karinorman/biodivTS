@@ -37,15 +37,10 @@ get_fd <- function(obs_data, filter_plot, ...){
   
   species_mat <- data %>%
     select(year, id, weight) %>%
-    arrange(year) %>%
     arrange(id) %>%
-    pivot_wider(names_from = id, values_from = weight, values_fill = 0) %>%
-    select(-year)
+    pivot_wider(names_from = id, values_from = weight, values_fill = 0)
   
-  years <- data %>% 
-    select(year) %>%
-    distinct() %>%
-    arrange(year)
+  years <- select(species_mat, year)
   
   trait_mat <- data %>%
     select(-c(biotimeName, taxa, id_species, plot, year, weight, 
@@ -71,7 +66,7 @@ get_fd <- function(obs_data, filter_plot, ...){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = TRUE, ...))[,1:8] %>%
+  fd_out <- as_tibble(dbFD_joggle(trait_mat, select(species_mat, -year), w.abun = TRUE, ...))[,1:8] %>%
     cbind(years, .) %>%
     mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2])
     write_tsv(fd_out, paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
@@ -119,14 +114,15 @@ get_parallel_FD <- function(df, group_num){
   group_data <- df %>% filter(plot_id %in% group_plots$plot_id)
   
   future::plan("multiprocess", workers = 4)
-  fd <- future_map(group_plots$plot_id, get_fd_safe, obs_data = group_data) %>%
+  fd <- future_map(group_plots$plot_id, get_fd_safe, obs_data = group_data, 
+                   m = "min", corr = "cailliez") %>%
     rbind()
   
   print(group_num)
   return(fd)
 }
 
-#fd <- map(1:num_groups, get_parallel_FD, df = data)
+fd <- map(1:num_groups, get_parallel_FD, df = data)
 ```
 
 Read data back in, excluding sites/plots as they become a problem:
@@ -148,14 +144,20 @@ system.time(fd <- map(plot_sizes$plot_id, get_fd_error, obs_data = data, m = "mi
 system.time(fd <- map(plot_sizes$plot_id, get_fd_safe, obs_data = data,  m = "min", corr = "cailliez"))
 ```
 
-Format tables
+Format FD table with null values
 ```{r}
+null_table <- pins::pin_get("null-table", board = "github")
+
 fd_table <- fd_data %>% 
   select(year, plot_id, richness = nbsp, everything(), -sing.sp) %>%
   gather(metric, value, contains("F"), RaoQ) %>%
   left_join(biotime_traits %>% 
               select(plot_id, study_id, plot) %>%
-                       distinct())
+                       distinct()) %>%
+  left_join(null_table %>%
+              select(plot_id, year, richness, metric, mean, sd), 
+            by = c("year", "plot_id", "richness", "metric")) %>%
+  mutate(SES = (value - mean)/sd)
 
 usethis::use_data(fd_table)
 pins::pin(fd_table, board = "github")
