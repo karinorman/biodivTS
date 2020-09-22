@@ -1,0 +1,22 @@
+---
+title: "manuscript"
+author: "Kari Norman"
+date: "8/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###Methods
+- matched all species to an ID using taxadb, if more than one species name matched to the same ID they were considered the same species and observations of those species were consolidated into one
+- only include time series with at least 4 species and at least 4 years
+- drop traits that were the same for all observed species
+- all non-categorical or binary traits were z-score scaled to give each trait equal weight (@lepsQuantifyingInterpretingFunctional2006, @schleuterUserGuideFunctional2010)
+- raw abundance counts within a year for each plot
+- needed euclidian distance matrix - used calliez correction because it was a sufficient correction for all plots even though it led to a marginal decrease in "quality" for the corrected hull
+- weight by abundance if available and biomass if not
+- null model stuff via @swensonBiogeographyFilteringWoody2012
+- for years where all species in the species pool were observed the null model sd is zero for functional richness, since FRic does not incorporate abundance changes. 
+- drop species with trait match
