@@ -67,16 +67,7 @@ biotime_traits <- pins::pin_get("biotime-traits", board = "github")
 
 n = 100
 
-#get the plots that meet our criteria for calculating FD
-sample_plots <- biotime_traits %>%
-  filter(!is.na(plot)) %>% #remove unlabeled plots 
-  group_by(plot_id, year) %>%
-  filter(n_distinct(id) > 4) %>%
-  group_by(plot_id) %>%
-  filter(n_distinct(year) > 4) %>%
-  ungroup()
-
-trait_data <- sample_plots %>% 
+trait_data <- biotime_traits %>% 
   select(-c(biotimeName, taxa, id_species, plot, year, weight, 
             traitName, scientificName, plot_id, study_id)) %>%
   distinct()
@@ -87,7 +78,7 @@ rm(biotime_traits)
 Get sample dataframe
 ```{r}
 future::plan(multiprocess)
-sample_occurrence <- future_map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
+sample_occurrence <- future_map(unique(biotime_traits$plot_id), get_plot_sample, data = biotime_traits, n = n) %>%
   bind_rows() %>%
   replace(is.na(.), 0)
 ```

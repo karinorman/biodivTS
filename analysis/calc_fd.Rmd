@@ -21,8 +21,6 @@ Get FD metrics for each study
 
 FD function:
 ```{r}
-biotime_traits <- pins::pin_get("biotime-traits", board = "github")
-
 get_fd <- function(obs_data, filter_plot, ...){
   require(FD)
   
@@ -81,16 +79,7 @@ get_fd_safe <- possibly(get_fd, NA)
 
 First pass at calculating FD metrics from FD package:
 ```{r}
-data <- biotime_traits %>% 
-  filter(!is.na(plot)) %>% #remove unlabeled plots 
-  group_by(plot_id, year) %>%
-  filter(n_distinct(id) > 4) %>%
-  group_by(plot_id) %>%
-  filter(n_distinct(year) > 4) %>% 
-  filter(plot_id != "169A") %>% #soemthing strange going on with this one, a duplicate species obs in 2006
-  ungroup() #%>%
-  #filter(#!study_id %in% c(195, 360), #exclude because they break
-         #!study_id %in% c(217, 327, 195)) #exclude to get the file size smaller
+data <- pins::pin_get("biotime-traits", board = "github")
 
 plots <- data %>%
   pull(plot_id) %>%
