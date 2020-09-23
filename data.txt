@@ -23,3 +23,8 @@
   rows: 107418
   cols: 9
   type: table
+- path: biotime-data
+  name: biotime-data
+  rows: 2072220
+  cols: 10
+  type: table
