@@ -1,7 +1,7 @@
 - path: biotime-traits
   name: biotime-traits
-  rows: 829762
-  cols: 59
+  rows: 755067
+  cols: 67
   type: table
 - path: year-biotime
   name: year-biotime

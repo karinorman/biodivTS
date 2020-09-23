@@ -1,8 +1,8 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-194c23f/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-194c23f/data.rds
-rows: 829762
-cols: 59
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-d74a760/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-d74a760/data.rds
+rows: 755067
+cols: 67
 columns:
   id: character
   biotimeName: character
@@ -34,33 +34,41 @@ columns:
   pelagicspecialist: numeric
   nocturnal: numeric
   bodymass_value: numeric
-  crepuscular: numeric
-  diurnal: numeric
-  fos: numeric
-  ter: numeric
-  aqu: numeric
-  arb: numeric
-  diet_leaves: numeric
-  diet_flowers: numeric
-  diet_vert: numeric
-  wet_warm: numeric
-  wet_cold: numeric
-  dry_warm: numeric
-  dry_cold: numeric
-  age_at_maturity_min_y: numeric
-  age_at_maturity_max_y: numeric
-  body_size_mm: numeric
-  size_at_maturity_min_mm: numeric
-  size_at_maturity_max_mm: numeric
-  longevity_max_y: numeric
-  litter_size_min_n: numeric
-  litter_size_max_n: numeric
-  reproductive_output_y: numeric
-  offspring_size_min_mm: numeric
-  offspring_size_max_mm: numeric
-  dir: numeric
-  lar: numeric
-  viv: numeric
+  activity_nocturnal: numeric
+  activity_crepuscular: numeric
+  activity_diurnal: numeric
+  Fos: numeric
+  Ter: numeric
+  Aqu: numeric
+  Arb: numeric
+  Leaves: numeric
+  Flowers: numeric
+  Seeds: logical
+  Fruits: numeric
+  Arthro: numeric
+  Vert: numeric
+  Diu: numeric
+  Noc: numeric
+  Crepu: numeric
+  Wet_warm: numeric
+  Wet_cold: numeric
+  Dry_warm: numeric
+  Dry_cold: numeric
+  Body_mass_g: numeric
+  Age_at_maturity_min_y: numeric
+  Age_at_maturity_max_y: numeric
+  Body_size_mm: numeric
+  Size_at_maturity_min_mm: numeric
+  Size_at_maturity_max_mm: numeric
+  Longevity_max_y: numeric
+  Litter_size_min_n: numeric
+  Litter_size_max_n: numeric
+  Reproductive_output_y: numeric
+  Offspring_size_min_mm: numeric
+  Offspring_size_max_mm: numeric
+  Dir: numeric
+  Lar: numeric
+  Viv: numeric
   plot_id: character
   weight: numeric
 type: table
