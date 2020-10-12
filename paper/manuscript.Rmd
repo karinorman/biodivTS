@@ -1,22 +1,112 @@
 ---
-title: "manuscript"
-author: "Kari Norman"
-date: "8/24/2020"
-output: html_document
+title: "Functional trait data tell new story about biodiversity change"
+author: 
+  - name: "Kari E A Norman"
+    affiliation: ucb
+  - name: "Carl Boettiger"
+    affiliation: ucb, ropensci
+address:
+  - code: ucb
+    address: "Dept of Environmental Science, Policy, and Management, University of California Berkeley, Berkeley CA 94720-3114, USA"
+  - code: ropensci
+    address: "The rOpenSci Project, University of California Berkeley, Berkeley CA 94720-3114, USA" 
+abstract: |
+
+journal: "Ecography"
+date: "`r Sys.Date()`"
+bibliography: refs.bib
+layout: 3p
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
+output: 
+  rticles::elsevier_article:
+    includes:
+      in_header: preamble.tex
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+### Introduction
 
-###Methods
-- matched all species to an ID using taxadb, if more than one species name matched to the same ID they were considered the same species and observations of those species were consolidated into one
-- only include time series with at least 4 species and at least 4 years
-- drop traits that were the same for all observed species
-- all non-categorical or binary traits were z-score scaled to give each trait equal weight (@lepsQuantifyingInterpretingFunctional2006, @schleuterUserGuideFunctional2010)
-- raw abundance counts within a year for each plot
-- needed euclidian distance matrix - used calliez correction because it was a sufficient correction for all plots even though it led to a marginal decrease in "quality" for the corrected hull
-- weight by abundance if available and biomass if not
-- null model stuff via @swensonBiogeographyFilteringWoody2012
-- for years where all species in the species pool were observed the null model sd is zero for functional richness, since FRic does not incorporate abundance changes. 
-- drop species with trait match
+Ecological communities are experiencing unprecedented change as a result
+of anthropogenic pressures such as climate change, land use change, and
+invasive species.
+
+#### Paragraph 1 - communities are changing, we need to know how and what that means for ecosystem properties
+
+-   communities are changing as a result of a whole bunch of different
+    pressures
+
+-   a few well documented phenomena: accelerating extinction rates, what
+    else?
+
+-   it's essential for conservation and ecology to understand what these
+    changes mean for ecosystem properties like stability, function, etc
+
+#### Paragraph 2 - species diversity is the go to - it's not working 
+
+-   traditionally the most common method of capturing change in
+    communities is biodiversity
+
+-   despite other well documented changes, species diversity doesn't
+    seem to capture local community-level changes
+    ([@dornelasAssemblageTimeSeries2014],
+    [@suppSpecieslevelCommunitylevelResponses2014],
+    [@vellendGlobalMetaanalysisReveals2013]), though there is evidence
+    of a significant increase in turnover
+
+-   We need to look beyond species and their abundances to understand
+    the kinds of changes happening in communities
+
+#### Paragraph 3 - functional diversity is the answer!
+
+-   Functional diversity provides a potentially powerful tool for
+    examining biodiversity changes because it captures characteristics
+    beyond species identity.
+
+-   Powerful functional lens ([@mcgillRebuildingCommunityEcology2006])
+
+-   Functional diversity can tells us a story independent of species
+    richness, as huge functional changes can occur while species
+    richness (or even diversity!) stays the same. This especially gives
+    insight into the turnover we know is occurring
+
+-   We examine 100's of mammal, bird, and amphibian timeseries from the
+    Biotime database paired with functional trait data to assess overall
+    trends in functional change and identify where functional diversity
+    tells us a story beyond species richness
+
+### Methods
+
+#### *Data*
+
+Biodiversity timeseries were obtained from the Biotime database, a
+global repository of assemblage timeseries with 386 individual studies
+from multiple taxa.
+
+-   matched all species to an ID using taxadb, if more than one species
+    name matched to the same ID they were considered the same species
+    and observations of those species were consolidated into one - only
+    include time series with at least 4 species and at least 4 years
+
+-   drop traits that were the same for all observed species
+
+-   all non-categorical or binary traits were z-score scaled to give
+    each trait equal weight
+    ([@lepsQuantifyingInterpretingFunctional2006],
+    [@schleuterUserGuideFunctional2010])
+
+-   raw abundance counts within a year for each plot
+
+-   needed euclidian distance matrix - used calliez correction because
+    it was a sufficient correction for all plots even though it led to a
+    marginal decrease in "quality" for the corrected hull
+
+-   weight by abundance if available and biomass if not
+
+-   null model stuff via [@swensonBiogeographyFilteringWoody2012] - for
+    years where all species in the species pool were observed the null
+    model sd is zero for functional richness, since FRic does not
+    incorporate abundance changes. - drop species with trait match
