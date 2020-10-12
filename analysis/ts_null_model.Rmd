@@ -115,7 +115,7 @@ get_nullplot_FD <- function(file_path, traits, ...) {
   setwd(tmp_dir)
   
   print(unique(plot_samples$plot_id))
-  sample_fd <- as.data.frame(dbFD_joggle(x = trait_mat, a = sample_species_mat, w.abun = TRUE, ...)) %>%
+  sample_fd <- as.data.frame(dbFD_mine(x = trait_mat, a = sample_species_mat, w.abun = TRUE, ...)$fd_met) %>%
     cbind(plot_samples %>% select(year, plot_id, n))
   
   setwd(here::here())

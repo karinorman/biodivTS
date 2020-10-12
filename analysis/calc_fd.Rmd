@@ -13,6 +13,8 @@ library(furrr)
 library(FD)
 library(biodivTS)
 
+source(here::here("R", "dbFD_mine.R"))
+
 pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
 ```
 
@@ -64,10 +66,13 @@ get_fd <- function(obs_data, filter_plot, ...){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  fd_out <- as_tibble(dbFD_joggle(trait_mat, select(species_mat, -year), w.abun = TRUE, ...))[,1:8] %>%
+  fd_data <- dbFD_mine(trait_mat, select(species_mat, -year), w.abun = TRUE, ...)
+  fd_out <- as_tibble(fd_data$fd_met)[,1:8] %>%
     cbind(years, .) %>%
     mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2])
+  
     write_tsv(fd_out, paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
+    write_tsv(fd_data$pca_traits, paste0(here::here("data"), "/fd_output/", filter_plot, "_traits.tsv"))
   
   setwd(here::here())
   print(filter_plot)
@@ -116,7 +121,7 @@ fd <- map(1:num_groups, get_parallel_FD, df = data)
 
 Read data back in, excluding sites/plots as they become a problem:
 ```{r}
-files <-  dir(here::here("data", "fd_output"), "*.tsv")
+files <-  dir(here::here("data", "fd_output"), "*_fd.tsv")
 
 fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
