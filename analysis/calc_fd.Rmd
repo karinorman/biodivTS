@@ -13,6 +13,8 @@ library(furrr)
 library(FD)
 library(biodivTS)
 
+source(here::here("R", "dbFD_mine.R"))
+
 pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
 ```
 
@@ -21,8 +23,6 @@ Get FD metrics for each study
 
 FD function:
 ```{r}
-biotime_traits <- pins::pin_get("biotime-traits", board = "github")
-
 get_fd <- function(obs_data, filter_plot, ...){
   require(FD)
   
@@ -37,15 +37,10 @@ get_fd <- function(obs_data, filter_plot, ...){
   
   species_mat <- data %>%
     select(year, id, weight) %>%
-    arrange(year) %>%
     arrange(id) %>%
-    pivot_wider(names_from = id, values_from = weight, values_fill = 0) %>%
-    select(-year)
+    pivot_wider(names_from = id, values_from = weight, values_fill = 0)
   
-  years <- data %>% 
-    select(year) %>%
-    distinct() %>%
-    arrange(year)
+  years <- select(species_mat, year)
   
   trait_mat <- data %>%
     select(-c(biotimeName, taxa, id_species, plot, year, weight, 
@@ -71,10 +66,13 @@ get_fd <- function(obs_data, filter_plot, ...){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  fd_out <- as_tibble(dbFD_joggle(trait_mat, species_mat, w.abun = TRUE, ...))[,1:8] %>%
+  fd_data <- dbFD_mine(trait_mat, select(species_mat, -year), w.abun = TRUE, ...)
+  fd_out <- as_tibble(fd_data$fd_met)[,1:8] %>%
     cbind(years, .) %>%
     mutate(plot_id = unlist(filter_plot), trait_count = dim(trait_mat)[2])
+  
     write_tsv(fd_out, paste0(here::here("data"), "/fd_output/", filter_plot, "_fd.tsv"))
+    write_tsv(fd_data$pca_traits, paste0(here::here("data"), "/fd_output/", filter_plot, "_traits.tsv"))
   
   setwd(here::here())
   print(filter_plot)
@@ -86,16 +84,7 @@ get_fd_safe <- possibly(get_fd, NA)
 
 First pass at calculating FD metrics from FD package:
 ```{r}
-data <- biotime_traits %>% 
-  filter(!is.na(plot)) %>% #remove unlabeled plots 
-  group_by(plot_id, year) %>%
-  filter(n_distinct(id) > 4) %>%
-  group_by(plot_id) %>%
-  filter(n_distinct(year) > 4) %>% 
-  filter(plot_id != "169A") %>% #soemthing strange going on with this one, a duplicate species obs in 2006
-  ungroup() #%>%
-  #filter(#!study_id %in% c(195, 360), #exclude because they break
-         #!study_id %in% c(217, 327, 195)) #exclude to get the file size smaller
+data <- pins::pin_get("biotime-traits", board = "github")
 
 plots <- data %>%
   pull(plot_id) %>%
@@ -119,19 +108,20 @@ get_parallel_FD <- function(df, group_num){
   group_data <- df %>% filter(plot_id %in% group_plots$plot_id)
   
   future::plan("multiprocess", workers = 4)
-  fd <- future_map(group_plots$plot_id, get_fd_safe, obs_data = group_data) %>%
+  fd <- future_map(group_plots$plot_id, get_fd_safe, obs_data = group_data, 
+                   m = "min", corr = "cailliez") %>%
     rbind()
   
   print(group_num)
   return(fd)
 }
 
-#fd <- map(1:num_groups, get_parallel_FD, df = data)
+fd <- map(1:num_groups, get_parallel_FD, df = data)
 ```
 
 Read data back in, excluding sites/plots as they become a problem:
 ```{r}
-files <-  dir(here::here("data", "fd_output"), "*.tsv")
+files <-  dir(here::here("data", "fd_output"), "*_fd.tsv")
 
 fd_data <- files %>%
   paste0(here::here("data", "fd_output"), "/", .) %>%
@@ -148,82 +138,20 @@ system.time(fd <- map(plot_sizes$plot_id, get_fd_error, obs_data = data, m = "mi
 system.time(fd <- map(plot_sizes$plot_id, get_fd_safe, obs_data = data,  m = "min", corr = "cailliez"))
 ```
 
-Let's also do the functions from BAT package
+Format FD table with null values
 ```{r}
-#function for getting PCA axes with at least 95% coverage
-axes95 <- function(mat){
-  axes <- pco(mat)
-  eigen <- axes$eig
-  
-  threshold <- sum(eigen[eigen > 0]) * 0.95
-  
-  sums <- cumsum(eigen)
-  num_axes <- Position(function(x) x > threshold, sums)
-  
-  return(num_axes)
-}
+null_table <- pins::pin_get("null-table", board = "github")
 
-get_BAT_fd <- function(data, filter_plot){
-  require(BAT)
-  require(StatMatch)
-  require(labdsv)
-  
-  data <- data %>% filter(plot_id == filter_plot)
-  
-  print(max(data$record_id))
-  
-  species_mat <- data %>%
-    select(year, id) %>% 
-    distinct() %>%
-    arrange(year, id) %>%
-    mutate(present = 1) %>%
-    spread(id, value = present, fill = 0) %>%
-    column_to_rownames("year")
-  
-  trait_mat <- data %>%
-    select(-c(taxa, record_id, day, month, year, sample_desc, id_species, 
-              latitude, longitude, sum_abundance, sum_biomass, biotimeName, 
-              traitName, scientificName)
-    ) %>%
-    distinct() %>%
-    select_if(~ length(unique(.)) > 1) %>% #remove columns that have the same value for all columns
-    mutate_at(vars(-id, -ends_with("5cat")), list(~scales::rescale(.,to=c(0, 1)))) %>% #rescale variables
-    arrange(id) %>%
-    column_to_rownames("id")
-  
-  #get PCA trait matrix
-  trait_dist <- gower.dist(trait_mat)
-  trait_pco <- pco(trait_dist, k = axes95(trait_dist))
-
-  traits <- trait_pco$points
-  rownames(traits) <- rownames(trait_mat)
-  
-  #getFD metrics
-  kernelFD <- kernel.alpha(comm=as.matrix(species_mat),trait=traits,abund=FALSE,method="gaussian",return.hv=TRUE)
-  hv <- kernelFD[[2]]
-  
-  disp <- kernel.dispersion(comm=hv,frac=0.1,func='dissimilarity') 
-  div <- kernel.dispersion(comm=hv,frac=0.6, func='divergence')
-  even <- kernel.evenness(comm=hv)
-  
-  results <- data.frame(richness = as.numeric(kernelFD[[1]]), disp, div, even) %>% 
-    mutate(plot_id = filter_plot)
-  
-  return(results)
-}
-
-get_BAT_fd(biotime_traits, 376300153)
-```
-
-
-Format tables
-```{r}
 fd_table <- fd_data %>% 
   select(year, plot_id, richness = nbsp, everything(), -sing.sp) %>%
   gather(metric, value, contains("F"), RaoQ) %>%
   left_join(biotime_traits %>% 
               select(plot_id, study_id, plot) %>%
-                       distinct())
+                       distinct()) %>%
+  left_join(null_table %>%
+              select(plot_id, year, richness, metric, mean, sd), 
+            by = c("year", "plot_id", "richness", "metric")) %>%
+  mutate(SES = (value - mean)/sd)
 
 usethis::use_data(fd_table)
 pins::pin(fd_table, board = "github")

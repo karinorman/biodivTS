@@ -1,7 +1,7 @@
 - path: biotime-traits
   name: biotime-traits
-  rows: 829762
-  cols: 59
+  rows: 755067
+  cols: 67
   type: table
 - path: year-biotime
   name: year-biotime
@@ -16,10 +16,15 @@
 - path: fd-table
   name: fd-table
   rows: 107142
-  cols: 8
+  cols: 11
   type: table
 - path: null-table
   name: null-table
-  rows: 107262
+  rows: 107418
   cols: 9
+  type: table
+- path: biotime-data
+  name: biotime-data
+  rows: 2072220
+  cols: 10
   type: table

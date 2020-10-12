@@ -88,9 +88,14 @@ coverage <- comp_biotime_traits %>%
 inc_coverage <- coverage %>% filter(perc > percent)
 
 biotime_traits <- comp_biotime_traits %>%
-  #get studies with appropriate coverage and drop observations that we don't have trait data for
-  filter(study_id %in% inc_coverage$study_id, !is.na(scientificName)) %>% 
-  mutate(plot_id = paste0(study_id, plot))
+  #get studies with appropriate coverage and drop observations that we don't have trait data for, and unlabeled non-id'd species
+  filter(study_id %in% inc_coverage$study_id, !is.na(scientificName), !is.na(plot)) %>% 
+  mutate(plot_id = paste0(study_id, plot)) %>%
+  group_by(plot_id, year) %>%
+  filter(n_distinct(id) > 4) %>%
+  group_by(plot_id) %>%
+  filter(n_distinct(year) > 4) %>%
+  ungroup()
 ```
 
 Create one weight column 
