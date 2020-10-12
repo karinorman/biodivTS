@@ -67,45 +67,29 @@ biotime_traits <- pins::pin_get("biotime-traits", board = "github")
 
 n = 100
 
-#get the plots that meet our criteria for calculating FD
-sample_plots <- biotime_traits %>%
-  filter(!is.na(plot)) %>% #remove unlabeled plots 
-  group_by(plot_id, year) %>%
-  filter(n_distinct(id) > 4) %>%
-  group_by(plot_id) %>%
-  filter(n_distinct(year) > 4) %>%
-  ungroup()
-
-trait_data <- sample_plots %>% 
+trait_data <- biotime_traits %>% 
   select(-c(biotimeName, taxa, id_species, plot, year, weight, 
             traitName, scientificName, plot_id, study_id)) %>%
   distinct()
+
+rm(biotime_traits)
 ```
 
 Get sample dataframe
 ```{r}
 future::plan(multiprocess)
-sample_occurrence <- future_map(unique(sample_plots$plot_id), get_plot_sample, data = sample_plots, n = n) %>%
+sample_occurrence <- future_map(unique(biotime_traits$plot_id), get_plot_sample, data = biotime_traits, n = n) %>%
   bind_rows() %>%
   replace(is.na(.), 0)
-
-files <-  dir(here::here("data", "null_samples"), "*.csv")
-sample_occurrence <- files %>%
-  paste0(here::here("data", "null_samples"), "/", .) %>%
-  map_dfr(~read_csv(.x) %>% mutate(plot_id = as.character(plot_id)) %>% replace(is.na(.), 0))
-
-pins::pin(sample_occurrence, board = "github")
-sample_occurrence <- pins::pin_get("sample_occurrence", board = "github")
 ```
 
 ```{r}
-get_plot_FD <- function(traits, occ_df, filter_plot, ...) {
-  plot_samples <- occ_df %>%
-    filter(plot_id == filter_plot)
-    
+get_nullplot_FD <- function(file_path, traits, ...) {
+  
+  plot_samples <- read_csv(file_path, col_types = cols(plot_id = "c")) %>% mutate(plot_id = as.character(plot_id)) %>% replace(is.na(.), 0)
+
   sample_species_mat <- plot_samples %>%
-    select(-c(year, plot_id, n)) %>% #want only species x site info
-    select_if(!colSums(na.omit(.)) %in% c(0, NA)) %>% #remove species that don't occur in the plot
+    select(-c(X1, year, plot_id, n)) %>% #want only species x site info
     select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
   
   trait_mat <- traits %>%
@@ -126,94 +110,63 @@ get_plot_FD <- function(traits, occ_df, filter_plot, ...) {
   
   #the convexhull c code creates an output file of vertices, in order to not have multiple threads writing
   #to the same file we have to create individual working directories
-  tmp_dir <- paste0(save_dir, "/tmp", "/tmp_", filter_plot)
+  tmp_dir <- paste0(save_dir, "/tmp", "/tmp_", unique(plot_samples$plot_id))
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
   
-  print(filter_plot)
-  sample_fd <- as.data.frame(dbFD_joggle(x = trait_mat, a = sample_species_mat, w.abun = TRUE, ...)) %>%
+  print(unique(plot_samples$plot_id))
+  sample_fd <- as.data.frame(dbFD_mine(x = trait_mat, a = sample_species_mat, w.abun = TRUE, ...)$fd_met) %>%
     cbind(plot_samples %>% select(year, plot_id, n))
   
   setwd(here::here())
-  write_tsv(sample_fd, paste0(save_dir, "/null", filter_plot, ".csv"))
-  
-  # df <- occ_df %>%
-  #   filter(plot_id == filter_plot) %>%
-  #   select(richness, plot_id, n) %>%
-  #   bind_cols(sample_fd) %>%
-  #   mutate(merge_test = case_when(richness == nbsp ~ TRUE,
-  #                                 TRUE ~ FALSE))
-  # 
-  # if (sum(df$merge_test) != dim(df)[1])
-  #   warning("richness and region columns may not have been appropriately joined with FD data")
+  write_tsv(sample_fd, paste0(save_dir, "/null", unique(plot_samples$plot_id), ".tsv"))
   
   return(sample_fd)
 }
 
-null_FD <- map_dfr(unique(sample_plots$plot_id)[1:3], get_plot_FD, 
-                   traits = trait_data, occ_df = sample_occurrence,
+files <-  dir(here::here("data", "null_samples"), "*.csv") %>%
+  paste0(here::here("data", "null_samples"), "/", .)
+
+plan(multiprocess)
+null_FD <- future_map_dfr(files, get_nullplot_FD, traits = trait_data,
                    m = "min", corr = "cailliez")
 ```
 
-Calculate null models in parallel
+Create Null table
 ```{r}
-#number of chunks to split original dataset into 
-num_groups = 4
+path <- here::here("data", "fd_null_output")
+null_files <-  dir(path, "*.tsv") %>%
+  paste0(path, "/", .)
 
-plot_sizes <- sample_plots %>%
-  count(plot_id) %>%
-  arrange(desc(n)) %>%
-  mutate(group = rep_len(1:num_groups, dim(.)[1]))
-
-get_parallel_FD <- function(group_num){
-  group_plots <- plot_sizes %>% filter(group == group_num)
-  group_data <- sample_occurrence %>% filter(plot_id %in% group_plots$plot_id)
-  group_trait_data <- trait_data %>% filter(id %in% colnames(group_data)[-(1:3)])
+process_nulls <- function(file_path, n){
+  data <- read_tsv(file_path, col_types = cols(plot_id = "c")) %>%
+    select(year, plot_id, richness = nbsp, everything(), -sing.sp, -starts_with("CWM"), -n) %>%
+    group_by(year)
   
-  future::plan(multiprocess)
-  fd <- map_dfr(group_plots$plot_id[1:3], get_plot_FD,
-                traits = group_trait_data, occ_df = group_data,
-                m = "min", corr = "cailliez")
-    #future_map(group_plots$plot_id, get_fd_safe, data = group_data)
+  means <- data %>%
+    select(-plot_id, -richness) %>%
+    summarise(across(everything(), mean)) %>%
+    pivot_longer(cols = -year, names_to = "metric", values_to = "mean")
   
-  print(group_num)
-  return(fd)
+  sds <- data %>%
+    select(-plot_id, -richness) %>%
+    summarise(across(everything(), sd)) %>%
+    pivot_longer(cols = -year, names_to = "metric", values_to = "sd")
+  
+  stats <- left_join(means, sds, by = c("year", "metric")) %>%
+    left_join(data %>% select(year, plot_id, richness) %>% distinct(), by = "year") %>%
+    mutate(se = sd/sqrt(n),
+           lowerCI = mean - qt(0.975, n - 1) * se, 
+           upperCI = mean + qt(0.975, n - 1) * se)  %>%
+    select(year, plot_id, everything())
+  
+  return(stats)
 }
 
-fd <- map_dfr(1:num_groups, get_parallel_FD)
-```
+plan(multiprocess)
+null_table <- future_map_dfr(null_files, process_nulls, n = n)
 
-BAT
-```{r}
-library(BAT)
-
-get_plot_BAT <- function(data, trait_range, occ_df, filter_plot) {
-  sample_species_mat <- occ_df %>%
-    filter(plot_id == filter_plot) %>%
-    select(-c(richness, plot_id, n)) %>% #want only species x site info
-    select_if(!colSums(.) %in% c(0, NA)) %>% #remove species that don't occur in the plot
-    select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
-  
-  traits <- colnames(data)[trait_range]
-  sample_trait_mat <-
-    clean_trait_matrix(get_trait_matrix(data = data, colnames(sample_species_mat), traits))
-  
-  #get distance matrix
-  dist_traits <-  gowdis(sample_trait_mat)
-  trait.pco <- dudi.pco(quasieuclid(dist_traits), scannf = FALSE, full = TRUE)
-  
-}
-
-test <- get_plot_BAT(biotime_traits, 17:64, sample_occurrence, 5617)
-
-
-ower.mat_spider <- gower.dist(traits)
-euc.pco <- pco(gower.mat_spider,k=3)
-
-barplot(euc.pco$eig)
-(euc.pco$eig[1]+euc.pco$eig[2]+euc.pco$eig[3])/sum(euc.pco$eig[euc.pco$eig > 0]) #0.955 variance explained by first 3 axes
-
-traits <- euc.pco$points
-row.names(traits) <- row.names(traits2)
+usethis::use_data(null_table)
+pins::pin(null_table, board = "github")
 ```
 

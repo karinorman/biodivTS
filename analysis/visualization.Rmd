@@ -32,7 +32,7 @@ plt +
 #Visualizing FD trends
 ```{r}
 #load(here::here("data", "fd_table.rda"))
-fd_table <- pins::pin_get("fd_table", board = "github")
+fd_table <- pins::pin_get("fd-table", board = "github")
 
 fric_plot <- fd_table %>%
   filter(metric == "FRic") %>%
@@ -75,9 +75,9 @@ library(lme4)
 plot_metric <- function(metric_name, ylabel){
   data <- fd_table %>%
     filter(metric == metric_name) %>%
-    mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+    mutate(plot_id = as.factor(plot_id), logSES = log(SES))
   
-  mod <- lmer(logvalue ~ year + (1|plot_id), data = data)
+  mod <- lmer(logSES ~ year + (1|plot_id), data = data)
   coefs <- summary(mod)$coefficients
   
   print(metric_name) 
@@ -90,7 +90,7 @@ plot_metric <- function(metric_name, ylabel){
   trend_plot <- data %>%
     left_join(pred, by = "year") %>%
     #left_join(metadata %>% select(study_id, climate)) %>%
-    ggplot(aes(x = year, y = logvalue)) +
+    ggplot(aes(x = year, y = logSES)) +
     # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
     # geom_point(aes(color = climate, group = plot_id)) +
     geom_point(aes(group = plot_id) ,color = "grey") +
@@ -117,9 +117,9 @@ get model info
 get_metric_conint <- function(metric_name){
  data <- fd_table %>%
     filter(metric == metric_name) %>%
-    mutate(plot_id = as.factor(plot_id), logvalue = log(value))
+    mutate(plot_id = as.factor(plot_id), logSES = log(SES))
   
-  mod <- lmer(logvalue ~ year + (1|plot_id), data = data)
+  mod <- lmer(logSES ~ year + (1|plot_id), data = data)
   coefs <- summary(mod)$coefficients
   
   confint(mod)
