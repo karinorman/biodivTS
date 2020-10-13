@@ -45,7 +45,7 @@ invasive species.
 -   it's essential for conservation and ecology to understand what these
     changes mean for ecosystem properties like stability, function, etc
 
-#### Paragraph 2 - species diversity is the go to - it's not working 
+#### Paragraph 2 - species diversity is the go to - it's not working
 
 -   traditionally the most common method of capturing change in
     communities is biodiversity
@@ -84,29 +84,71 @@ invasive species.
 
 Biodiversity timeseries were obtained from the Biotime database, a
 global repository of assemblage timeseries with 386 individual studies
-from multiple taxa.
+from multiple taxa. Timeseries were paired with their functional trait
+data based on the predominant taxa in the timeseries. Due to limitations
+in trait data and processing feasability, we included only mammal, bird,
+and amphibian timeseries. Trait data were obtained from Elton Trait
+Database (mammals and birds; [@wilman2014]) and Amphibio (amphibians,
+[@oliveira2017]).
 
--   matched all species to an ID using taxadb, if more than one species
-    name matched to the same ID they were considered the same species
-    and observations of those species were consolidated into one - only
-    include time series with at least 4 species and at least 4 years
+-   something here describing where the data in those databases comes
+    from, that they're species-level means, etc**;**
 
--   drop traits that were the same for all observed species
+-   also more description of how biotime is structured (studies, some
+    with plots, etc)
 
--   all non-categorical or binary traits were z-score scaled to give
-    each trait equal weight
-    ([@lepsQuantifyingInterpretingFunctional2006],
-    [@schleuterUserGuideFunctional2010])
+In order to ensure taxonomic consistency across datasets, biotime
+species were paired with trait data based on their species identifier
+from the Integrated Taxonomic Information System database (citation),
+obtained through the taxadb R package
+([@normanTaxadbHighperformanceLocal2020]). If more than one species in
+the assemblage data resolved to the same identifier, observations were
+considered the same species. For trait data, traits for all species of
+the same identifier were averaged. Only studies with at least 85% trait
+coverage were included. In order to have a sufficient number of
+observation years to observe a trend and a sufficient number of species
+to calculate functional diversity metrics, studies with fewer than 4
+years and years with fewer than 4 species observed were also excluded.
+
+Functional diversity metrics were calculated for total yearly abundance.
+For many studies there were a different number of samples within each
+year. To adjust for this inconsistency in sampling effort we used
+sample-based rarefaction by bootstrap resampling within year for each
+timeseries based on the smallest number of samples in a year for that
+timeseries.
 
 -   raw abundance counts within a year for each plot
+
+#### *Functional diversity metrics* 
+
+We calculated yearly metrics of functional diversity and turnover for
+each plot within each study. All available trait data for each study was
+included in the trait matrix with the exception of traits that were the
+same value for all observed species in the study. All continuous traits
+were z-score scaled to give each trait equal weight in the trait space
+([@lepsQuantifyingInterpretingFunctional2006],
+[@schleuterUserGuideFunctional2010]).
+
+We used the function dbFD from the FD package (citation) to calculated
+PCA-scaled trait matrices for each species in a timeseries and
+functional diversity (FD), functional evenness (FEve), functional
+diveregence (FDiv), and functional dispersion (FDis) based on those
+trait matrices. The number of trait axes was limited to the maximum
+number of traits that fulfills the criteria $s >= s^t$, where $s$ is the
+number of species and \$t\$ is the number of traits. This limitation
+allows for a sufficient number of axes to capture the trait space while
+maintaining computational feasibility for metric calculations. Metrics
+incorporated weighting based on either species abundance or biomass
+based on the methods for each study. The PCA-scaled trait matrices were
+then used as input to the BAT package....
 
 -   needed euclidian distance matrix - used calliez correction because
     it was a sufficient correction for all plots even though it led to a
     marginal decrease in "quality" for the corrected hull
 
--   weight by abundance if available and biomass if not
-
 -   null model stuff via [@swensonBiogeographyFilteringWoody2012] - for
     years where all species in the species pool were observed the null
     model sd is zero for functional richness, since FRic does not
     incorporate abundance changes. - drop species with trait match
+
+#### *Analysis*
