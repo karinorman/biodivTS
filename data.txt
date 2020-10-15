@@ -1,7 +1,7 @@
 - path: biotime-traits
   name: biotime-traits
-  rows: 755067
-  cols: 67
+  rows: 755027
+  cols: 68
   type: table
 - path: year-biotime
   name: year-biotime
@@ -10,8 +10,8 @@
   type: table
 - path: study-table
   name: study-table
-  rows: 361
-  cols: 6
+  rows: 53
+  cols: 11
   type: table
 - path: fd-table
   name: fd-table
@@ -27,4 +27,9 @@
   name: biotime-data
   rows: 2072220
   cols: 10
+  type: table
+- path: metadata
+  name: metadata
+  rows: 361
+  cols: 42
   type: table

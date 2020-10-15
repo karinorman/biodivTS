@@ -1,0 +1,154 @@
+---
+title: "Functional trait data tell new story about biodiversity change"
+author: 
+  - name: "Kari E A Norman"
+    affiliation: ucb
+  - name: "Carl Boettiger"
+    affiliation: ucb, ropensci
+address:
+  - code: ucb
+    address: "Dept of Environmental Science, Policy, and Management, University of California Berkeley, Berkeley CA 94720-3114, USA"
+  - code: ropensci
+    address: "The rOpenSci Project, University of California Berkeley, Berkeley CA 94720-3114, USA" 
+abstract: |
+
+journal: "Ecography"
+date: "`r Sys.Date()`"
+bibliography: refs.bib
+layout: 3p
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
+output: 
+  rticles::elsevier_article:
+    includes:
+      in_header: preamble.tex
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+### Introduction
+
+Ecological communities are experiencing unprecedented change as a result
+of anthropogenic pressures such as climate change, land use change, and
+invasive species.
+
+#### Paragraph 1 - communities are changing, we need to know how and what that means for ecosystem properties
+
+-   communities are changing as a result of a whole bunch of different
+    pressures
+
+-   a few well documented phenomena: accelerating extinction rates, what
+    else?
+
+-   it's essential for conservation and ecology to understand what these
+    changes mean for ecosystem properties like stability, function, etc
+
+#### Paragraph 2 - species diversity is the go to - it's not working
+
+-   traditionally the most common method of capturing change in
+    communities is biodiversity
+
+-   despite other well documented changes, species diversity doesn't
+    seem to capture local community-level changes
+    ([@dornelasAssemblageTimeSeries2014],
+    [@suppSpecieslevelCommunitylevelResponses2014],
+    [@vellendGlobalMetaanalysisReveals2013]), though there is evidence
+    of a significant increase in turnover
+
+-   We need to look beyond species and their abundances to understand
+    the kinds of changes happening in communities
+
+#### Paragraph 3 - functional diversity is the answer!
+
+-   Functional diversity provides a potentially powerful tool for
+    examining biodiversity changes because it captures characteristics
+    beyond species identity.
+
+-   Powerful functional lens ([@mcgillRebuildingCommunityEcology2006])
+
+-   Functional diversity can tells us a story independent of species
+    richness, as huge functional changes can occur while species
+    richness (or even diversity!) stays the same. This especially gives
+    insight into the turnover we know is occurring
+
+-   We examine 100's of mammal, bird, and amphibian timeseries from the
+    Biotime database paired with functional trait data to assess overall
+    trends in functional change and identify where functional diversity
+    tells us a story beyond species richness
+
+### Methods
+
+#### *Data*
+
+Biodiversity timeseries were obtained from the Biotime database, a
+global repository of assemblage timeseries with 386 individual studies
+from multiple taxa. Timeseries were paired with their functional trait
+data based on the predominant taxa in the timeseries. Due to limitations
+in trait data and processing feasability, we included only mammal, bird,
+and amphibian timeseries. Trait data were obtained from Elton Trait
+Database (mammals and birds; [@wilman2014]) and Amphibio (amphibians,
+[@oliveira2017]).
+
+-   something here describing where the data in those databases comes
+    from, that they're species-level means, etc**;**
+
+-   also more description of how biotime is structured (studies, some
+    with plots, etc)
+
+In order to ensure taxonomic consistency across datasets, biotime
+species were paired with trait data based on their species identifier
+from the Integrated Taxonomic Information System database (citation),
+obtained through the taxadb R package
+([@normanTaxadbHighperformanceLocal2020]). If more than one species in
+the assemblage data resolved to the same identifier, observations were
+considered the same species. For trait data, traits for all species of
+the same identifier were averaged. Only studies with at least 85% trait
+coverage were included. In order to have a sufficient number of
+observation years to observe a trend and a sufficient number of species
+to calculate functional diversity metrics, studies with fewer than 4
+years and years with fewer than 4 species observed were also excluded.
+
+Functional diversity metrics were calculated for total yearly abundance.
+For many studies there were a different number of samples within each
+year. To adjust for this inconsistency in sampling effort we used
+sample-based rarefaction by bootstrap resampling within year for each
+timeseries based on the smallest number of samples in a year for that
+timeseries.
+
+-   raw abundance counts within a year for each plot
+
+#### *Functional diversity metrics* 
+
+We calculated yearly metrics of functional diversity and turnover for
+each plot within each study. All available trait data for each study was
+included in the trait matrix with the exception of traits that were the
+same value for all observed species in the study. All continuous traits
+were z-score scaled to give each trait equal weight in the trait space
+([@lepsQuantifyingInterpretingFunctional2006],
+[@schleuterUserGuideFunctional2010]).
+
+We used the function dbFD from the FD package (citation) to calculated
+PCA-scaled trait matrices for each species in a timeseries and
+functional diversity (FD), functional evenness (FEve), functional
+diveregence (FDiv), and functional dispersion (FDis) based on those
+trait matrices. The number of trait axes was limited to the maximum
+number of traits that fulfills the criteria $s >= s^t$, where $s$ is the
+number of species and \$t\$ is the number of traits. This limitation
+allows for a sufficient number of axes to capture the trait space while
+maintaining computational feasibility for metric calculations. Metrics
+incorporated weighting based on either species abundance or biomass
+based on the methods for each study. The PCA-scaled trait matrices were
+then used as input to the BAT package....
+
+-   needed euclidian distance matrix - used calliez correction because
+    it was a sufficient correction for all plots even though it led to a
+    marginal decrease in "quality" for the corrected hull
+
+-   null model stuff via [@swensonBiogeographyFilteringWoody2012] - for
+    years where all species in the species pool were observed the null
+    model sd is zero for functional richness, since FRic does not
+    incorporate abundance changes. - drop species with trait match
+
+#### *Analysis*
