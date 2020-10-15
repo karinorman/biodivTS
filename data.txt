@@ -28,3 +28,8 @@
   rows: 2072220
   cols: 10
   type: table
+- path: metadata
+  name: metadata
+  rows: 361
+  cols: 42
+  type: table

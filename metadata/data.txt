@@ -1,0 +1,49 @@
+path:
+- https://github.com/karinorman/biodivTS/releases/download/metadata-a7d6844/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/metadata-a7d6844/data.rds
+rows: 361
+cols: 42
+columns:
+  study_id: integer
+  realm: factor
+  climate: factor
+  general_treat: factor
+  treatment: factor
+  treat_comments: factor
+  treat_date: factor
+  habitat: factor
+  protected_area: logical
+  biome_map: factor
+  taxa: factor
+  organisms: factor
+  title: factor
+  ab_bio: factor
+  has_plot: factor
+  data_points: integer
+  start_year: integer
+  end_year: integer
+  cent_lat: numeric
+  cent_long: numeric
+  number_of_species: integer
+  number_of_samples: integer
+  number_lat_long: integer
+  total: integer
+  grain_size_text: factor
+  grain_sq_km: numeric
+  area_sq_km: numeric
+  contact_1: factor
+  contact_2: factor
+  cont_1_mail: factor
+  cont_2_mail: factor
+  license: factor
+  web_link: factor
+  data_source: factor
+  methods: factor
+  summary_methods: factor
+  link_id: integer
+  comments: factor
+  date_study_added: factor
+  abundance_type: factor
+  biomass_type: factor
+  sample_desc_name: factor
+type: table
