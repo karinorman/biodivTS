@@ -16,10 +16,15 @@ devtools::load_all()
 ```
 
 ```{r}
-load(here::here("data", "biotime_data.rda"))
+biotime_data <- pins::pin_get("biotime-data", board = "github")
+#load(here::here("data", "biotime_data.rda"))
 load(here::here("data", "elton_mamm.rda"))
 load(here::here("data", "elton_bird.rda"))
 load(here::here("data", "amphibio.rda"))
+
+biotime_data <- biotime_data %>%
+  ungroup() %>%
+  mutate(obsID = row_number())
 ```
 
 #Checking Coverage of ID's and trait data -> biotime
@@ -53,8 +58,8 @@ merge_data <- function(trait_data){
     select(-scientificName) %>%
     rename(biotimeName = sourceName) %>%
   left_join(trait_data %>% rename(traitName = sourceName), by = "id",
-            na_matches = "never") #%>%
-   # drop_na(scientificName)
+            na_matches = "never") %>%
+   drop_na(scientificName)
 }
 ```
 
@@ -69,9 +74,14 @@ percent <- 0.85
 
 traits <- list(elton_bird, elton_mamm, amphibio)
 
-comp_biotime_traits <- map_dfr(traits, merge_data) %>%
-  right_join(biotime_data %>% select(-sourceName, -scientificName)) %>%
-  distinct()
+trait_merge <- map_dfr(traits, merge_data) 
+
+comp_biotime_traits <- trait_merge %>%
+  bind_rows(biotime_data %>% 
+              filter(!obsID %in% trait_merge$obsID) %>%
+              select(-scientificName) %>%
+              rename(biotimeName = sourceName))# %>%
+  #distinct()
 
 #always check that one species didn't match to multiple datasets, below should return and empty dataframe
 #comp_biotime_traits %>% group_by(record_id) %>% filter(n() > 1) %>% dim()
@@ -79,10 +89,10 @@ comp_biotime_traits <- map_dfr(traits, merge_data) %>%
 #this gives a coverage for each trait dataset, so potentially a lot of coverage with one dataset and no coverage on all the rest
 #need to get rid of zeros when there is coverage from another dataset so we only have one entry per study
 coverage <- comp_biotime_traits %>%
-  select(study_id, scientificName) %>%
+  select(study_id, id, biotimeName, traitName) %>%
   distinct() %>%
   group_by(study_id) %>%
-  summarise(perc = sum(!is.na(id))/n()) %>%
+  summarise(perc = sum(!is.na(traitName))/n()) %>%
   arrange(desc(perc))
 
 inc_coverage <- coverage %>% filter(perc > percent)
@@ -116,11 +126,13 @@ pins::pin(biotime_traits, board = "github")
 
 Create table of info for each study
 ```{r}
-study_table <- biotime_data %>%
-  group_by(study_id) %>%
-  mutate(min_year = min(year), max_year = max(year), n_year = n_distinct(year), plots = n_distinct(plot)) %>% 
-  select(study_id, taxa, min_year, max_year, plots) %>%
-  distinct() %>%
+metadata <- pins::pin_get("metadata", board = "github")
+
+study_table <- biotime_traits %>%
+  select(study_id, plot) %>%
+  count(study_id, name = "n_plots") %>% 
+  left_join(metadata %>% select(study_id, realm, climate, habitat, biome_map, taxa, 
+                                organisms, start_year, end_year), by = "study_id") %>%
   left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
 
 usethis::use_data(study_table)
