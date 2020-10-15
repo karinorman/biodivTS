@@ -1,8 +1,8 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-d74a760/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-d74a760/data.rds
-rows: 755067
-cols: 67
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-28acfa4/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-28acfa4/data.rds
+rows: 755027
+cols: 68
 columns:
   id: character
   biotimeName: character
@@ -11,6 +11,7 @@ columns:
   year: integer
   study_id: integer
   taxa: character
+  obsID: integer
   traitName: character
   scientificName: character
   diet_inv: numeric
