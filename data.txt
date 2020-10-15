@@ -10,8 +10,8 @@
   type: table
 - path: study-table
   name: study-table
-  rows: 361
-  cols: 6
+  rows: 53
+  cols: 11
   type: table
 - path: fd-table
   name: fd-table

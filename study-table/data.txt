@@ -1,13 +1,18 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/study-table-3aad762/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/study-table-3aad762/data.rds
-rows: 361
-cols: 6
+- https://github.com/karinorman/biodivTS/releases/download/study-table-eccaaac/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/study-table-eccaaac/data.rds
+rows: 53
+cols: 11
 columns:
   study_id: integer
-  taxa: character
-  min_year: integer
-  max_year: integer
-  plots: integer
+  n_plots: integer
+  realm: factor
+  climate: factor
+  habitat: factor
+  biome_map: factor
+  taxa: factor
+  organisms: factor
+  start_year: integer
+  end_year: integer
   coverage: numeric
 type: table
