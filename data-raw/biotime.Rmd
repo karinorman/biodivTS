@@ -14,35 +14,56 @@ library(here)
 library(tidyverse)
 library(lazyeval)
 library(taxadb)
+library(DBI)
+library(dbplyr)
 
 source(here::here("data-raw", "helper_functions.R"))
 ```
 
-Import occurence data from Biotime
-```{r}
-#rdataretriever::install("biotime", connection = "csv", data_dir = here("data"))
-# 
-# data <- read.csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>%
-#   select(study_id, taxa) %>%
-#   left_join(read.csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")), by = "study_id")
+Import occurrence data from Biotime
 
-data <- pins::pin_get("year-biotime", board = "github")
+Access database
+```{r}
+#personal computer
+con <- dbConnect(
+  drv = RMariaDB::MariaDB(), 
+  dbname = "biotime",
+  username = "root",
+  password = "Ka1172353!", 
+  host = "localhost"
+)
+
+#thelio
+con <- DBI::dbConnect(RMariaDB::MariaDB(), 
+                      host="mariadb", 
+                      user="root", 
+                      password="password", 
+                      dbname="biotime")
+
+biotime_sql <- tbl(con, "allrawdata") %>% 
+  collect() %>% 
+  rename_all(.funs = tolower) %>%
+  select(-id_all_raw_data)
+```
+```{r}
+data <- biotime_sql %>% 
+  group_by(id_species, plot, year, study_id) %>% 
+  summarise(year_abun = sum(na.omit(abundance)), 
+            year_biomass = sum(na.omit(biomass))) %>%
+  left_join(tbl(con, "datasets") %>% select(taxa = TAXA, study_id = STUDY_ID) %>% collect()) %>%
+  left_join(tbl(con, "species") %>% select(id_species = ID_SPECIES, genus_species = GENUS_SPECIES) %>% collect()) %>%
+  ungroup()
+
+#should be zero to be appropriately aggregated
+#data %>% group_by(study_id, plot, year, id_species) %>% filter(n()>1) %>% View()
 ```
 
-Many of the studies with only one plot have NA for the plot number, but we want to distinguish between NA's in studies that have multiple plots and unlabled studies.
+Replace NA plots with a plot label (these are studies with no plot subdivision)
 ```{r}
-#find studies that only have one plot labeled NA
-sing_study <- data %>% 
-  select(study_id, plot) %>%
-  distinct() %>%
-  count(study_id) %>%
-  filter(n == 1) %>%
-  pull(study_id)
-
 #replace plot NA's that are really studies with only one plot with a plot label 
 data <- data %>% 
   mutate(plot = case_when(
-    study_id %in% sing_study & plot %in% c(NA, "", "#REF!") ~ "A",
+    is.na(plot) ~ "A",
     TRUE ~ plot
   ))
 ```
@@ -169,6 +190,6 @@ NOT EXECUTED FOR CURRENT ITERATION (9/4/20)
 ```
 
 ```{r}
-usethis::use_data(biotime_data)
+pins::pin(biotime_data, board = "github")
 ```
 
