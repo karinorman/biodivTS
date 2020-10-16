@@ -1,0 +1,64 @@
+path:
+- https://github.com/karinorman/biodivTS/releases/download/trait-ref-dab86a8/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/trait-ref-dab86a8/data.rds
+rows: 975
+cols: 57
+columns:
+  species: character
+  Fos: numeric
+  Ter: numeric
+  Aqu: numeric
+  Arb: numeric
+  Leaves: numeric
+  Flowers: numeric
+  Seeds: logical
+  Fruits: numeric
+  Arthro: numeric
+  Vert: numeric
+  Diu: numeric
+  Noc: numeric
+  Crepu: numeric
+  Wet_warm: numeric
+  Wet_cold: numeric
+  Dry_warm: numeric
+  Dry_cold: numeric
+  Body_mass_g: numeric
+  Age_at_maturity_min_y: numeric
+  Age_at_maturity_max_y: numeric
+  Body_size_mm: numeric
+  Size_at_maturity_min_mm: numeric
+  Size_at_maturity_max_mm: numeric
+  Longevity_max_y: numeric
+  Litter_size_min_n: numeric
+  Litter_size_max_n: numeric
+  Reproductive_output_y: numeric
+  Offspring_size_min_mm: numeric
+  Offspring_size_max_mm: numeric
+  Dir: numeric
+  Lar: numeric
+  Viv: numeric
+  diet_inv: numeric
+  diet_vend: numeric
+  diet_vect: numeric
+  diet_vfish: numeric
+  diet_vunk: numeric
+  diet_scav: numeric
+  diet_fruit: numeric
+  diet_nect: numeric
+  diet_seed: numeric
+  diet_planto: numeric
+  diet_5cat: character
+  forstrat_watbelowsurf: numeric
+  forstrat_wataroundsurf: numeric
+  forstrat_ground: numeric
+  forstrat_understory: numeric
+  forstrat_midhigh: numeric
+  forstrat_canopy: numeric
+  forstrat_aerial: numeric
+  pelagicspecialist: numeric
+  nocturnal: numeric
+  bodymass_value: numeric
+  activity_nocturnal: numeric
+  activity_crepuscular: numeric
+  activity_diurnal: numeric
+type: table

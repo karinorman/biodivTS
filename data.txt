@@ -38,3 +38,8 @@
   rows: 789274
   cols: 16
   type: table
+- path: trait-ref
+  name: trait-ref
+  rows: 975
+  cols: 57
+  type: table
