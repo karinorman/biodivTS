@@ -33,3 +33,8 @@
   rows: 361
   cols: 42
   type: table
+- path: bt-traitfiltered
+  name: bt-traitfiltered
+  rows: 789274
+  cols: 16
+  type: table
