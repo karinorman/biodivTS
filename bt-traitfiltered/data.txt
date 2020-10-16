@@ -1,10 +1,10 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/bt-traitfiltered-81aabd3/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/bt-traitfiltered-81aabd3/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/bt-traitfiltered-66bbf86/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/bt-traitfiltered-66bbf86/data.rds
 rows: 789274
-cols: 16
+cols: 15
 columns:
-  id: character
+  species: character
   climate: factor
   realm: factor
   taxa: factor
@@ -19,5 +19,4 @@ columns:
   cell: numeric
   abundance: numeric
   biomass: numeric
-  scientificName: character
 type: table
