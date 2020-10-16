@@ -33,11 +33,6 @@
   rows: 361
   cols: 42
   type: table
-- path: bt-traitfiltered
-  name: bt-traitfiltered
-  rows: 789274
-  cols: 15
-  type: table
 - path: trait-ref
   name: trait-ref
   rows: 975
