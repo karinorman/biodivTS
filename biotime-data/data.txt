@@ -1,17 +1,24 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-data-da1edf0/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-data-da1edf0/data.rds
-rows: 2072220
-cols: 10
+- https://github.com/karinorman/biodivTS/releases/download/biotime-data-15306a1/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-data-15306a1/data.rds
+rows: 4824350
+cols: 17
 columns:
   id: character
   sourceName: character
-  id_species: integer
-  plot: character
-  year: integer
+  climate: factor
+  realm: factor
+  taxa: factor
+  studymethod: character
+  abundance_type: factor
+  biomass_type: factor
+  obseventid: character
+  rarefyid: character
   study_id: integer
-  year_abun: numeric
-  year_biomass: numeric
-  taxa: character
+  year: integer
+  plot: factor
+  cell: numeric
+  abundance: numeric
+  biomass: numeric
   scientificName: character
 type: table

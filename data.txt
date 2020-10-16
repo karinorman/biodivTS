@@ -25,8 +25,8 @@
   type: table
 - path: biotime-data
   name: biotime-data
-  rows: 2072220
-  cols: 10
+  rows: 4824350
+  cols: 17
   type: table
 - path: metadata
   name: metadata
