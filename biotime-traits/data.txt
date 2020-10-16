@@ -1,16 +1,25 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-28acfa4/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-28acfa4/data.rds
-rows: 755027
-cols: 68
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-8aa34cf/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/biotime-traits-8aa34cf/data.rds
+rows: 789274
+cols: 75
 columns:
   id: character
   biotimeName: character
-  id_species: integer
-  plot: character
-  year: integer
+  climate: factor
+  realm: factor
+  taxa: factor
+  studymethod: character
+  abundance_type: factor
+  biomass_type: factor
+  obseventid: character
+  rarefyid: character
   study_id: integer
-  taxa: character
+  year: integer
+  plot: factor
+  cell: numeric
+  abundance: numeric
+  biomass: numeric
   obsID: integer
   traitName: character
   scientificName: character
@@ -70,6 +79,4 @@ columns:
   Dir: numeric
   Lar: numeric
   Viv: numeric
-  plot_id: character
-  weight: numeric
 type: table
