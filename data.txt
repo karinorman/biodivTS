@@ -41,3 +41,7 @@
   rows: 789274
   cols: 15
   type: table
+- path: bt_traitfiltered
+  name: bt_traitfiltered
+  extension: ''
+  type: files
