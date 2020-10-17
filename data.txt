@@ -36,8 +36,3 @@
 - path: biotime_traits
   name: biotime_traits
   extension: ''
-- path: bt-traitfiltered
-  name: bt-traitfiltered
-  rows: 789274
-  cols: 15
-  type: table
