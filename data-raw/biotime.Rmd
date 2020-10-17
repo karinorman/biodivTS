@@ -68,6 +68,17 @@ data <- data %>%
   ))
 ```
 
+Load data from outside processing script
+```{r}
+load(here::here('data/BioTIME_grid_filtered.Rdata'))
+data <- bt_grid_filtered %>%
+  rename_with(tolower) %>%
+  mutate(species = str_replace(species, "_", " "))
+
+rm(bt_grid_filtered)
+```
+
+
 Check which authority would result in the most matches 
 ```{r}
 ##Counts show that OTT is the best authority 
@@ -80,17 +91,9 @@ OTT is the best authority but doesn't have common names, so we use the next best
 ##Biotime
 
 ```{r}
-# #Getting matches by scientific name 
-# biotime <- data %>% 
-#   select(genus_species) %>%
-#   drop_na() %>%
-#   distinct() %>%
-#   mutate(id = get_ids(genus_species, "itis")) %>%
-#   left_join(data, by = "genus_species")
-
 #Getting matches by sci name and common name 
-biotime_ids <- filter_name(unique(data$genus_species), "itis") %>%
-  bind_rows(filter_common(unique(data$genus_species), "itis")) %>%
+biotime_ids <- filter_name(unique(data$species), "itis") %>%
+  bind_rows(filter_common(unique(data$species), "itis")) %>%
   filter(taxonRank == "species") %>% #only want ID's to species, since that's the level of the trait data
   drop_na(acceptedNameUsageID)
 ```
@@ -111,20 +114,17 @@ biotime_ids <- unres %>%
     "ITIS:683209",
     "ITIS:527684",
     "ITIS:782604",
-    "ITIS:28107",
-    "ITIS:508923",
-    "ITIS:159807", #Heterodontus zebra, all the studies including it are using sci names, so we should match to the sci name match not common name match
-    "ITIS:175125" #The Redhead is coming from bird studies, so choose the bird match, 
-    #the rest can't be match due to too little information
+    "ITIS:159807"
   )) %>%
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 
 biotime_data <- biotime_ids %>%
   select(id = acceptedNameUsageID,input) %>%
   distinct() %>%
-  right_join(data, by = c("input" = "genus_species")) %>%
+  right_join(data, by = c("input" = "species")) %>%
   rename(sourceName = input) %>%
-  mutate(scientificName = taxadb::get_names(id))
+  mutate(scientificName = taxadb::get_names(id)) %>%
+  mutate(row_num = row_number())
 ```
 
 Some ID's matched to more than one species in biotime, so we need to consolidate those entries so there is only one per ID (by removing the sourceName) 
@@ -134,11 +134,13 @@ dupe_id_entry <- biotime_data %>%
   group_by(id) %>% 
   filter(n_distinct(sourceName) > 1) 
 
-biotime_data <- setdiff(biotime_data, dupe_id_entry) %>%
+biotime_data <- biotime_data %>%
+  filter(!row_num %in% dupe_id_entry$row_num) %>% #setdiff(biotime_data, dupe_id_entry) %>%
   bind_rows(dupe_id_entry %>% 
-              select(-sourceName, id_species) %>% 
-              group_by(id, scientificName, plot, year, study_id, taxa) %>% 
-              summarize(year_abun = sum(year_abun), year_biomass = sum(year_biomass)))
+              select(-sourceName) %>% 
+              group_by(across(c(-row_num, -abundance, -biomass))) %>%
+              summarize(abundance = sum(abundance), biomass = sum(biomass))) %>%
+  select(-row_num)
 ```
 
 Do any unmatched species have matches with other providers?
@@ -168,7 +170,7 @@ NOT EXECUTED FOR CURRENT ITERATION (9/4/20)
 # # #then finish clean up 
 # #   select(id = acceptedNameUsageID, input, scientificName) %>% 
 # #   distinct() %>%
-# #   left_join(data %>% select(-species, -genus), by = c("input" = "genus_species"), na_matches =  "never") %>%
+# #   left_join(data %>% select(-species, -genus), by = c("input" = "species"), na_matches =  "never") %>%
 # #   rename(sourceName = input) %>%
 # #   ungroup()
 # 

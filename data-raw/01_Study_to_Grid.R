@@ -36,10 +36,10 @@ library(iNEXT)
 
 ##	get the data and metadata
 ##	Get the raw data locally
-bt <- read.csv(system.file("extdata", "biotime/biotime_query.csv", package = "biodivTS")) %>%
+bt <- read.csv("data/biotime_query.csv") %>%
   rename_with(toupper)
 ##	Get the meta data locally
-meta <- read.csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS")) %>%
+meta <- read.csv("data/biotime_metadata.csv") %>%
   rename_with(toupper)
 
 ##	join abundance records with the metadata
