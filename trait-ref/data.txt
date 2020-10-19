@@ -1,10 +1,10 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/trait-ref-dab86a8/data.csv
-- https://github.com/karinorman/biodivTS/releases/download/trait-ref-dab86a8/data.rds
+- https://github.com/karinorman/biodivTS/releases/download/trait-ref-37ff13c/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/trait-ref-37ff13c/data.rds
 rows: 975
 cols: 57
 columns:
-  species: character
+  Species: character
   Fos: numeric
   Ter: numeric
   Aqu: numeric
