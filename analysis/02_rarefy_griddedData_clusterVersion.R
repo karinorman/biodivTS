@@ -19,18 +19,22 @@ library(betapart)
 
 ##==========================================
 ##	Get the gridded data locally
-load('data/BioTIME_grid_filtered.Rdata')
+#load('data/BioTIME_grid_filtered.Rdata')
+bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+  rename_with(toupper) %>%
+  rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,
+         rarefyID = RAREFYID, cell = CELL, Abundance = ABUNDANCE, Biomass = BIOMASS)
 
 ##	use the job and task id as a counter for resampling and to set the seed
 ##	of the random number generator
-uniq_id <- Sys.getenv('UNIQ_ID')
+uniq_id <- runif(1, min = 1, max = 2000)
 seed <- uniq_id
 #seed <- substr(seed, 1, 4)
 set.seed(seed)
 
 #=================================FUNCTION TO RAREFY DATA============================
 
-rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resamples=100, trimsamples=FALSE){
+rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resamples=100, trimsamples=FALSE, ...){
 
   #	CALCULATE RAREFIED METRICS for each study for all years
   #	restrict calculations to where there is abundance>0 AND
@@ -131,7 +135,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
     # remove 0's or NA's (to catch any places where abundance wasn't actually recorded or the species is indicated as absent)
     filter_(.dots=zero_NA_filter) %>%
     # depending on type: nest(Species, Abundance) OR nest(Species, Biomass)
-    nest_(key_col="data", nest_cols=c("Species", field)) %>%
+    nest(data=c("Species", field)) %>%
     # reduce to studies that have more than two time points for a given cell
     group_by(rarefyID) %>%
     #keeps all study_cells with 2 or more years of data
@@ -180,21 +184,31 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
       # create community matrix of rarefied sample
       rare_comm  <- ungroup(rare_samp) %>%
-        spread(Species, Abundance, fill=0) %>%
-        dplyr::select(-rarefyID, -YEAR, -cell, -rarefy_resamp)
+        arrange(Species) %>% #order species so the trait matrix can in the same order
+        spread(Species, Abundance, fill=0)
+
+      #get vector of years in the same order as the community matrix to tack back on to FD dataframe later
+      years <- rare_comm$YEAR
+
+      rare_comm <- rare_comm %>%
+        column_to_rownames("YEAR") %>%
+        dplyr::select(-rarefyID, -cell, -rarefy_resamp)
 
       # betapart requires presence/absence matrix for Jaccard calculations of turnover/nestedness
       rare_comm_binary <- with(rare_comm, ifelse(rare_comm > 0, 1, 0))
 
+      # get trait matrix for the species in the sample
+      traits <- get_traitMat(rare_samp$Species, trait_ref)
+
       # initialise matrices for calculating turnover
-      simbaseline <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
-      names(simbaseline)<-c('YEAR', 'cell', 'Jaccard_base','Horn_base','Chao_base','Pearson_base','Gains_base','Losses_base', 'Jbeta_base', 'Jtu_base', 'Jne_base')
+      simbaseline <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
+      names(simbaseline)<-c('YEAR', 'cell', 'Jaccard_base','Horn_base','Chao_base','Pearson_base','Gains_base','Losses_base', 'Jbeta_base', 'Jtu_base', 'Jne_base', 'Jbeta_base_func', 'Jtu_base_func', 'Jne_base_func')
 
-      simnext <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
-      names(simnext)<-c('YEAR', 'cell', 'Jaccard_next','Horn_next','Chao_next','Pearson_next','Gains_next','Losses_next', 'Jbeta_next', 'Jtu_next', 'Jne_next')
+      simnext <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
+      names(simnext)<-c('YEAR', 'cell', 'Jaccard_next','Horn_next','Chao_next','Pearson_next','Gains_next','Losses_next', 'Jbeta_next', 'Jtu_next', 'Jne_next', 'Jbeta_next_func', 'Jtu_next_func', 'Jne_next_func')
 
-      simhind <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
-      names(simhind)<-c('YEAR', 'cell', 'Jaccard_hind','Horn_hind','Chao_hind','Pearson_hind','Gains_hind','Losses_hind', 'Jbeta_hind', 'Jtu_hind', 'Jne_hind')
+      simhind <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
+      names(simhind)<-c('YEAR', 'cell', 'Jaccard_hind','Horn_hind','Chao_hind','Pearson_hind','Gains_hind','Losses_hind', 'Jbeta_hind', 'Jtu_hind', 'Jne_hind', 'Jbeta_hind_func', 'Jtu_hind_func', 'Jne_hind_func')
 
       counter2 <- 1
 
@@ -213,7 +227,15 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Jbeta <- as.matrix(J_components$beta.jac)
         Jtu <- as.matrix(J_components$beta.jtu)
         Jne <- as.matrix(J_components$beta.jne)
-        n <- length(unique(rare_samp$YEAR))
+        n <- length(years)
+
+        # calculated functional diversity
+        FD_mets <- get_FD(species_mat = rare_comm, trait_mat = traits, year_list = years,
+                          data_id = rare_samp$rarefyID, samp_id = uniq_id, m = "min", corr = "cailliez")
+        J_func_components <- funcbeta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
+        Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
+        Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
+        Jne_func <- as.matrix(J_func_components$funct.beta.jne)
 
         # How baseline is calculated.
         # NB: we do not compare first year with itself here (to be added before model fitting later)
@@ -228,7 +250,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           Lossessim[2:n],
           Jbeta[2:n],
           Jtu[2:n],
-          Jne[2:n])
+          Jne[2:n],
+          Jbeta_func[2:n],
+          Jtu_func[2:n],
+          Jne_func[2:n])
 
         # How consecutive is calculated.
         simnext[counter2:(counter2+n-2),] <- cbind(
@@ -242,7 +267,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           Lossessim[row(Lossessim)-col(Lossessim)==1],
           Jbeta[row(Jbeta)-col(Jbeta)==1],
           Jtu[row(Jtu)-col(Jtu)==1],
-          Jne[row(Jne)-col(Jne)==1])
+          Jne[row(Jne)-col(Jne)==1],
+          Jbeta_func[row(Jbeta_func)-col(Jbeta_func)==1],
+          Jtu_func[row(Jtu_func)-col(Jtu_func)==1],
+          Jne_func[row(Jne_func)-col(Jne_func)==1])
 
         # How hindcasting is calculated.
         simhind[counter2:(counter2+n-2),] <- cbind(
@@ -256,7 +284,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           Lossessim[row(Lossessim)%in%1:(max(row(Lossessim))-1) & col(Lossessim)==max(col(Lossessim))],
           Jbeta[row(Jbeta)%in%1:(max(row(Jbeta))-1) & col(Jbeta)==max(col(Jbeta))],
           Jtu[row(Jtu)%in%1:(max(row(Jtu))-1) & col(Jtu)==max(col(Jtu))],
-          Jne[row(Jne)%in%1:(max(row(Jne))-1) & col(Jne)==max(col(Jne))])
+          Jne[row(Jne)%in%1:(max(row(Jne))-1) & col(Jne)==max(col(Jne))],
+          Jbeta_func[row(Jbeta_func)%in%1:(max(row(Jbeta_func))-1) & col(Jbeta_func)==max(col(Jbeta_func))],
+          Jtu_func[row(Jtu_func)%in%1:(max(row(Jtu_func))-1) & col(Jtu_func)==max(col(Jtu_func))],
+          Jne_func[row(Jne_func)%in%1:(max(row(Jne_func))-1) & col(Jne_func)==max(col(Jne_func))])
 
         # calculate univariate metrics
         uni_metrics <- ungroup(rare_samp) %>%
@@ -272,9 +303,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           ungroup()
 
         # combine univariate and turnover metrics
-        biochange_metrics <- full_join(uni_metrics, simbaseline[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
-        biochange_metrics <- full_join(biochange_metrics, simnext[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
-        biochange_metrics <- full_join(biochange_metrics, simhind[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
+        biochange_metrics <- full_join(uni_metrics, simbaseline[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
+          full_join(simnext[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
+          full_join(simhind[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
+          full_join(FD_mets$fd_met, by = c("YEAR" = "year"))
 
         # add to dataframe for all studies
         rarefied_metrics <- bind_rows(rarefied_metrics, biochange_metrics)
