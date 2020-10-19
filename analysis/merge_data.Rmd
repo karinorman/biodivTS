@@ -126,7 +126,7 @@ trait_cols <- trait_cols[!trait_cols %in% c("sourceName", "scientificName")]
 
 trait_ref <- biotime_traits %>%
   select(all_of(trait_cols)) %>%
-  rename(species = id) %>%
+  rename(Species = id) %>%
   distinct()
 
 pins::pin(trait_ref, board = "github")
