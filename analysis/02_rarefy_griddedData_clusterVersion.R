@@ -16,6 +16,7 @@ library(tidyr)
 library(lazyeval)
 library(vegan)
 library(betapart)
+library(furrr)
 
 ##==========================================
 ##	Get the gridded data locally
@@ -149,7 +150,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   for(i in 1:resamples){
 
     ## loop to do rarefaction for each study
-    for(j in 1:length(unique(bt_grid_nest$rarefyID))){
+    for(j in 1:length(unique(bt_grid_nest$rarefyID)[1:5])){
       print(paste('rarefaction', i, 'out of', resamples, 'for study_cell', j, '(', unique(bt_grid_nest$rarefyID)[j], ')',  'in', length(unique(bt_grid_nest$rarefyID))))
 
       ##	get the jth study_cell
@@ -231,8 +232,9 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
         # calculated functional diversity
         FD_mets <- get_FD(species_mat = rare_comm, trait_mat = traits, year_list = years,
-                          data_id = rare_samp$rarefyID, samp_id = uniq_id, m = "min", corr = "cailliez")
-        J_func_components <- funcbeta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
+                          data_id = rare_samp$rarefyID, samp_id = uniq_id,
+                          w.abun = TRUE, m = "min", corr = "cailliez")
+        J_func_components <- functional.beta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
         Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
         Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
         Jne_func <- as.matrix(J_func_components$funct.beta.jne)
@@ -332,7 +334,15 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Jtu <- as.matrix(J_components$beta.jtu)
         Jne <- as.matrix(J_components$beta.jne)
 
-        # How baseline is calculated.
+        # calculated functional diversity
+        FD_mets <- get_FD(species_mat = rare_comm, trait_mat = traits, year_list = years,
+                          data_id = rare_samp$rarefyID, samp_id = uniq_id,
+                          w.abun = FALSE, m = "min", corr = "cailliez")
+        J_func_components <- functional.beta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
+        Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
+        Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
+        Jne_func <- as.matrix(J_func_components$funct.beta.jne)
+
         # How baseline is calculated.
         simbaseline[counter2:(counter2+n-2),] <- cbind(
           unique(rare_samp$YEAR)[2:n],
@@ -345,7 +355,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           Lossessim[2:n],
           Jbeta[2:n],
           Jtu[2:n],
-          Jne[2:n])
+          Jne[2:n],
+          Jbeta_func[2:n],
+          Jtu_func[2:n],
+          Jne_func[2:n])
 
         # How consecutive is calculated.
         simnext[counter2:(counter2+n-2),] <- cbind(
@@ -359,7 +372,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           Lossessim[row(Lossessim)-col(Lossessim)==1],
           Jbeta[row(Jbeta)-col(Jbeta)==1],
           Jtu[row(Jtu)-col(Jtu)==1],
-          Jne[row(Jne)-col(Jne)==1])
+          Jne[row(Jne)-col(Jne)==1],
+          Jbeta_func[row(Jbeta_func)-col(Jbeta_func)==1],
+          Jtu_func[row(Jtu_func)-col(Jtu_func)==1],
+          Jne_func[row(Jne_func)-col(Jne_func)==1])
 
         # How hindcasting is calculated.
         simhind[counter2:(counter2+n-2),] <- cbind(
@@ -373,7 +389,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           Lossessim[row(Lossessim)%in%1:(max(row(Lossessim))-1) & col(Lossessim)==max(col(Lossessim))],
           Jbeta[row(Jbeta)%in%1:(max(row(Jbeta))-1) & col(Jbeta)==max(col(Jbeta))],
           Jtu[row(Jtu)%in%1:(max(row(Jtu))-1) & col(Jtu)==max(col(Jtu))],
-          Jne[row(Jne)%in%1:(max(row(Jne))-1) & col(Jne)==max(col(Jne))])
+          Jne[row(Jne)%in%1:(max(row(Jne))-1) & col(Jne)==max(col(Jne))],
+          Jbeta_func[row(Jbeta_func)%in%1:(max(row(Jbeta_func))-1) & col(Jbeta_func)==max(col(Jbeta_func))],
+          Jtu_func[row(Jtu_func)%in%1:(max(row(Jtu_func))-1) & col(Jtu_func)==max(col(Jtu_func))],
+          Jne_func[row(Jne_func)%in%1:(max(row(Jne_func))-1) & col(Jne_func)==max(col(Jne_func))])
 
         # calculate univariate metrics
         uni_metrics <- ungroup(rare_samp) %>%
@@ -389,9 +408,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
           ungroup()
 
         # combine univariate and turnover metrics
-        biochange_metrics <- full_join(uni_metrics, simbaseline[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
-        biochange_metrics <- full_join(biochange_metrics, simnext[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
-        biochange_metrics <- full_join(biochange_metrics, simhind[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
+        biochange_metrics <- full_join(uni_metrics, simbaseline[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
+          full_join(simnext[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
+          full_join(simhind[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
+          full_join(FD_mets$fd_met, by = c("YEAR" = "year"))
 
         # add to dataframe for all studies
         rarefied_metrics <- bind_rows(rarefied_metrics, biochange_metrics)
@@ -405,29 +425,38 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 } # END function
 
 ##================================== Calculate mean rarefied diversity for each data type=======================================
-## Separate true abundance (count) data from presence and biomass/cover data
-bt_grid_abund <- bt_grid_filtered %>%
-  filter(ABUNDANCE_TYPE %in% c("Count", "Density", "MeanCount"))
+get_samp_metrics <- function(data, samp_number){
+  ## Separate true abundance (count) data from presence and biomass/cover data
+  bt_grid_abund <- data %>%
+    filter(ABUNDANCE_TYPE %in% c("Count", "Density", "MeanCount"))
 
-bt_grid_pres <- bt_grid_filtered %>%
-  filter(ABUNDANCE_TYPE == "Presence/Absence")
+  bt_grid_pres <- data %>%
+    filter(ABUNDANCE_TYPE == "Presence/Absence")
 
-bt_grid_bmass <- bt_grid_filtered %>%
-  filter(is.na(ABUNDANCE_TYPE)) #only want to calculate on biomass data when abundance data is also not available
+  #We don't have any data with only biomass measurements, so don't need this
+  # bt_grid_bmass <- data %>%
+  #   filter(is.na(ABUNDANCE_TYPE)) #only want to calculate on biomass data when abundance data is also not available
 
-#-----------------------------Alternate for trimming years with low samples
-# rarefy diversity after trimming years with excessively low samples (sensu Dornelas et al. 2014, methods, Fig S10)
+  #-----------------------------Alternate for trimming years with low samples
+  # rarefy diversity after trimming years with excessively low samples (sensu Dornelas et al. 2014, methods, Fig S10)
 
-## Get rarefied sample for each measurement type (trimmed data)
-#rarefy_abund_trim <- rarefy_diversity(grid=bt_grid_abund, type="count", resamples=1, trimsamples=TRUE)
-#rarefy_pres_trim <- rarefy_diversity(grid=bt_grid_pres, type="presence", resamples=1, trimsamples=TRUE)
-#rarefy_biomass_trim <- rarefy_diversity(grid=bt_grid_bmass, type="biomass", resamples=1, trimsamples=TRUE)
-#-----------------------------
-## Get rarefied resample for each type of measurement (all data)
-rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, type="count", resamples=1)
-rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, type="presence", resamples=1)
-rarefy_biomass <- rarefy_diversity(grid=bt_grid_bmass, type="biomass", resamples=1)
+  ## Get rarefied sample for each measurement type (trimmed data)
+  #rarefy_abund_trim <- rarefy_diversity(grid=bt_grid_abund, type="count", resamples=1, trimsamples=TRUE)
+  #rarefy_pres_trim <- rarefy_diversity(grid=bt_grid_pres, type="presence", resamples=1, trimsamples=TRUE)
+  #rarefy_biomass_trim <- rarefy_diversity(grid=bt_grid_bmass, type="biomass", resamples=1, trimsamples=TRUE)
+  #-----------------------------
+  ## Get rarefied resample for each type of measurement (all data)
+  rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, type="count", resamples=1)
+  rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, type="presence", resamples=1)
+  #rarefy_biomass <- rarefy_diversity(grid=bt_grid_bmass, type="biomass", resamples=1)
 
-##	save rarefied sample (for later collation and calculation of mean)
-#save(rarefy_abund_trim,rarefy_pres_trim, rarefy_biomass_trim,
-save(rarefy_abund, rarefy_pres, rarefy_biomass, file=Sys.getenv('OFILE'))
+  ##	save rarefied sample (for later collation and calculation of mean)
+  #save(rarefy_abund_trim,rarefy_pres_trim, rarefy_biomass_trim,
+  dir <- here::here("data", "rarefied_metrics")
+  dir.create(dir)
+  save(rarefy_abund, rarefy_pres, #rarefy_biomass,
+       file=paste0(dir, "/resample", samp_number, ".rda"))
+}
+
+plan("multiprocess")
+future_map(1:10, get_samp_metrics, data = bt_grid_filtered)

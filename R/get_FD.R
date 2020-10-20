@@ -5,7 +5,7 @@ get_FD <- function(species_mat, trait_mat, year_list, data_id, samp_id, ...){
   fs::dir_create(tmp_dir)
   setwd(tmp_dir)
 
-  fd_data <- dbFD_mine(trait_mat, species_mat, w.abun = TRUE, ...)
+  fd_data <- dbFD_mine(trait_mat, species_mat, ...)
   fd_out <- as_tibble(fd_data$fd_met)[,1:8] %>%
     cbind(year = year_list, .)
 
