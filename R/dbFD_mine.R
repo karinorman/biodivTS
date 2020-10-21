@@ -6,6 +6,16 @@ dbFD_mine <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani",
                                                                              "ssi"), calc.CWM = TRUE, CWM.type = c("dom", "all"),
           calc.FDiv = TRUE, dist.bin = 2, print.pco = FALSE, messages = TRUE)
 {
+
+  axes95 <- function(eig){
+    threshold <- sum(eig[eig > 0]) * 0.95
+
+    sums <- cumsum(eig)
+    num_axes <- Position(function(x) x > threshold, sums)
+
+    return(num_axes)
+  }
+
   tol <- .Machine$double.eps
   corr <- match.arg(corr)
   ord <- match.arg(ord)
@@ -302,6 +312,7 @@ dbFD_mine <- function (x, a, w, w.abun = TRUE, stand.x = TRUE, ord = c("podani",
     }
   }
   x.pco <- dudi.pco(x.dist2, scannf = FALSE, full = TRUE)
+  if(m == "coverage") {m <- axes95(x.pco$eig)}
   traits <- round(x.pco$li, .Machine$double.exponent)
   nb.sp <- numeric(c)
   for (i in 1:c) {

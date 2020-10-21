@@ -153,7 +153,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   for(i in 1:resamples){
 
     ## loop to do rarefaction for each study
-    for(j in 1:length(unique(bt_grid_nest$rarefyID))){
+    for(j in 1:length(unique(bt_grid_nest$rarefyID))[1:5]){
       print(paste('rarefaction', i, 'out of', resamples, 'for study_cell', j, '(', unique(bt_grid_nest$rarefyID)[j], ')',  'in', length(unique(bt_grid_nest$rarefyID))))
 
       ##	get the jth study_cell
@@ -236,7 +236,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         # calculated functional diversity
         FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
                                data_id = rare_samp$rarefyID, samp_id = uniq_id,
-                               w.abun = TRUE, m = "min", corr = "cailliez")
+                               w.abun = TRUE, m = "coverage", corr = "cailliez")
         if (is.null(dim(FD_mets))){
           J_func_components <- functional.beta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
           Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
@@ -286,7 +286,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         # calculated functional diversity
         FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
                                data_id = rare_samp$rarefyID, samp_id = uniq_id,
-                               w.abun = FALSE, m = "min", corr = "cailliez")
+                               w.abun = FALSE, m = "coverage", corr = "cailliez")
         if (is.null(dim(FD_mets))){
           J_func_components <- functional.beta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
           Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
