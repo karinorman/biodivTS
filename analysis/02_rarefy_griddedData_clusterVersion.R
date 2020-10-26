@@ -6,7 +6,6 @@
 # Primary Code Authors: Shane Blowes and Sarah Supp
 # Email: sablowes@gmail.com, sarah@weecology.org
 ##======================================================================
-rm(list=ls())
 
 ##	load packages
 library(dplyr)
@@ -17,8 +16,13 @@ library(lazyeval)
 library(vegan)
 library(betapart)
 library(furrr)
+library(doParallel)
+library(foreach)
+devtools::load_all()
 
 ##==========================================
+pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
+
 ##	Get the gridded data locally
 #load('data/BioTIME_grid_filtered.Rdata')
 bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
@@ -26,16 +30,12 @@ bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
   rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,
          rarefyID = RAREFYID, cell = CELL, Abundance = ABUNDANCE, Biomass = BIOMASS)
 
-##	use the job and task id as a counter for resampling and to set the seed
-##	of the random number generator
-uniq_id <- runif(1, min = 1, max = 2000)
-seed <- uniq_id
-#seed <- substr(seed, 1, 4)
-set.seed(seed)
+trait_ref <- pins::pin_get("trait-ref", board = "github")
 
 #=================================FUNCTION TO RAREFY DATA============================
 
-rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resamples=100, trimsamples=FALSE, ...){
+rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resamples=100,
+                             trimsamples=FALSE, trait_axes, parallel, ...){
 
   #	CALCULATE RAREFIED METRICS for each study for all years
   #	restrict calculations to where there is abundance>0 AND
@@ -149,8 +149,17 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   ## create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
   get_FD_safe <- possibly(get_FD, otherwise = data_frame())
 
+  if(isTRUE(parallel)){
+    # set up parallel loop
+    cores=detectCores()
+    cl <- parallel::makeForkCluster(cores[1]-1) #not to overload your computer
+    registerDoParallel(cl)
+  }else{
+    registerDoSEQ()
+  }
+
   ##	rarefy rarefy_resamps times
-  for(i in 1:resamples){
+  rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
 
     ## loop to do rarefaction for each study
     for(j in 1:length(unique(bt_grid_nest$rarefyID))[1:5]){
@@ -179,7 +188,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         # unpack and collate taxa from rarefied sample
         unnest(data) %>%
         # add unique counter for a resampling event
-        mutate(rarefy_resamp = uniq_id) %>%
+        mutate(rarefy_resamp = i) %>%
         # collate species within cells within years
         group_by(rarefyID, YEAR, cell, rarefy_resamp, Species) %>%
         dplyr::summarise_(
@@ -202,7 +211,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
       rare_comm_binary <- with(rare_comm, ifelse(rare_comm > 0, 1, 0))
 
       # get trait matrix for the species in the sample
-      traits <- get_traitMat(rare_samp$Species, trait_ref)
+      traits <- get_traitMat(rare_samp$Species, ...)
 
       # initialise matrices for calculating turnover
       simbaseline <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
@@ -236,7 +245,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         # calculated functional diversity
         FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
                                data_id = rare_samp$rarefyID, samp_id = uniq_id,
-                               w.abun = TRUE, m = "coverage", corr = "cailliez")
+                               w.abun = TRUE, m = trait_axes, corr = "cailliez")
         if (is.null(dim(FD_mets))){
           J_func_components <- functional.beta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
           Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
@@ -286,7 +295,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         # calculated functional diversity
         FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
                                data_id = rare_samp$rarefyID, samp_id = uniq_id,
-                               w.abun = FALSE, m = "coverage", corr = "cailliez")
+                               w.abun = FALSE, m = trait_axes, corr = "cailliez")
         if (is.null(dim(FD_mets))){
           J_func_components <- functional.beta.pair(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
           Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
@@ -379,55 +388,29 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
       rarefied_metrics <- bind_rows(rarefied_metrics, biochange_metrics)
 
     }	# rarefyID loop (STUDY_CELL ID)
+    rarefied_metrics <- inner_join(new_meta, rarefied_metrics, by='rarefyID')
+
+    #save out the files
+    dir <- here::here("data", "rarefied_metrics")
+    dir.create(dir)
+    save(rarefied_metrics, file=paste0(dir, "/resample_", type, i, ".rda"))
+
+    rarefied_metrics
   }	# rarefaction loop
-  rarefied_metrics <- as_tibble(rarefied_metrics)
-  # combine with the new metadata
-  rarefied_metrics <- inner_join(new_meta, rarefied_metrics, by='rarefyID')
+
+  parallel::stopCluster(cl)
   return(rarefied_metrics)
 } # END function
 
 ##================================== Calculate mean rarefied diversity for each data type=======================================
-get_samp_metrics <- function(data, samp_number){
-  library(biodivTS)
-  ## Separate true abundance (count) data from presence and biomass/cover data
-  bt_grid_abund <- data %>%
-    filter(ABUNDANCE_TYPE %in% c("Count", "Density", "MeanCount"))
+## Separate true abundance (count) data from presence and biomass/cover data
+bt_grid_abund <- bt_grid_filtered %>%
+  filter(ABUNDANCE_TYPE %in% c("Count", "Density", "MeanCount"))
 
-  bt_grid_pres <- data %>%
-    filter(ABUNDANCE_TYPE == "Presence/Absence")
+bt_grid_pres <- bt_grid_filtered %>%
+  filter(ABUNDANCE_TYPE == "Presence/Absence")
 
-  #We don't have any data with only biomass measurements, so don't need this
-  # bt_grid_bmass <- data %>%
-  #   filter(is.na(ABUNDANCE_TYPE)) #only want to calculate on biomass data when abundance data is also not available
+## Get rarefied resample for each type of measurement (all data)
+rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = FALSE, resamples=160)
+rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200)
 
-  #-----------------------------Alternate for trimming years with low samples
-  # rarefy diversity after trimming years with excessively low samples (sensu Dornelas et al. 2014, methods, Fig S10)
-
-  ## Get rarefied sample for each measurement type (trimmed data)
-  #rarefy_abund_trim <- rarefy_diversity(grid=bt_grid_abund, type="count", resamples=1, trimsamples=TRUE)
-  #rarefy_pres_trim <- rarefy_diversity(grid=bt_grid_pres, type="presence", resamples=1, trimsamples=TRUE)
-  #rarefy_biomass_trim <- rarefy_diversity(grid=bt_grid_bmass, type="biomass", resamples=1, trimsamples=TRUE)
-  #-----------------------------
-  ## Get rarefied resample for each type of measurement (all data)
-  rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, type="count", resamples=1)
-  rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, type="presence", resamples=1)
-  #rarefy_biomass <- rarefy_diversity(grid=bt_grid_bmass, type="biomass", resamples=1)
-
-  ##	save rarefied sample (for later collation and calculation of mean)
-  #save(rarefy_abund_trim,rarefy_pres_trim, rarefy_biomass_trim,
-  dir <- here::here("data", "rarefied_metrics")
-  dir.create(dir)
-  save(rarefy_abund, rarefy_pres, #rarefy_biomass,
-       file=paste0(dir, "/resample", samp_number, ".rda"))
-}
-
-##### Set Up for rarefying via parallel mapping ############
-# furrr can't detect functions loaded via devtools::load_all(), so we have to source them manually
-source(here::here("R/get_FD.R"))
-source(here::here("R/dbFD_mine.R"))
-source(here::here("R/get_traitMat.R"))
-
-# create a file for writing out the rarefyID's that error out for the FD calculation
-
-plan("multiprocess")
-future_map(1:200, get_samp_metrics, data = bt_grid_filtered)
