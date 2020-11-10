@@ -165,7 +165,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
       ##	get the jth study_cell
       study <- bt_grid_nest %>%
-        filter(rarefyID==unique(bt_grid_nest$rarefyID)[j])
+        filter(rarefyID==filter_id)
 
       # get minimum sample size for rarefaction
       min_samp <- study %>% distinct(min_samp) %>% .$min_samp
@@ -303,6 +303,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         #   Jne_func <- matrix(nrow = size, ncol = size)
         # }
 
+
         # calculate univariate metrics
         uni_metrics <- ungroup(rare_samp) %>%
           group_by(rarefyID, YEAR, cell, rarefy_resamp) %>%
@@ -386,6 +387,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
       rarefied_metrics <- bind_rows(rarefied_metrics, biochange_metrics)
 
     }	# rarefyID loop (STUDY_CELL ID)
+
     rarefied_metrics <- inner_join(new_meta, rarefied_metrics) %>%
       mutate(sample_num = i)
 
@@ -394,11 +396,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
     dir.create(dir)
     save(rarefied_metrics, file=paste0(dir, "/resample_", type, i, ".rda"))
 
-    rarefied_metrics
   }	# rarefaction loop
 
-  parallel::stopCluster(cl)
-  return(rarefied_metrics)
+  rarefied_metrics <- as_tibble(rarefied_metrics)
+  rarefied_metrics <- inner_join(new_meta, rarefied_metrics, by = "rarefyID")
 } # END function
 
 ##================================== Calculate mean rarefied diversity for each data type=======================================
