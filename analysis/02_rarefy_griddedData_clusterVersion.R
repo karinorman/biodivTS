@@ -146,10 +146,6 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   ##	initialise df to store all biochange metrics
   rarefied_metrics <- data.frame()
 
-  ## create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
-  get_FD_safe <- possibly(get_FD, otherwise = data_frame())
-  betapart_safe <- possibly(functional.beta.pair, otherwise = data.frame())
-
   if(isTRUE(parallel)){
     # set up parallel loop
     cl <- parallel::makeForkCluster(core_num) #not to overload your computer
@@ -213,20 +209,26 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
       rare_comm_binary <- with(rare_comm, ifelse(rare_comm > 0, 1, 0))
 
       # get trait matrix for the species in the sample
-      traits <- get_traitMat(rare_samp$Species, ...)
+      #traits <- get_traitMat(rare_samp$Species, ...)
 
       # initialise matrices for calculating turnover
-      simbaseline <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
-      names(simbaseline)<-c('YEAR', 'cell', 'Jaccard_base','Horn_base','Chao_base','Pearson_base','Gains_base','Losses_base', 'Jbeta_base', 'Jtu_base', 'Jne_base', 'Jbeta_base_func', 'Jtu_base_func', 'Jne_base_func')
+      simbaseline <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
+      names(simbaseline)<-c('YEAR', 'cell', 'Jaccard_base','Horn_base','Chao_base','Pearson_base','Gains_base','Losses_base', 'Jbeta_base', 'Jtu_base', 'Jne_base')#, 'Jbeta_base_func', 'Jtu_base_func', 'Jne_base_func')
 
-      simnext <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
-      names(simnext)<-c('YEAR', 'cell', 'Jaccard_next','Horn_next','Chao_next','Pearson_next','Gains_next','Losses_next', 'Jbeta_next', 'Jtu_next', 'Jne_next', 'Jbeta_next_func', 'Jtu_next_func', 'Jne_next_func')
+      simnext <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
+      names(simnext)<-c('YEAR', 'cell', 'Jaccard_next','Horn_next','Chao_next','Pearson_next','Gains_next','Losses_next', 'Jbeta_next', 'Jtu_next', 'Jne_next')#, 'Jbeta_next_func', 'Jtu_next_func', 'Jne_next_func')
 
-      simhind <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 14)))
-      names(simhind)<-c('YEAR', 'cell', 'Jaccard_hind','Horn_hind','Chao_hind','Pearson_hind','Gains_hind','Losses_hind', 'Jbeta_hind', 'Jtu_hind', 'Jne_hind', 'Jbeta_hind_func', 'Jtu_hind_func', 'Jne_hind_func')
+      simhind <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
+      names(simhind)<-c('YEAR', 'cell', 'Jaccard_hind','Horn_hind','Chao_hind','Pearson_hind','Gains_hind','Losses_hind', 'Jbeta_hind', 'Jtu_hind', 'Jne_hind')#, 'Jbeta_hind_func', 'Jtu_hind_func', 'Jne_hind_func')
 
       counter2 <- 1
 
+      #save out sample species matrix
+      rare_comm_save <- rare_comm %>%
+        mutate(type = type, rarefyID = unique(study$rarefyID), sample_num = i)
+      dir <- here::here("data", "rarefied_samples")
+      dir.create(dir)
+      save(rare_comm_save, file=paste0(dir, "/", type, "_cell", unique(study$rarefyID), "_sample", i, ".rda"))
 
       if(type=="count"){
 
@@ -243,29 +245,6 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Jtu <- as.matrix(J_components$beta.jtu)
         Jne <- as.matrix(J_components$beta.jne)
         n <- length(years)
-
-        # calculated functional diversity
-        FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
-                               data_id = rare_samp$rarefyID, samp_id = i,
-                               w.abun = TRUE, m = trait_axes, corr = "cailliez")
-        if (is.null(dim(FD_mets))){
-          J_func_components <- betapart_safe(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
-          if(is.null(dim(J_func_components))){
-            Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
-            Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
-            Jne_func <- as.matrix(J_func_components$funct.beta.jne)
-          } else{
-            size <- dim(rare_comm_binary)
-            Jbeta_func <- matrix(nrow = size, ncol = size)
-            Jtu_func <- matrix(nrow = size, ncol = size)
-            Jne_func <- matrix(nrow = size, ncol = size)
-          }
-        } else {
-          size <- dim(rare_comm_binary)
-          Jbeta_func <- matrix(nrow = size, ncol = size)
-          Jtu_func <- matrix(nrow = size, ncol = size)
-          Jne_func <- matrix(nrow = size, ncol = size)
-        }
 
         # calculate univariate metrics
         uni_metrics <- ungroup(rare_samp) %>%
@@ -302,27 +281,27 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Jne <- as.matrix(J_components$beta.jne)
 
         # calculated functional diversity
-        FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
-                               data_id = rare_samp$rarefyID, samp_id = i,
-                               w.abun = FALSE, m = trait_axes, corr = "cailliez")
-        if (is.null(dim(FD_mets))){
-          J_func_components <- betapart_safe(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
-          if(is.null(dim(J_func_components))){
-            Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
-            Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
-            Jne_func <- as.matrix(J_func_components$funct.beta.jne)
-          } else{
-            size <- dim(rare_comm_binary)
-            Jbeta_func <- matrix(nrow = size, ncol = size)
-            Jtu_func <- matrix(nrow = size, ncol = size)
-            Jne_func <- matrix(nrow = size, ncol = size)
-          }
-        } else{
-          size <- dim(rare_comm_binary)
-          Jbeta_func <- matrix(nrow = size, ncol = size)
-          Jtu_func <- matrix(nrow = size, ncol = size)
-          Jne_func <- matrix(nrow = size, ncol = size)
-        }
+        # FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
+        #                        data_id = rare_samp$rarefyID, samp_id = i,
+        #                        w.abun = FALSE, m = trait_axes, corr = "cailliez")
+        # if (is.null(dim(FD_mets))){
+        #   J_func_components <- betapart_safe(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
+        #   if(is.null(dim(J_func_components))){
+        #     Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
+        #     Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
+        #     Jne_func <- as.matrix(J_func_components$funct.beta.jne)
+        #   } else{
+        #     size <- dim(rare_comm_binary)
+        #     Jbeta_func <- matrix(nrow = size, ncol = size)
+        #     Jtu_func <- matrix(nrow = size, ncol = size)
+        #     Jne_func <- matrix(nrow = size, ncol = size)
+        #   }
+        # } else{
+        #   size <- dim(rare_comm_binary)
+        #   Jbeta_func <- matrix(nrow = size, ncol = size)
+        #   Jtu_func <- matrix(nrow = size, ncol = size)
+        #   Jne_func <- matrix(nrow = size, ncol = size)
+        # }
 
         # calculate univariate metrics
         uni_metrics <- ungroup(rare_samp) %>%
@@ -352,10 +331,11 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Lossessim[2:n],
         Jbeta[2:n],
         Jtu[2:n],
-        Jne[2:n],
-        Jbeta_func[2:n],
-        Jtu_func[2:n],
-        Jne_func[2:n])
+        Jne[2:n]#,
+        # Jbeta_func[2:n],
+        # Jtu_func[2:n],
+        # Jne_func[2:n]
+        )
 
       # How consecutive is calculated.
       simnext[counter2:(counter2+n-2),] <- cbind(
@@ -369,10 +349,11 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Lossessim[row(Lossessim)-col(Lossessim)==1],
         Jbeta[row(Jbeta)-col(Jbeta)==1],
         Jtu[row(Jtu)-col(Jtu)==1],
-        Jne[row(Jne)-col(Jne)==1],
-        Jbeta_func[row(Jbeta_func)-col(Jbeta_func)==1],
-        Jtu_func[row(Jtu_func)-col(Jtu_func)==1],
-        Jne_func[row(Jne_func)-col(Jne_func)==1])
+        Jne[row(Jne)-col(Jne)==1]#,
+        # Jbeta_func[row(Jbeta_func)-col(Jbeta_func)==1],
+        # Jtu_func[row(Jtu_func)-col(Jtu_func)==1],
+        # Jne_func[row(Jne_func)-col(Jne_func)==1]
+        )
 
       # How hindcasting is calculated.
       simhind[counter2:(counter2+n-2),] <- cbind(
@@ -386,10 +367,11 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Lossessim[row(Lossessim)%in%1:(max(row(Lossessim))-1) & col(Lossessim)==max(col(Lossessim))],
         Jbeta[row(Jbeta)%in%1:(max(row(Jbeta))-1) & col(Jbeta)==max(col(Jbeta))],
         Jtu[row(Jtu)%in%1:(max(row(Jtu))-1) & col(Jtu)==max(col(Jtu))],
-        Jne[row(Jne)%in%1:(max(row(Jne))-1) & col(Jne)==max(col(Jne))],
-        Jbeta_func[row(Jbeta_func)%in%1:(max(row(Jbeta_func))-1) & col(Jbeta_func)==max(col(Jbeta_func))],
-        Jtu_func[row(Jtu_func)%in%1:(max(row(Jtu_func))-1) & col(Jtu_func)==max(col(Jtu_func))],
-        Jne_func[row(Jne_func)%in%1:(max(row(Jne_func))-1) & col(Jne_func)==max(col(Jne_func))])
+        Jne[row(Jne)%in%1:(max(row(Jne))-1) & col(Jne)==max(col(Jne))]#,
+        # Jbeta_func[row(Jbeta_func)%in%1:(max(row(Jbeta_func))-1) & col(Jbeta_func)==max(col(Jbeta_func))],
+        # Jtu_func[row(Jtu_func)%in%1:(max(row(Jtu_func))-1) & col(Jtu_func)==max(col(Jtu_func))],
+        # Jne_func[row(Jne_func)%in%1:(max(row(Jne_func))-1) & col(Jne_func)==max(col(Jne_func))]
+        )
 
 
       # combine univariate and turnover metrics
@@ -397,14 +379,15 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         full_join(simnext[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell')) %>%
         full_join(simhind[-length(unique(rare_samp$YEAR)),], by=c('YEAR', 'cell'))
 
-      if(is.null(dim(FD_mets))){
-        biochange_metrics <- full_join(biochange_metrics, FD_mets$fd_met, by = c("YEAR" = "year"))}
+      # if(is.null(dim(FD_mets))){
+      #   biochange_metrics <- full_join(biochange_metrics, FD_mets$fd_met, by = c("YEAR" = "year"))}
 
       # add to dataframe for all studies
       rarefied_metrics <- bind_rows(rarefied_metrics, biochange_metrics)
 
     }	# rarefyID loop (STUDY_CELL ID)
-    rarefied_metrics <- inner_join(new_meta, rarefied_metrics)
+    rarefied_metrics <- inner_join(new_meta, rarefied_metrics) %>%
+      mutate(sample_num = i)
 
     #save out the files
     dir <- here::here("data", "rarefied_metrics")
@@ -427,6 +410,39 @@ bt_grid_pres <- bt_grid_filtered %>%
   filter(ABUNDANCE_TYPE == "Presence/Absence")
 
 ## Get rarefied resample for each type of measurement (all data)
-rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=4, core_num = 4)
-rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200)
+rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 4)
+rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 20)
+
+calc_FD_mets <- function(file_path){
+  load(file_path)
+
+  # create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
+  get_FD_safe <- possibly(get_FD, otherwise = data_frame())
+  betapart_safe <- possibly(functional.beta.pair, otherwise = data.frame())
+
+  # calculated functional diversity
+  if(rare_comm_save$)
+  FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
+                         data_id = rare_samp$rarefyID, samp_id = i,
+                         w.abun = TRUE, m = trait_axes, corr = "cailliez")
+  if (is.null(dim(FD_mets))){
+    J_func_components <- betapart_safe(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
+    if(is.null(dim(J_func_components))){
+      Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
+      Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
+      Jne_func <- as.matrix(J_func_components$funct.beta.jne)
+    } else{
+      size <- dim(rare_comm_binary)
+      Jbeta_func <- matrix(nrow = size, ncol = size)
+      Jtu_func <- matrix(nrow = size, ncol = size)
+      Jne_func <- matrix(nrow = size, ncol = size)
+    }
+  } else {
+    size <- dim(rare_comm_binary)
+    Jbeta_func <- matrix(nrow = size, ncol = size)
+    Jtu_func <- matrix(nrow = size, ncol = size)
+    Jne_func <- matrix(nrow = size, ncol = size)
+  }
+
+}
 
