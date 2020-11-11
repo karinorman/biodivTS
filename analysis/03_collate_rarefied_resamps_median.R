@@ -8,31 +8,21 @@ library(tibble)
 path <- here::here("data", "rarefied_metrics")
 filelist <-  dir(path, "*.rda") %>%
   paste0(path, "/", .)
-nSimul <-  length(filelist)
 
-##	initialise data.frames to store all rarefied resamples
-rarefy_abund_all <- data_frame()
-#rarefy_biomass_all <- data_frame()
-rarefy_pres_all <- data_frame()
+species_metrics <- purrr::map_dfr(filelist, function(x) {load(x)
+  return(rarefied_metrics)
+	})
 
-for (iSimul in 1:nSimul) {
-	##	load a rarefied sample
-	load(filelist[iSimul])
-	print(iSimul)
-	##	add a column describing measurement type
-	rarefy_abund <- rarefy_abund %>% mutate(measurement_type = 'abundance')
-	#rarefy_biomass <- rarefy_biomass %>% mutate(measurement_type = 'biomass')
-	rarefy_pres <- rarefy_pres %>% mutate(measurement_type = 'presence')
+path <- here::here("data", "rarefied_metrics", "fd")
+filelist <-  dir(path, "*.rda") %>%
+  paste0(path, "/", .)
 
-	##	collate rarefied samples
-	rarefy_abund_all <- bind_rows(rarefy_abund_all, rarefy_abund)
-	#rarefy_biomass_all <- bind_rows(rarefy_biomass_all, rarefy_biomass)
-	rarefy_pres_all <- bind_rows(rarefy_pres_all, rarefy_pres)
-}
+fd_metrics <- purrr::map_dfr(filelist, function(x) {load(x)
+  return(biochange_metrics)
+})
 
 ##	put them all together
-rarefied_metrics <- bind_rows(rarefy_abund_all, #rarefy_biomass_all,
-                              rarefy_pres_all)
+rarefied_metrics <-
 
 ##	pull out new metadata
 new_meta <- rarefied_metrics %>%
