@@ -143,9 +143,6 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
     filter(n_distinct(YEAR)>=2) %>%
     ungroup()
 
-  ##	initialise df to store all biochange metrics
-  rarefied_metrics <- data.frame()
-
   if(isTRUE(parallel)){
     # set up parallel loop
     cl <- parallel::makeForkCluster(core_num) #not to overload your computer
@@ -155,8 +152,11 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   }
 
   ##	rarefy rarefy_resamps times
-  #rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
-  rarefied_metrics <- for(i in 1:resamples){
+  rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
+  #rarefied_metrics <- for(i in 1:resamples){
+
+    ##	initialise df to store all biochange metrics
+    rarefied_metrics <- data.frame()
 
     ## loop to do rarefaction for each study
     for(j in 1:length(unique(bt_grid_nest$rarefyID))){
@@ -362,7 +362,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
     }	# rarefyID loop (STUDY_CELL ID)
     rarefied_metrics <- inner_join(new_meta, rarefied_metrics) %>%
-      mutate(sample_num = i, type = type)
+      mutate(type = type)
 
     #save out the files
     path <- here::here("data", "rarefied_metrics")
