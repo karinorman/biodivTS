@@ -35,7 +35,7 @@ trait_ref <- pins::pin_get("trait-ref", board = "github")
 #=================================FUNCTION TO RAREFY DATA============================
 
 rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resamples=100,
-                             trimsamples=FALSE, trait_axes, parallel, core_num, ...){
+                             parallel, core_num, ...){
 
   #	CALCULATE RAREFIED METRICS for each study for all years
   #	restrict calculations to where there is abundance>0 AND
@@ -76,38 +76,18 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
     # calculate how many observations per year per study
     dplyr::summarise(nsamples = n_distinct(ObsEventID))
 
-  # Check if you wanted to remove years with especially low samples (< 1/2 the average number of samples)
-  if(trimsamples) {
-    # Calculate the mean number of samples per cell
-    mean_samp <- ungroup(nsamples) %>% group_by(rarefyID) %>%
-      mutate(mean_samp = mean(nsamples),
-             lower_bound = mean(nsamples)/2) %>%
-      filter(nsamples >= lower_bound)
-
-    min_samp <- ungroup(mean_samp) %>% group_by(rarefyID) %>%
-      mutate(min_samp = min(nsamples)) %>%
-      # retain only the rows with the minimum sample size for a given cell
-      filter(nsamples==min_samp) %>%
-      distinct(rarefyID, min_samp, .keep_all=TRUE)
-
-    # join the data and filter out years with  nsamples less than 1/2 the mean number of samples
-    grid <- inner_join(grid, dplyr::select(min_samp, - YEAR, -nsamples)) %>%
-      filter(n_samps >= lower_bound)
-    rm(mean_samp,min_samp)
-    print("trimsamples==TRUE: Removing years with < 1/2 the average number of samples for a given ID")
-
-  } else {
     # Calculate the minimum number of samples per cell
     min_samp <- ungroup(nsamples) %>% group_by(rarefyID) %>%
-      mutate(min_samp = min(nsamples)) %>%
+      mutate(min_samp = min(nsamples), max_samp = max(nsamples)) %>%
+      #check for studies that have consistent sampling and don't need to be rarefied
+      mutate(rarefy = if_else(min_samp != max_samp, TRUE, FALSE)) %>%
       # retain only the rows with the minimum sample size for a given cell
-      filter(nsamples==min_samp) %>%
-      distinct(rarefyID, min_samp, .keep_all=TRUE)
+      select(-max_samp, -nsamples, -YEAR) %>%
+      distinct()
 
     #	Add the min_samp to the data and tidy a little
-    grid <- inner_join(grid, dplyr::select(min_samp, - YEAR, -nsamples))
+    grid <- inner_join(grid, min_samp)
     rm(min_samp)
-  }
 
   # Re-calculate metadata
   new_meta <- ungroup(grid) %>%
@@ -152,8 +132,8 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   }
 
   ##	rarefy rarefy_resamps times
-  rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
-  #rarefied_metrics <- for(i in 1:resamples){
+  #rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
+  rarefied_metrics <- for(i in 1:resamples){
 
     ##	initialise df to store all biochange metrics
     rarefied_metrics <- data.frame()
@@ -382,7 +362,7 @@ bt_grid_pres <- bt_grid_filtered %>%
   filter(ABUNDANCE_TYPE == "Presence/Absence")
 
 ## Get rarefied resample for each type of measurement (all data)
-rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=10, core_num = 3)
+rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 44)
 rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 20)
 
 calc_FD_mets <- function(file_path, traits){
@@ -496,5 +476,6 @@ path <- here::here("data", "rarefied_samples")
 files <- dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
-purrr::map(files, calc_FD_mets, traits = trait_ref)
+plan("multiprocess", workers = 4)
+furrr::future_map(files, calc_FD_mets, traits = trait_ref)
 
