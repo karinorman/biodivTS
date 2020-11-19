@@ -1,7 +1,7 @@
 path:
-- data.csv
+- https://github.com/karinorman/biodivTS/releases/download/rarefied-medians-d3147fc/data.csv
 - data.rds
-rows: 19049
+rows: 37662
 cols: 86
 columns:
   rarefyID: character

@@ -48,6 +48,6 @@
   type: table
 - path: rarefied-medians
   name: rarefied-medians
-  rows: 19049
+  rows: 37662
   cols: 86
   type: table
