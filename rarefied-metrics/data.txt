@@ -1,6 +1,8 @@
-path: data.rds
+path:
+- data.csv
+- data.rds
 rows: 20353
-cols: 76
+cols: 75
 columns:
   rarefyID: character
   SamplePool: integer
@@ -74,7 +76,6 @@ columns:
   startYear.y: integer
   endYear.y: integer
   rarefy_resamp: integer
-  CWM: data.frame
   N_int: numeric
   S_int: numeric
   ENSPIE_int: numeric
