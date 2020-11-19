@@ -17,7 +17,18 @@ path <- here::here("data", "rarefied_metrics", "fd")
 filelist <-  dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
-fd_metrics <- purrr::map_dfr(filelist, function(x) {load(x)
+fd_metrics <- purrr::map_dfr(filelist, function(x) {
+  load(x)
+  split_path <- str_split(x, "/") %>%
+    unlist(.) %>%
+    last() %>%
+    str_split(., "_") %>%
+    unlist()
+
+  rarefyID <- paste0(str_replace(split_path[2], "cell", ""), "_", split_path[3])
+
+  biochange_metrics <- biochange_metrics %>%
+    mutate(rarefyID = rarefyID)
   return(biochange_metrics)
 })
 
@@ -28,13 +39,14 @@ rarefied_metrics <- full_join(species_metrics, fd_metrics)
 new_meta <- rarefied_metrics %>%
 	distinct(rarefyID, SamplePool, SampleN, num_years, duration, startYear, endYear)
 
-
-##	calculate the medians for all the metrics
+##	calculate the medians for all the metrics for studies that were rarefied
 rarefied_medians <- ungroup(rarefied_metrics) %>%
-  select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, rarefy_resamp)) %>%
-  group_by(rarefyID, YEAR, cell) %>%
-  dplyr::summarise(across(.cols = everything(), median)) %>%
-  ungroup()
+  filter(rarefied == TRUE) %>%
+  select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, rarefy_resamp, CWM)) %>%
+  group_by(rarefyID, YEAR, cell, rarefied, type) %>%
+  dplyr::summarise(across(.cols = everything(), ~median(.x, na.rm = TRUE))) %>%
+  ungroup() %>%
+  bind_rows(ungroup(rarefied_metrics) %>% filter(rarefied == FALSE))
 
 rarefied_ints <- ungroup(rarefied_metrics) %>%
   select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, rarefy_resamp)) %>%
@@ -45,8 +57,8 @@ rarefied_ints <- ungroup(rarefied_metrics) %>%
   ungroup()
 
 ##	recombine with new metadata
-rarefied_medians <- inner_join(new_meta, rarefied_medians, by='rarefyID') %>%
+rarefied_metrics <- inner_join(new_meta, rarefied_medians, by='rarefyID') %>%
   inner_join(rarefied_ints)
 
 ##	save
-save(rarefied_medians, file=Sys.getenv('OFILE'))
+usethis::use_data(rarefied_metrics)

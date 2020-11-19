@@ -373,6 +373,11 @@ bt_grid_pres <- bt_grid_filtered %>%
 rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 44)
 rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 20)
 
+loadRData <- function(file_name){
+  load(file_name)
+  get(ls()[ls() != "file_name"])
+}
+
 calc_FD_mets <- function(file_path, traits){
   rare_comm_save <- loadRData(file_path)
 
@@ -464,7 +469,9 @@ calc_FD_mets <- function(file_path, traits){
 
     } else{
       biochange_metrics <- FD_mets$fd_met %>%
-        select(-c(nbsp, sing.sp))
+        select(-c(nbsp, sing.sp)) %>%
+        mutate(cell = unique(rare_comm_save$cell), rarefy_resamp = unique(rare_comm_save$rarefy_resamp)) %>%
+        rename(YEAR = year)
     }
   }else{ biochange_metrics <- tibble() }
 
@@ -473,6 +480,35 @@ calc_FD_mets <- function(file_path, traits){
   save(biochange_metrics, file=paste0(path, "/", unique(rare_comm_save$type),
                                       "_cell", unique(rare_comm_save$rarefyID),
                                       "_sample", unique(rare_comm_save$rarefy_resamp), ".rda"))
+
+}
+
+get_FD_errors <- function(file_path, traits){
+  rare_comm_save <- loadRData(file_path)
+
+  years <- rare_comm_save$YEAR
+
+  species_mat <- rare_comm_save %>%
+    column_to_rownames("YEAR") %>%
+    dplyr::select(-c(rarefyID, cell, type, rarefy_resamp))
+
+  # get trait matrix for the species in the sample
+  traits <- get_traitMat(colnames(species_mat), trait_data = traits)
+
+  # create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
+  get_FD_safe <- safely(get_FD, otherwise = data_frame())
+
+  # calculated functional diversity
+  if(unique(rare_comm_save$type) == "count"){
+    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
+                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
+                           w.abun = TRUE, m = "min", corr = "cailliez")
+  } else{
+    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
+                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
+                           w.abun = FALSE, m = "min", corr = "cailliez")
+  }
+  return(FD_mets)
 }
 
 path <- here::here("data", "rarefied_samples")
@@ -480,5 +516,5 @@ files <- dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
 plan("multiprocess", workers = 4)
-furrr::future_map(files[4968:10473], calc_FD_mets, traits = trait_ref)
+furrr::future_map(files, calc_FD_mets, traits = trait_ref)
 
