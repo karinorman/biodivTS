@@ -43,7 +43,7 @@
   type: table
 - path: rarefied-metrics
   name: rarefied-metrics
-  rows: 20353
+  rows: 40224
   cols: 62
   type: table
 - path: rarefied-medians
