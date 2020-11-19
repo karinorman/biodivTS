@@ -40,13 +40,15 @@ new_meta <- rarefied_metrics %>%
 	distinct(rarefyID, SamplePool, SampleN, num_years, duration, startYear, endYear)
 
 ##	calculate the medians for all the metrics for studies that were rarefied
-rarefied_medians <- ungroup(rarefied_metrics) %>%
+metric_cols <- ungroup(rarefied_metrics) %>%
+  select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, rarefy_resamp, CWM))
+
+rarefied_medians <- metric_cols %>%
   filter(rarefied == TRUE) %>%
-  select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, rarefy_resamp, CWM)) %>%
   group_by(rarefyID, YEAR, cell, rarefied, type) %>%
   dplyr::summarise(across(.cols = everything(), ~median(.x, na.rm = TRUE))) %>%
   ungroup() %>%
-  bind_rows(ungroup(rarefied_metrics) %>% filter(rarefied == FALSE))
+  bind_rows(metric_cols %>% filter(rarefied == FALSE))
 
 rarefied_ints <- ungroup(rarefied_metrics) %>%
   select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, rarefy_resamp)) %>%
@@ -62,3 +64,4 @@ rarefied_metrics <- inner_join(new_meta, rarefied_medians, by='rarefyID') %>%
 
 ##	save
 usethis::use_data(rarefied_metrics)
+pins::pin(rarefied_metrics, board = "github")
