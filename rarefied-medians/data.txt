@@ -1,8 +1,8 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/rarefied-medians-2838624/data.csv
+- https://github.com/karinorman/biodivTS/releases/download/rarefied-medians-48d676f/data.csv
 - data.rds
 rows: 19049
-cols: 117
+cols: 118
 columns:
   rarefyID: character
   STUDY_ID: integer
@@ -114,6 +114,7 @@ columns:
   logN: numeric
   logENSPIE: numeric
   taxa_mod: integer
+  climate_mod: character
   Jsim_01: numeric
   Jbeta_01: numeric
   Jtu_01: numeric

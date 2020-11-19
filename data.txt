@@ -49,5 +49,5 @@
 - path: rarefied-medians
   name: rarefied-medians
   rows: 19049
-  cols: 117
+  cols: 118
   type: table
