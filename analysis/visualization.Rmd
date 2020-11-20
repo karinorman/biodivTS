@@ -14,7 +14,9 @@ library(tidyverse)
 ```
 
 ```{r}
-load(here::here("data", "biotime_data.rda"))
+metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
+  pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "cYEAR", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
+  rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID"))) 
 ```
 
 ```{r}
@@ -73,11 +75,11 @@ metric plotting function
 library(lme4)
 
 plot_metric <- function(metric_name, ylabel){
-  data <- fd_table %>%
-    filter(metric == metric_name) %>%
-    mutate(plot_id = as.factor(plot_id), logSES = log(SES))
+  data <- metrics %>%
+    filter(metric == metric_name, !is.na(value), !is.infinite(value)) %>%
+    mutate(logvalue = log(value))
   
-  mod <- lmer(logSES ~ year + (1|plot_id), data = data)
+  mod <- lmer(logvalue ~ year + (1|rarefyID), data = data)
   coefs <- summary(mod)$coefficients
   
   print(metric_name) 
@@ -90,11 +92,11 @@ plot_metric <- function(metric_name, ylabel){
   trend_plot <- data %>%
     left_join(pred, by = "year") %>%
     #left_join(metadata %>% select(study_id, climate)) %>%
-    ggplot(aes(x = year, y = logSES)) +
-    # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
-    # geom_point(aes(color = climate, group = plot_id)) +
-    geom_point(aes(group = plot_id) ,color = "grey") +
-    geom_smooth(aes(group = plot_id), color = "darkgrey", method = "glm", se = FALSE) +
+    ggplot(aes(x = year, y = logvalue)) +
+    # geom_smooth(aes(color = climate, group = rarefyID), method = "glm", se = FALSE) +
+    # geom_point(aes(color = climate, group = rarefyID)) +
+    geom_point(aes(group = rarefyID) ,color = "grey") +
+    geom_smooth(aes(group = rarefyID), color = "darkgrey", method = "glm", se = FALSE) +
     #geom_smooth(color = "black", method = "glm", se = FALSE) +
     geom_line(mapping = aes(y = pred)) +
     theme(legend.position = "none") +
@@ -115,11 +117,11 @@ pmap(plot_map, plot_metric)
 get model info
 ```{r}
 get_metric_conint <- function(metric_name){
- data <- fd_table %>%
+ data <- metrics %>%
     filter(metric == metric_name) %>%
-    mutate(plot_id = as.factor(plot_id), logSES = log(SES))
+    mutate(rarefyID = as.factor(rarefyID), logValue = log(value))
   
-  mod <- lmer(logSES ~ year + (1|plot_id), data = data)
+  mod <- lmer(logValue ~ year + (1|rarefyID), data = data)
   coefs <- summary(mod)$coefficients
   
   confint(mod)
