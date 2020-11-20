@@ -14,7 +14,8 @@ pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
 
 # rarefied metrics ready for modelling
 rarefied_metrics <- pins::pin_get("rarefied-metrics", board = "github")
-meta <- pins::pin_get("metadata", board = "github")
+meta <- pins::pin_get("metadata", board = "github") %>%
+  select(study_id, realm, climate, habitat, biome_map, taxa, organisms, cent_lat, cent_long, abundance_type)
 
 # load('~/Dropbox/BiogeoBioTIME/rarefied_medians.Rdata')
 # # new meta data
@@ -76,10 +77,10 @@ rarefied_medians <- rarefied_medians %>%
     taxa_mod = ifelse((taxa=='Marine invertebrates' | taxa=='Terrestrial invertebrates' | taxa=='Freshwater invertebrates'),
                       'Invertebrates',
                       ifelse((taxa=='Marine plants' | taxa=='Terrestrial plants' | taxa=='Freshwater plants'),
-                             'Plant', taxa)))#,
+                             'Plant', taxa)),
     # simplified climate/latitudinal bands
-    # climate_mod = ifelse(abs(rarefyID_y) > 60, 'Polar',
-    #                      ifelse(abs(rarefyID_y) < 23.5, 'Tropical', 'Temperate')))
+     climate_mod = ifelse(abs(cent_lat) > 60, 'Polar',
+                          ifelse(abs(cent_lat) < 23.5, 'Tropical', 'Temperate')))
 
 ##	add turnover comparisons of first year to itself: similarity==1, dissimiliarity==0
 ##	also, add indicator variable for complete turnover (similarity==0)
@@ -111,6 +112,5 @@ rarefied_medians <- rarefied_medians %>%
     Jtu_01_func = ifelse(Jtu_base_func==Jbeta_base, 1, 0),		# 100% contribution of turnover (species replacement)
     Jne_01_func = ifelse(Jne_base_func==Jbeta_base, 1, 0)) %>%	# 100% contribution of nestedness ()
   ungroup()
-
 
 pins::pin(rarefied_medians, board = "github")
