@@ -33,7 +33,8 @@ fd_metrics <- purrr::map_dfr(filelist, function(x) {
 })
 
 ##	put them all together
-rarefied_metrics <- full_join(species_metrics, fd_metrics)
+rarefied_metrics <- full_join(species_metrics, fd_metrics) %>%
+  filter(S != 1) # remove samples that had one species as they result in strange metric values
 
 ##	pull out new metadata
 new_meta <- rarefied_metrics %>%
