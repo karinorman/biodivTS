@@ -1,0 +1,80 @@
+---
+title: "Models"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(lme4)
+library(broom.mixed)
+```
+
+Get data and put it in long form 
+```{r}
+metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
+  select(-cYEAR) %>%
+  pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
+  rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID"))) 
+```
+####Data exploration
+
+How many years are missing FD metrics? Only a handful! Let's exclude them so we can get an accurate view of the number of years for which we have data for each timeseries                                                                                                     
+```{r}
+no_fd_years <- metrics %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis"), is.na(value))
+
+dim(no_fd_years)
+
+metrics <- setdiff(metrics, no_fd_years)
+```
+
+Visualize number of years for each timeseries
+```{r}
+hist_numYears <- metrics %>%
+  select(year, rarefyID) %>% 
+  distinct() %>% 
+  count(rarefyID, name = "num_years") %>% 
+  ggplot() +
+  geom_histogram(aes(x = num_years),
+                 binwidth = 2) +
+  scale_x_continuous(name = 'Number of years sampled',
+                     breaks = c(2,4,8,16,32,48,64,96)) +
+  #scale_y_continuous(breaks = c(0,2500,5000,7500,10000,12500, 15000, 17500, 20000,22500)) +
+  labs(tag = 'B',
+       y = 'Number of cells') +
+  theme_bw() +
+  theme(panel.grid.minor.x = element_blank())
+```
+
+Function to fit GLM to overall metric trend
+```{r}
+metric_mean_fit <- metrics %>%
+  filter(!is.na(value)) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(value ~ year + (1|rarefyID), data = .x)))
+
+metric_mean_coef <- metric_mean_fit %>%
+  mutate(coef = map(model, tidy)) %>% 
+  select(-data, -model) %>% 
+  unnest(cols = c(coef))
+```
+
+```{r}
+indiv_ts_fit <- metrics %>% 
+  filter(!is.na(value)) %>%
+  group_by_at(setdiff(names(metrics), c("year", "value"))) %>%
+  filter(n_distinct(year) > 1) %>% #filter out rarefyID's that don't have multiple years after dropping Na's
+  group_nest() %>%
+  mutate(model = map(data, ~ lm(value ~ year, data = .x)))
+
+indiv_ts_coef <- indiv_ts_fit %>%
+  mutate(coef = map(model, tidy)) %>% 
+  select(-data, -model) %>% 
+  unnest(cols = c(coef))
+```
+
