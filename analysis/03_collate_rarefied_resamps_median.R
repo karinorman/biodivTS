@@ -11,7 +11,7 @@ filelist <-  dir(path, "*.rda") %>%
 
 species_metrics <- purrr::map_dfr(filelist, function(x) {load(x)
   return(rarefied_metrics)
-	})
+	}) %>% distinct()
 
 path <- here::here("data", "rarefied_metrics", "fd")
 filelist <-  dir(path, "*.rda") %>%
@@ -30,7 +30,7 @@ fd_metrics <- purrr::map_dfr(filelist, function(x) {
   biochange_metrics <- biochange_metrics %>%
     mutate(rarefyID = rarefyID)
   return(biochange_metrics)
-})
+}) %>% distinct()
 
 ##	put them all together
 rarefied_metrics <- full_join(species_metrics, fd_metrics) %>%
