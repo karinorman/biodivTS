@@ -1,7 +1,7 @@
 path:
-- https://github.com/karinorman/biodivTS/releases/download/rarefied-metrics-7e33943/data.csv
+- data.csv
 - data.rds
-rows: 40224
+rows: 20349
 cols: 62
 columns:
   rarefyID: character
