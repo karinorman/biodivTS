@@ -155,13 +155,14 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
   }
 
   ##	rarefy rarefy_resamps times
-  rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
-  #rarefied_metrics <- for(i in 1:resamples){
+  #rarefied_metrics <- foreach(i = 1:resamples, .combine=rbind) %dopar% {
+  rarefied_metrics <- for(i in 1:resamples){
 
     ## loop to do rarefaction for each study
     for(j in 1:length(unique(bt_grid_nest$rarefyID))){
     #for(j in 1:3){
-      print(paste('rarefaction', i, 'out of', resamples, 'for study_cell', j, '(', unique(bt_grid_nest$rarefyID)[j], ')',  'in', length(unique(bt_grid_nest$rarefyID))))
+      filter_id <- unique(bt_grid_nest$rarefyID)[j]
+      print(paste('rarefaction', i, 'out of', resamples, 'for study_cell', j, '(', filter_id, ')',  'in', length(unique(bt_grid_nest$rarefyID))))
 
       ##	get the jth study_cell
       study <- bt_grid_nest %>%
@@ -198,6 +199,13 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         arrange(Species) %>% #order species so the trait matrix can in the same order
         spread(Species, Abundance, fill=0)
 
+      #save out sample species matrix
+      rare_comm_save <- rare_comm %>% mutate(type = type)
+      path <- here::here("data", "rarefied_samples")
+      dir.create(path)
+      save(rare_comm_save, file=paste0(path, "/", type, "_cell", unique(study$rarefyID), "_sample", i, ".rda"))
+
+
       #get vector of years in the same order as the community matrix to tack back on to FD dataframe later
       years <- rare_comm$YEAR
 
@@ -207,9 +215,6 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
       # betapart requires presence/absence matrix for Jaccard calculations of turnover/nestedness
       rare_comm_binary <- with(rare_comm, ifelse(rare_comm > 0, 1, 0))
-
-      # get trait matrix for the species in the sample
-      #traits <- get_traitMat(rare_samp$Species, ...)
 
       # initialise matrices for calculating turnover
       simbaseline <- data.frame(array(NA, dim=c(length(unique(rare_samp$YEAR)), 11)))
@@ -222,13 +227,6 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
       names(simhind)<-c('YEAR', 'cell', 'Jaccard_hind','Horn_hind','Chao_hind','Pearson_hind','Gains_hind','Losses_hind', 'Jbeta_hind', 'Jtu_hind', 'Jne_hind')#, 'Jbeta_hind_func', 'Jtu_hind_func', 'Jne_hind_func')
 
       counter2 <- 1
-
-      #save out sample species matrix
-      rare_comm_save <- rare_comm %>%
-        mutate(type = type, rarefyID = unique(study$rarefyID), sample_num = i)
-      dir <- here::here("data", "rarefied_samples")
-      dir.create(dir)
-      save(rare_comm_save, file=paste0(dir, "/", type, "_cell", unique(study$rarefyID), "_sample", i, ".rda"))
 
       if(type=="count"){
 
@@ -279,29 +277,6 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
         Jbeta <- as.matrix(J_components$beta.jac)
         Jtu <- as.matrix(J_components$beta.jtu)
         Jne <- as.matrix(J_components$beta.jne)
-
-        # calculated functional diversity
-        # FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
-        #                        data_id = rare_samp$rarefyID, samp_id = i,
-        #                        w.abun = FALSE, m = trait_axes, corr = "cailliez")
-        # if (is.null(dim(FD_mets))){
-        #   J_func_components <- betapart_safe(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
-        #   if(is.null(dim(J_func_components))){
-        #     Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
-        #     Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
-        #     Jne_func <- as.matrix(J_func_components$funct.beta.jne)
-        #   } else{
-        #     size <- dim(rare_comm_binary)
-        #     Jbeta_func <- matrix(nrow = size, ncol = size)
-        #     Jtu_func <- matrix(nrow = size, ncol = size)
-        #     Jne_func <- matrix(nrow = size, ncol = size)
-        #   }
-        # } else{
-        #   size <- dim(rare_comm_binary)
-        #   Jbeta_func <- matrix(nrow = size, ncol = size)
-        #   Jtu_func <- matrix(nrow = size, ncol = size)
-        #   Jne_func <- matrix(nrow = size, ncol = size)
-        # }
 
         # calculate univariate metrics
         uni_metrics <- ungroup(rare_samp) %>%
@@ -387,17 +362,14 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
     }	# rarefyID loop (STUDY_CELL ID)
     rarefied_metrics <- inner_join(new_meta, rarefied_metrics) %>%
-      mutate(sample_num = i)
+      mutate(sample_num = i, type = type)
 
     #save out the files
-    dir <- here::here("data", "rarefied_metrics")
-    dir.create(dir)
-    save(rarefied_metrics, file=paste0(dir, "/resample_", type, i, ".rda"))
+    path <- here::here("data", "rarefied_metrics")
+    dir.create(path)
+    save(rarefied_metrics, file=paste0(path, "/resample_", type, i, ".rda"))
 
   }	# rarefaction loop
-
-  rarefied_metrics <- as_tibble(rarefied_metrics)
-  rarefied_metrics <- inner_join(new_meta, rarefied_metrics, by = "rarefyID")
 } # END function
 
 ##================================== Calculate mean rarefied diversity for each data type=======================================
@@ -409,39 +381,119 @@ bt_grid_pres <- bt_grid_filtered %>%
   filter(ABUNDANCE_TYPE == "Presence/Absence")
 
 ## Get rarefied resample for each type of measurement (all data)
-rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 4)
+rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=10, core_num = 3)
 rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 20)
 
-calc_FD_mets <- function(file_path){
+calc_FD_mets <- function(file_path, traits){
   load(file_path)
+
+  years <- rare_comm_save$YEAR
+
+  species_mat <- rare_comm_save %>%
+    column_to_rownames("YEAR") %>%
+    select(-c(rarefyID, cell, type, rarefy_resamp))
+
+  # get trait matrix for the species in the sample
+  traits <- get_traitMat(colnames(species_mat), trait_data = traits)
 
   # create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
   get_FD_safe <- possibly(get_FD, otherwise = data_frame())
   betapart_safe <- possibly(functional.beta.pair, otherwise = data.frame())
 
   # calculated functional diversity
-  FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
-                         data_id = rare_samp$rarefyID, samp_id = i,
-                         w.abun = TRUE, m = trait_axes, corr = "cailliez")
+  if(unique(rare_comm_save$type) == "count"){
+    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
+                         data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
+                         w.abun = TRUE, m = "min", corr = "cailliez")
+  } else{
+    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
+                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
+                           w.abun = FALSE, m = "min", corr = "cailliez")
+  }
+
   if (is.null(dim(FD_mets))){
-    J_func_components <- betapart_safe(x = rare_comm_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
+    species_mat_binary <- with(species_mat, ifelse(species_mat > 0, 1, 0))
+    J_func_components <- betapart_safe(x = species_mat_binary, traits = FD_mets$pca_traits, index.family='jaccard')	# distance
     if(is.null(dim(J_func_components))){
       Jbeta_func <- as.matrix(J_func_components$funct.beta.jac)
       Jtu_func <- as.matrix(J_func_components$funct.beta.jtu)
       Jne_func <- as.matrix(J_func_components$funct.beta.jne)
     } else{
-      size <- dim(rare_comm_binary)
+      size <- dim(species_mat)
       Jbeta_func <- matrix(nrow = size, ncol = size)
       Jtu_func <- matrix(nrow = size, ncol = size)
       Jne_func <- matrix(nrow = size, ncol = size)
     }
   } else {
-    size <- dim(rare_comm_binary)
+    size <- dim(species_mat)
     Jbeta_func <- matrix(nrow = size, ncol = size)
     Jtu_func <- matrix(nrow = size, ncol = size)
     Jne_func <- matrix(nrow = size, ncol = size)
   }
 
+  n <- length(unique(rare_comm_save$YEAR))
+
+  # initialise matrices for calculating turnover
+  simbaseline <- data.frame(array(NA, dim=c(n, 5)))
+  names(simbaseline)<-c('YEAR', 'cell', 'Jbeta_base_func', 'Jtu_base_func', 'Jne_base_func')
+
+  simnext <- data.frame(array(NA, dim=c(n, 5)))
+  names(simnext)<-c('YEAR', 'cell', 'Jbeta_next_func', 'Jtu_next_func', 'Jne_next_func')
+
+  simhind <- data.frame(array(NA, dim=c(n, 5)))
+  names(simhind)<-c('YEAR', 'cell', 'Jbeta_hind_func', 'Jtu_hind_func', 'Jne_hind_func')
+
+  counter2 <- 1
+
+  #Collate metrics
+  # How baseline is calculated.
+  # NB: we do not compare first year with itself here (to be added before model fitting later)
+  simbaseline[counter2:(counter2+n-2),] <- cbind(
+    unique(rare_comm_save$YEAR)[2:n],
+    unique(rare_comm_save$cell),
+    Jbeta_func[2:n],
+    Jtu_func[2:n],
+    Jne_func[2:n]
+  )
+
+  # How consecutive is calculated.
+  simnext[counter2:(counter2+n-2),] <- cbind(
+    unique(rare_comm_save$YEAR)[2:n],
+    unique(rare_comm_save$cell),
+    Jbeta_func[row(Jbeta_func)-col(Jbeta_func)==1],
+    Jtu_func[row(Jtu_func)-col(Jtu_func)==1],
+    Jne_func[row(Jne_func)-col(Jne_func)==1]
+  )
+
+  # How hindcasting is calculated.
+  simhind[counter2:(counter2+n-2),] <- cbind(
+    unique(rare_comm_save$YEAR)[1:(n-1)],
+    unique(rare_comm_save$cell),
+    Jbeta_func[row(Jbeta_func)%in%1:(max(row(Jbeta_func))-1) & col(Jbeta_func)==max(col(Jbeta_func))],
+    Jtu_func[row(Jtu_func)%in%1:(max(row(Jtu_func))-1) & col(Jtu_func)==max(col(Jtu_func))],
+    Jne_func[row(Jne_func)%in%1:(max(row(Jne_func))-1) & col(Jne_func)==max(col(Jne_func))]
+  )
+
+  # combine univariate and turnover metrics
+  biochange_metrics <- full_join(simbaseline[-n,],
+                                 FD_mets$fd_met %>% select(-c(nbsp, sing.sp)),
+                                 by=c('YEAR' = 'year')) %>%
+    mutate(cell = unique(na.omit(cell))) %>%
+    full_join(simnext[-n,], by=c('YEAR', 'cell')) %>%
+    full_join(simhind[-n,], by=c('YEAR', 'cell')) %>%
+    mutate(rarefy_resamp = unique(rare_comm_save$rarefy_resamp))
+
+  path <- here::here("data", "rarefied_metrics", "fd")
+  dir.create(path)
+  save(biochange_metrics, file=paste0(path, "/", unique(rare_comm_save$type),
+                                   "_cell", unique(rare_comm_save$rarefyID),
+                                   "_sample", unique(rare_comm_save$rarefy_resamp), ".rda"))
+
 }
 
+path <- here::here("data", "rarefied_samples")
+files <- dir(path, "*.rda") %>%
+  paste0(path, "/", .)
+
+purrr::map(files, calc_FD_mets, traits = trait_ref)
 
