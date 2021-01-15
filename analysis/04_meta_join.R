@@ -10,29 +10,14 @@
 
 ##	libraries
 library(tidyverse)
-pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
+pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 
-# rarefied metrics ready for modelling
+# rarefied metrics ready for modeling
 rarefied_metrics <- pins::pin_get("rarefied-metrics", board = "github")
-meta <- pins::pin_get("metadata", board = "github") %>%
+meta <- pins::pin_get("meta", board = "github") %>%
   select(study_id, realm, climate, habitat, biome_map, taxa, organisms, cent_lat, cent_long, abundance_type)
 
-# load('~/Dropbox/BiogeoBioTIME/rarefied_medians.Rdata')
-# # new meta data
-# biomes <- read_csv('~/Dropbox/BiogeoBioTIME/rarefIDBiomeEco.csv')
-#
-# ##	filter the new biomes meta data to rarefyIDs that we have for modelling
-# biomes <- biomes %>% filter(rarefyID %in% rarefied_medians$rarefyID)
-#
-# # join
-# rarefied_medians <- inner_join(biomes %>% select(rarefyID, Biome, Ecoregion, X9, eco3, eco4, ECOREGION, Distance, Manual), rarefied_medians, by='rarefyID')
-#
-# # join with 'old' meta data too
-# meta <- read_csv('~/Dropbox/BioTIMELatest/bioTIMEmetadataJune.csv')
-# # meta <- read_csv('/home/sarah/Dropbox/BioTIMELatest/bioTIMEmetadataFeb.csv')
-# #str(meta)
-
-##	merge with 'old' metadata with the rarefied metrics
+##	merge metadata with the rarefied metrics
 rarefied_medians <- rarefied_metrics %>%
   separate(rarefyID, c("STUDY_ID", "cell2"), "_", remove=FALSE, convert=TRUE) %>%
   dplyr::select(-cell2)

@@ -40,6 +40,9 @@ bt <- read.csv("data/biotime_query.csv") %>%
 ##	Get the meta data locally
 meta <- read.csv("biotime/BioTIMEQuery02_04_2018 2.csv") %>%
   rename_with(toupper)
+# pin to use later
+pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
+pins::pin(meta, board = "github")
 
 ##	join abundance records with the metadata
 bt <- inner_join(meta, bt, by='STUDY_ID')
@@ -423,7 +426,6 @@ usethis::use_data(dgg)
 usethis::use_data(bt_grid_filtered)
 
 #save to cache
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
 pins::pin(dgg, board = "github")
 pins::pin(bt_grid_filtered, board = "github")
 
