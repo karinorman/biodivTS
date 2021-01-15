@@ -20,56 +20,59 @@ library(dbplyr)
 source(here::here("data-raw", "helper_functions.R"))
 ```
 
-Import occurrence data from Biotime
+## Get Biotime Occurrence 
+
+### Option for Getting data from SQL query (not grid filtered)
 
 Access database
 ```{r}
-#personal computer
-con <- dbConnect(
-  drv = RMariaDB::MariaDB(), 
-  dbname = "biotime",
-  username = "root",
-  password = "Ka1172353!", 
-  host = "localhost"
-)
-
-#thelio
-con <- DBI::dbConnect(RMariaDB::MariaDB(), 
-                      host="mariadb", 
-                      user="root", 
-                      password="password", 
-                      dbname="biotime")
-
-biotime_sql <- tbl(con, "allrawdata") %>% 
-  collect() %>% 
-  rename_all(.funs = tolower) %>%
-  select(-id_all_raw_data)
-```
-```{r}
-data <- biotime_sql %>% 
-  group_by(id_species, plot, year, study_id) %>% 
-  summarise(year_abun = sum(na.omit(abundance)), 
-            year_biomass = sum(na.omit(biomass))) %>%
-  left_join(tbl(con, "datasets") %>% select(taxa = TAXA, study_id = STUDY_ID) %>% collect()) %>%
-  left_join(tbl(con, "species") %>% select(id_species = ID_SPECIES, genus_species = GENUS_SPECIES) %>% collect()) %>%
-  ungroup()
-
-#should be zero to be appropriately aggregated
-#data %>% group_by(study_id, plot, year, id_species) %>% filter(n()>1) %>% View()
+# #personal computer
+# con <- dbConnect(
+#   drv = RMariaDB::MariaDB(), 
+#   dbname = "biotime",
+#   username = "root",
+#   password = "Ka1172353!", 
+#   host = "localhost"
+# )
+# 
+# #thelio
+# con <- DBI::dbConnect(RMariaDB::MariaDB(), 
+#                       host="mariadb", 
+#                       user="root", 
+#                       password="password", 
+#                       dbname="biotime")
+# 
+# biotime_sql <- tbl(con, "allrawdata") %>% 
+#   collect() %>% 
+#   rename_all(.funs = tolower) %>%
+#   select(-id_all_raw_data)
+# ```
+# ```{r}
+# data <- biotime_sql %>% 
+#   group_by(id_species, plot, year, study_id) %>% 
+#   summarise(year_abun = sum(na.omit(abundance)), 
+#             year_biomass = sum(na.omit(biomass))) %>%
+#   left_join(tbl(con, "datasets") %>% select(taxa = TAXA, study_id = STUDY_ID) %>% collect()) %>%
+#   left_join(tbl(con, "species") %>% select(id_species = ID_SPECIES, genus_species = GENUS_SPECIES) %>% collect()) %>%
+#   ungroup()
+# 
+# #should be zero to be appropriately aggregated
+# #data %>% group_by(study_id, plot, year, id_species) %>% filter(n()>1) %>% View()
 ```
 
 Replace NA plots with a plot label (these are studies with no plot subdivision)
 ```{r}
-#replace plot NA's that are really studies with only one plot with a plot label 
-data <- data %>% 
-  mutate(plot = case_when(
-    is.na(plot) ~ "A",
-    TRUE ~ plot
-  ))
+# #replace plot NA's that are really studies with only one plot with a plot label 
+# data <- data %>% 
+#   mutate(plot = case_when(
+#     is.na(plot) ~ "A",
+#     TRUE ~ plot
+#   ))
 ```
 
-Load data from outside processing script
+### Or, from the grid processing script
 ```{r}
+#file created by 01_biotime_grid.R
 load(here::here('data/BioTIME_grid_filtered.Rdata'))
 data <- bt_grid_filtered %>%
   rename_with(tolower) %>%
@@ -78,7 +81,7 @@ data <- bt_grid_filtered %>%
 rm(bt_grid_filtered)
 ```
 
-
+### Now get id's
 Check which authority would result in the most matches 
 ```{r}
 ##Counts show that OTT is the best authority 
@@ -86,9 +89,7 @@ get_match_counts(data %>% filter(taxa == "Birds"), "genus_species")
 get_match_counts(data, "genus_species")
 ```
 
-OTT is the best authority but doesn't have common names, so we use the next best ITIS. We'll start with BioTime data:
-
-##Biotime
+OTT is the best authority but doesn't have common names, so we use the next best ITIS
 
 ```{r}
 #Getting matches by sci name and common name 

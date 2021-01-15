@@ -16,11 +16,12 @@ devtools::load_all()
 ```
 
 ```{r}
+pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
+
 biotime_data <- pins::pin_get("biotime-data", board = "github")
-#load(here::here("data", "biotime_data.rda"))
-load(here::here("data", "elton_mamm.rda"))
-load(here::here("data", "elton_bird.rda"))
-load(here::here("data", "amphibio.rda"))
+elton_mamm <- pins::pin_get("elton-mamm", board = "github")
+elton_bird <- pins::pin_get("elton-bird", board = "github")
+amphibio <- pins::pin_get("amphibio", board = "github")
 
 biotime_data <- biotime_data %>%
   ungroup() %>%
@@ -116,6 +117,8 @@ bt_traitfiltered <- biotime_traits %>%
   select(all_of(bt_cols)) %>%
   rename(species = id)
 
+#save locally and in cache
+usethis::use_data(bt_traitfiltered)
 pins::pin(bt_traitfiltered, board = "github")
 ```
 
@@ -129,6 +132,8 @@ trait_ref <- biotime_traits %>%
   rename(Species = id) %>%
   distinct()
 
+#save locally and in cache
+usethis::use_data(trait_ref)
 pins::pin(trait_ref, board = "github")
 ```
 
@@ -143,6 +148,7 @@ study_table <- biotime_traits %>%
                                 organisms, start_year, end_year), by = "study_id") %>%
   left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
 
+#save locally and in cache
 usethis::use_data(study_table)
 pins::pin(study_table, board = "github")
 ```
