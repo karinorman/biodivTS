@@ -14,6 +14,8 @@ library(tidyverse)
 ```
 
 ```{r}
+pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
+
 metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
   pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "cYEAR", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID"))) 
