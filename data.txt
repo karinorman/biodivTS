@@ -13,11 +13,6 @@
   rows: 107418
   cols: 9
   type: table
-- path: metadata
-  name: metadata
-  rows: 361
-  cols: 42
-  type: table
 - path: trait-ref
   name: trait-ref
   rows: 975
