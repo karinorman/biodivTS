@@ -8,11 +8,6 @@
   rows: 53
   cols: 11
   type: table
-- path: fd-table
-  name: fd-table
-  rows: 107142
-  cols: 11
-  type: table
 - path: null-table
   name: null-table
   rows: 107418
