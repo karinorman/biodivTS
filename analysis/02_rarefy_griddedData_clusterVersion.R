@@ -165,7 +165,7 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
       ##	get the jth study_cell
       study <- bt_grid_nest %>%
-        filter(rarefyID==unique(bt_grid_nest$rarefyID)[j])
+        filter(rarefyID==filter_id)
 
       # get minimum sample size for rarefaction
       min_samp <- study %>% distinct(min_samp) %>% .$min_samp
@@ -394,11 +394,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
     dir.create(dir)
     save(rarefied_metrics, file=paste0(dir, "/resample_", type, i, ".rda"))
 
-    rarefied_metrics
   }	# rarefaction loop
 
-  parallel::stopCluster(cl)
-  return(rarefied_metrics)
+  rarefied_metrics <- as_tibble(rarefied_metrics)
+  rarefied_metrics <- inner_join(new_meta, rarefied_metrics, by = "rarefyID")
 } # END function
 
 ##================================== Calculate mean rarefied diversity for each data type=======================================
@@ -421,7 +420,6 @@ calc_FD_mets <- function(file_path){
   betapart_safe <- possibly(functional.beta.pair, otherwise = data.frame())
 
   # calculated functional diversity
-  if(rare_comm_save$)
   FD_mets <- get_FD_safe(species_mat = rare_comm, trait_mat = traits, year_list = years,
                          data_id = rare_samp$rarefyID, samp_id = i,
                          w.abun = TRUE, m = trait_axes, corr = "cailliez")
@@ -445,4 +443,5 @@ calc_FD_mets <- function(file_path){
   }
 
 }
+
 
