@@ -21,10 +21,9 @@ library(FD)
 devtools::load_all()
 
 ##==========================================
-pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
+pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
 
 ##	Get the gridded data locally
-#load('data/BioTIME_grid_filtered.Rdata')
 bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
   rename_with(toupper) %>%
   rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,

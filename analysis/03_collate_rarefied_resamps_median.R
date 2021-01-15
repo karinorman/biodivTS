@@ -65,4 +65,6 @@ rarefied_metrics <- inner_join(new_meta, rarefied_medians, by='rarefyID') %>%
 
 ##	save
 usethis::use_data(rarefied_metrics)
+
+pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
 pins::pin(rarefied_metrics, board = "github")
