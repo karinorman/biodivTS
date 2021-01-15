@@ -8,11 +8,6 @@
   rows: 53
   cols: 11
   type: table
-- path: null-table
-  name: null-table
-  rows: 107418
-  cols: 9
-  type: table
 - path: trait-ref
   name: trait-ref
   rows: 975
