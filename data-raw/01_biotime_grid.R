@@ -34,11 +34,11 @@ library(iNEXT)
 
 ##	get the data and metadata
 ##	Get the raw data locally
-bt <- read.csv("data/biotime_query.csv") %>%
-  read_csv(system.file("extdata", "biotime/BioTIMEQuery02_04_2018 2.csv", package = "biodivTS")) %>%
+bt <- #read.csv("data/biotime_query.csv") %>%
+  read.csv(system.file("extdata", "biotime/BioTIMEQuery02_04_2018 2.csv", package = "biodivTS")) %>%
   rename_with(toupper)
 ##	Get the meta data locally
-meta <- read.csv("biotime/BioTIMEQuery02_04_2018 2.csv") %>%
+meta <- read.csv(system.file("extdata", "biotime/BioTIMEQuery02_04_2018 2.csv", package = "biodivTS")) %>%
   rename_with(toupper)
 # pin to use later
 pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
@@ -225,8 +225,7 @@ rarefyID_cell_centre <- rarefyID_cell_centre %>% distinct(STUDY_ID, rarefyID, ce
 ##	NB: we will rarefy to the smallest number of ObsEventID's within studies
 bt_grid <- bt %>%
   dplyr::select(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, BIOMASS_TYPE, STUDY_ID, YEAR, PLOT,
-         cell, Species, SUM_ABUNDANCE, SUM_BIOMASS)
-names(bt_grid)[12:13] <- c('Abundance', 'Biomass')
+         cell, Species, Abundance = SUM.ALLRAWDATA.ABUNDANCE, Biomass = SUM.ALLRAWDATA.BIOMASS)
 
 # add column for rarefyID (STUDY_ID + cell = samples within a study that are spatially grouped)
 bt_grid <- bt_grid %>% unite(col=rarefyID, STUDY_ID, cell, sep="_", remove=FALSE)
@@ -234,10 +233,11 @@ bt_grid <- bt_grid %>% unite(col=rarefyID, STUDY_ID, cell, sep="_", remove=FALSE
 # add column for ObsEventID (STUDY_ID + PLOT + YEAR = discrete sampling events within a year)
 bt_grid <- bt_grid %>% unite(col=ObsEventID, rarefyID, PLOT, YEAR, sep="_", remove=FALSE)
 
-##	combine with bt_grid (and we are ready to rarefy)
-# bt_grid <- inner_join(ungroup(bt_grid), select(SampEvent_per_cell, STUDY_ID, YEAR, cell, n_samps))
+#save locally
+usethis::use_data(bt_grid)
 
-#save(dgg, bt_grid, file='BioTIME_grid.Rdata')
+#save to cache
+pins::pin(bt_grid, board = "github")
 
 
 ##==================================== EXPLORE AND FILTER ON COVERAGE ========================================
@@ -428,202 +428,3 @@ usethis::use_data(bt_grid_filtered)
 #save to cache
 pins::pin(dgg, board = "github")
 pins::pin(bt_grid_filtered, board = "github")
-
-#
-# ##==================================== VISUALIZE DATA ===========================================
-# ##	want to examine coverage and numbers of samples per cell through time
-# ##	calculate diversity metrics within cells for each study through time
-#
-# ##	Calculate biodiversity metrics for grid cells (count data only)
-# bt_gridMetrics_count <- bt_grid_collate %>%
-# 	# count data first...
-# 	filter(ABUNDANCE_TYPE!='Presence/Absence' & ABUNDANCE_TYPE!='<NA>') %>%
-# 	# remove zeroes and NAs(some studies are designated count, but record Biomass estimates)
-# 	filter(Abundance > 0 & !is.na(Abundance)) %>%
-# 	group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, STUDY_ID, YEAR, cell) %>%
-# 	summarise(
-# 		N = sum(Abundance),
-# 		S = n_distinct(Species),
-# 		S_check = specnumber(Abundance),
-# 		PIE = diversity(Abundance, index='simpson'),
-# 		ENSPIE = diversity(Abundance, index='invsimpson'),
-# 		pielou = diversity(Abundance)/log(S),
-# 		singletons = sum(Abundance==1),
-# 		doubletons = sum(Abundance==2),
-# 		# eqn 4a in Chao & Jost 2012 Ecology (==eqn 12 in Chao et al 2014 Ecol Monogr)
-# 		Chat = 1 - singletons/N * (N-1)*singletons/((N-1)*singletons + 2*doubletons),
-# 		# with one wrinkle  that makes a correction
-# 		# for communities with no doubletons (this prevents NaN results when singletons==0 & doubletons==0)
-# 		# (from code associated with Chao et al 2014 - see appendix)
-# 		Chat_corrected = ifelse(doubletons>0,
-# 			1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2*doubletons)),
-# 			1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2)))) %>%
-# 	ungroup()
-#
-# ##	how many cells for all the count data?
-# N_total_cells_countData <- bt_grid_collate %>%
-# 	# restrict to count data that we calculated metrics for
-# 	filter(ABUNDANCE_TYPE!='Presence/Absence' & ABUNDANCE_TYPE!='<NA>') %>%
-# 	filter(Abundance > 0 & !is.na(Abundance)) %>%
-# 	# calculate how many cells in total
-# 	summarise(total_cells = n_distinct(cell)) %>% .$total_cells
-#
-# bt_gridMetrics_count <- bt_gridMetrics_count %>% mutate(total_cells = N_total_cells_countData)
-#
-# ##	want a plot of % total cells retained for different coverage cutoffs
-# cov_threshold <- data.frame(threshold = seq(0,1,by=0.05),
-# 	retained_Chat = rep(NA, times=21),
-# 	retained_Chat_corrected = rep(NA, times=21))
-#
-# for(i in 1:nrow(cov_threshold)) {
-# 	cells_retained_Chat <- bt_gridMetrics_count %>% filter(Chat >= cov_threshold$threshold[i]) %>%
-# 		summarise(cells_retained = n_distinct(cell)) %>% .$cells_retained
-# 	cells_retained_Chat_corrected <- bt_gridMetrics_count %>% filter(Chat_corrected >= cov_threshold$threshold[i]) %>%
-# 		summarise(cells_retained = n_distinct(cell)) %>% .$cells_retained
-# 	cov_threshold$retained_Chat[i] <- cells_retained_Chat/N_total_cells_countData
-# 	cov_threshold$retained_Chat_corrected[i] <- cells_retained_Chat_corrected/N_total_cells_countData
-# }
-#
-# #png('count_coverage_proportion_cell_retained', width=800, height=600)
-# with(cov_threshold, plot(x=threshold, y=retained_Chat, type='n', xlim=c(0,1), ylim=c(min(cov_threshold$retained_Chat), 1),
-# 	xlab='Coverage', ylab='Proportion of cells retained', main='Count data coverage'))
-# with(cov_threshold, points(x=threshold, y=retained_Chat))
-# with(cov_threshold, lines(x=threshold, y=retained_Chat))
-# with(cov_threshold, points(x=threshold, y=retained_Chat_corrected, col=2))
-# with(cov_threshold, lines(x=threshold, y=retained_Chat_corrected, col=2))
-# legend('bottomleft', legend=c('eqn4', 'eqn4 corrected for f2=0'), col=c(1,2), pch=1, lty=1)
-# #dev.off()
-#
-#
-#
-#
-# #-------------------------- PLOT COVERAGE SEPARATELY BY SL, ML, REALM, AND CLIMATE--------------------
-#
-# ##	Plot coverage (within cells) through time for the SL?
-# ##	These are studies that have observations from only one cell
-# #png('SL coverage through time', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count, StudyMethod=='SL')) +
-# 	facet_wrap(CLIMATE~REALM, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=interaction(STUDY_ID, cell)), alpha=0.5) +
-# 	theme_bw()
-# #dev.off()
-#
-# #png('SL coverage_over_80 through time', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count, StudyMethod=='SL' & Chat_corrected>0.8)) +
-# 	facet_wrap(CLIMATE~REALM, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=interaction(STUDY_ID, cell)), alpha=0.5) +
-# 	theme_bw()
-# #dev.off()
-#
-#
-# ##	coverage (within cells) through time for the ML studies (MESSY when plotted all at once!)
-# ggplot(filter(bt_gridMetrics_count, StudyMethod=='ML')) +
-# 	facet_wrap(CLIMATE~REALM, scales='free') +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=interaction(STUDY_ID, cell)), alpha=0.3) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-#
-# ##	Studies with good coverage first...
-# #png('ML coverage through time_good', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count,
-# 	(StudyMethod=='ML' & CLIMATE=='Polar' & REALM=='Freshwater') | (StudyMethod=='ML' & CLIMATE=='Polar' & REALM=='Marine') | (StudyMethod=='ML' & CLIMATE=='Tropical' & REALM=='Marine') | (StudyMethod=='ML' & CLIMATE=='Tropical' & REALM=='Terrestrial'))) +
-# 	facet_wrap(CLIMATE~REALM, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=interaction(STUDY_ID, cell)), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-# #dev.off()
-#
-# ##	now, lots of variation in coverage...
-#
-# ##	closer look at noisy CLIMATE/REALM combinations
-# ##	temperate/marine
-# #png('ML coverage through time_temp_mar', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Temperate' & REALM=='Marine'))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw() +
-# 	ggtitle('Coverage through time for temperate marine studies')
-# #dev.off()
-#
-# ##	what happens if we filter to coverage>0.8
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Temperate' & REALM=='Marine' & Chat_corrected>0.8))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-#
-# ##	temperate/terrestrial
-# #png('ML coverage through time_temp_terr', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Temperate' & REALM=='Terrestrial'))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw() +
-# 	ggtitle('Coverage through time for temperate terrestrial studies')
-# #dev.off()
-#
-# ##	what happens if we filter to coverage>0.8
-# #png('ML coverage_over_80 through time_temp_terr', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Temperate' & REALM=='Terrestrial' & Chat_corrected>0.8))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw() +
-# 	ggtitle('Coverage through time for temperate terrestrial studies (only cells with coverage > 0.8)')
-# #dev.off()
-#
-# ##	polar-temperate/marine
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Polar/Temperate' & REALM=='Marine'))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-#
-# ##	what happens if we filter to coverage>0.8
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Polar/Temperate' & REALM=='Marine' & Chat_corrected>0.8))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-#
-# ##	temperate-tropical/marine
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Temperate/Tropical' & REALM=='Marine'))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-#
-# ##	what happens if we filter to coverage>0.8
-# ggplot(filter(bt_gridMetrics_count, (StudyMethod=='ML' & CLIMATE=='Temperate/Tropical' & REALM=='Marine' & Chat_corrected>0.8))) +
-# 	facet_wrap(~STUDY_ID, scales='free') +
-# 	geom_point(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), size=0.75, alpha=0.25) +
-# 	geom_line(aes(x=YEAR, y=Chat_corrected, colour=TAXA, group=cell), alpha=0.5) +
-# 	scale_x_continuous(breaks=pretty_breaks()) +
-# 	theme_bw()
-#
-# #-------------------------------------------------------------------------------
-# ##  frequency distribution of coverage by climate and realm
-# #png('Coverage per cell (histogram)', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count)) +
-#   facet_wrap(CLIMATE~REALM, scales='free') +
-#   geom_histogram(aes(Chat_corrected))
-# #dev.off()
-#
-# ##  frequency distribution of samples per year by climate and realm
-# #png('Samples per cell (histogram)', width=800, height=600)
-# ggplot(filter(bt_gridMetrics_count)) +
-# 	facet_wrap(CLIMATE~REALM, scales='free') +
-# 	geom_histogram(aes(n_samps)) +
-# 	ylab('Samples per cell (per year)')
-# #dev.off()
