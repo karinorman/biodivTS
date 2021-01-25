@@ -60,14 +60,27 @@ Fit GLM to overall metric trend
 ## should be GLS according to Dornelas supplement, but glmer isn't happy
 metric_mean_fit <- metrics %>%
   filter(!is.na(value)) %>%
-  group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id) + (1|rarefyID), data = .x)))
+  mutate(minyear = min(year), maxyear = max(year)) %>%
+  group_nest(metric, minyear, maxyear) %>%
+  #mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id) + (1|rarefyID), data = .x)),
+  mutate(model = map(data, ~lmer(logvalue ~ year + (1|rarefyID), data = .x)),
+         prediction = map(model, ~predict(.x), newdata = as.data.frame(year = minyear:maxyear)))
 
 metric_mean_coef <- metric_mean_fit %>%
   mutate(coef = map(model, tidy)) %>% 
   #mutate(confint = map(model, confint)) %>%
   select(-data, -model) %>% 
   unnest(cols = c(coef))
+
+mean_tests <- metric_mean_fit %>%
+  #filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+   mutate(p_value = map(model, ~drop1(.x, test = "Chisq") %>% select(`Pr(Chi)`) %>% slice(2) %>% pull())) %>% 
+  select(metric, p_value) %>%
+  left_join(metric_mean_coef %>% 
+              filter(term == "year") %>% 
+              select(metric, estimate))
+  
+
 
 # model for overall trend (random effect w/varying intercept and slope)
 # metric_slope_fit <- metrics %>%
@@ -82,14 +95,13 @@ metric_mean_coef <- metric_mean_fit %>%
 #   unnest(cols = c(coef))
 ```
 
-
 ```{r}
 indiv_ts_fit <- metrics %>% 
   filter(!is.na(value)) %>%
-  group_by_at(setdiff(names(metrics), c("year", "value"))) %>%
+  group_by_at(setdiff(names(metrics), c("year", "value", "logvalue"))) %>%
   filter(n_distinct(year) > 1) %>% #filter out rarefyID's that don't have multiple years after dropping Na's
   group_nest() %>%
-  mutate(model = map(data, ~ lm(value ~ year, data = .x)))
+  mutate(model = map(data, ~ lm(logvalue ~ year, data = .x)))
 
 indiv_ts_coef <- indiv_ts_fit %>%
   mutate(coef = map(model, tidy)) %>% 
@@ -112,5 +124,69 @@ indiv_ts_coef %>%
   theme_bw() +
   theme(panel.grid.minor.x = element_blank()) +
   facet_wrap(vars(metric), scales = "free")
+```
+Reproduce Dornelas figure - all data points & regressions w/overall mean
+```{r}
+#get climate classification
+metadata <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS"))
+
+fric_trend <- metrics %>%
+  filter(metric == "FRic") %>%
+  ggplot(aes(x = year, y = logvalue)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = rarefyID), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = rarefyID) ,color = "grey") +
+  geom_smooth(color = "black", method = "glm", se = FALSE) +
+  theme(legend.position = "none") 
+ggsave("fric_trends.png", fric_plot)
+```
+
+```{r}
+library(lme4)
+
+plot_metric <- function(metric_name, ylabel){
+
+  data <- metrics %>%
+    filter(metric == metric_name, !is.na(value), !is.infinite(value))
+
+  model_coef <- metric_mean_coef %>%
+    filter(metric == metric_name) %>%
+    select(term, estimate)
+  
+  intercept <- model_coef %>% filter(term == "(Intercept)") %>% pull(estimate)
+  slope <- model_coef %>% filter(term == "year") %>% pull(estimate)
+  
+  pred <- data.frame(year = min(data$year):max(data$year)) %>%
+    mutate(pred = intercept + year * slope)
+
+  trend_plot <- data %>%
+    left_join(pred, by = "year") %>%
+    #left_join(metadata %>% select(study_id, climate)) %>%
+    ggplot(aes(x = year, y = logvalue)) +
+    # geom_smooth(aes(color = climate, group = rarefyID), method = "glm", se = FALSE) +
+    # geom_point(aes(color = climate, group = rarefyID)) +
+    geom_point(aes(group = rarefyID) ,color = "grey", size = 0.30) +
+    geom_smooth(aes(color = climate_mod, group = rarefyID), method = "glm", se = FALSE, size = 0.5) +
+    #geom_smooth(color = "black", method = "glm", se = FALSE) +
+    geom_line(mapping = aes(y = pred)) +
+    theme(legend.position = "none") +
+    theme_classic() +
+    ylab(ylabel) +
+    labs(color = "Climate")
+  
+  ggsave(paste0(metric_name, "_trend.png"), trend_plot)
+  return(trend_plot)
+}
+
+plot_metric("FRic", "log(FD)")
+
+plot_map <- tibble(metric_name = c("S", "FRic", "FEve", "FDiv", "FDis"), 
+           ylabel = c("log(S)", "log(FD)", "log(Evenness)", "log(Divergence)", "log(Dispersion)"))
+pmap(plot_map, plot_metric)
+```
+
+```{r}
+
 ```
 
