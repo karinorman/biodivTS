@@ -22,7 +22,8 @@ metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
   select(-cYEAR) %>%
   pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  mutate(logvalue = log(value + abs(floor(min(na.omit(value)))))) # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  mutate(logvalue = log(value + abs(floor(min(na.omit(value)))))) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  filter(!is.na(value))
 ```
 ####Data exploration
 
@@ -59,12 +60,10 @@ Fit GLM to overall metric trend
 # model for overall trend (random effect w/varying intercept)
 ## should be GLS according to Dornelas supplement, but glmer isn't happy
 metric_mean_fit <- metrics %>%
-  filter(!is.na(value)) %>%
   mutate(minyear = min(year), maxyear = max(year)) %>%
   group_nest(metric, minyear, maxyear) %>%
-  #mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id) + (1|rarefyID), data = .x)),
-  mutate(model = map(data, ~lmer(logvalue ~ year + (1|rarefyID), data = .x)),
-         prediction = map(model, ~predict(.x), newdata = as.data.frame(year = minyear:maxyear)))
+  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id) + (1|rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))))
 
 metric_mean_coef <- metric_mean_fit %>%
   mutate(coef = map(model, tidy)) %>% 
@@ -79,34 +78,69 @@ mean_tests <- metric_mean_fit %>%
   left_join(metric_mean_coef %>% 
               filter(term == "year") %>% 
               select(metric, estimate))
-  
-
-
-# model for overall trend (random effect w/varying intercept and slope)
-# metric_slope_fit <- metrics %>%
-#   filter(!is.na(value)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(logvalue ~ year + (1 + year | rarefyID), data = .x)))
-# 
-# metric_slope_coef <- metric_slope_fit %>%
-#   mutate(coef = map(model, tidy)) %>% 
-#   #mutate(confint = map(model, confint)) %>%
-#   select(-data, -model) %>% 
-#   unnest(cols = c(coef))
 ```
 
+Fit model to individual studies - if there is more than one timeseries in a study, account for that
 ```{r}
-indiv_ts_fit <- metrics %>% 
-  filter(!is.na(value)) %>%
-  group_by_at(setdiff(names(metrics), c("year", "value", "logvalue"))) %>%
-  filter(n_distinct(year) > 1) %>% #filter out rarefyID's that don't have multiple years after dropping Na's
-  group_nest() %>%
-  mutate(model = map(data, ~ lm(logvalue ~ year, data = .x)))
+sing_study <- metrics %>%
+  group_by(study_id) %>%
+  filter(n_distinct(rarefyID) == 1) %>% 
+  pull(study_id) %>% unique()
 
-indiv_ts_coef <- indiv_ts_fit %>%
+# indiv_data <- metrics %>%
+#   mutate(rarefyID = as.factor(rarefyID)) %>%
+#   group_by_at(setdiff(names(metrics), c("year", "value", "logvalue", "rarefyID", "cell", "samplen"))) %>% 
+#   #filter(n_distinct(year) > 1) %>% #filter out rarefyID's that don't have multiple years after dropping Na's
+#   group_nest()
+
+indiv_data <- metrics %>%
+  mutate(rarefyID = as.factor(rarefyID)) %>%
+  group_by(study_id) %>%
+  group_nest()
+
+indiv_ts_sing_fit <- indiv_data %>%
+  filter(study_id %in% sing_study) %>%
+  mutate(model = map(data, ~ lm(logvalue ~ year, data = .x))) %>%
+  mutate(model_type = "lm")
+  
+  
+indiv_ts_fit <- indiv_data %>%
+  filter(!study_id %in% sing_study) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ (1 + year|rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead")))) %>%
+  mutate(model_type = "mixed",
+         p_value = map(model, ~drop1(.x, test = "Chisq") %>% select(`Pr(Chi)`) %>% slice(2) %>% pull()))
+
+  
+indiv_ts_coef <- bind_rows(indiv_ts_fit, indiv_ts_sing_fit) %>%
   mutate(coef = map(model, tidy)) %>% 
   select(-data, -model) %>% 
   unnest(cols = c(coef))
+```
+
+```{r}
+fit_mod <- function(data){
+  print(unique(data$rarefyID)) %>%
+  lmer(logvalue ~ (1 + year|rarefyID), 
+                                 data = data, control = lmerControl(optimizer ="Nelder_Mead"))
+}
+
+indiv_data %>%
+  filter(!study_id %in% sing_study) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ ( 1+ year|rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))))
+
+fit_mod <- function(filter_id){
+  filter_data <- metrics %>% filter(study_id == filter_id)
+  
+  print(filter_id)
+  lmer(logvalue ~ (1+ year|rarefyID), 
+                                 data = filter_data)
+}
+
+mult_studies <- metrics %>% filter(!study_id %in% sing_study) %>% pull(study_id) %>% unique()
+map(mult_studies, fit_mod)
+
 ```
 
 Plot of S and diversity metrics
