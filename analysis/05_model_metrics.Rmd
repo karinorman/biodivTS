@@ -56,28 +56,57 @@ hist_numYears <- metrics %>%
 ```
 
 Fit GLM to overall metric trend
+
+Convergence problems!! See here:
+https://joshua-nugent.github.io/allFit/
+https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html
+https://biologyforfun.wordpress.com/2018/04/09/help-i-have-convergence-warnings/
+
+Maybe need something other than a gaussian distribution?
+
+Model checks:
+https://debruine.github.io/posts/normality/
+performance::check_model()
+
 ```{r}
 # model for overall trend (random effect w/varying intercept)
-## should be GLS according to Dornelas supplement, but glmer isn't happy
 metric_mean_fit <- metrics %>%
-  mutate(minyear = min(year), maxyear = max(year)) %>%
-  group_nest(metric, minyear, maxyear) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id) + (1|rarefyID), 
-                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))))
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id/rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))),
+           null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))),
+           test = map2(model, null_model, anova),
+           test_res = map(test, tidy),
+           coef = map(model, tidy)
+           ) %>% 
+  unnest(cols = c(test_res)) %>%
+  select(metric, model, coef, p.value) %>%
+  filter(!is.na(p.value)) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year") %>%
+  select(-c(effect, group, term, statistic))
 
-metric_mean_coef <- metric_mean_fit %>%
-  mutate(coef = map(model, tidy)) %>% 
-  #mutate(confint = map(model, confint)) %>%
-  select(-data, -model) %>% 
-  unnest(cols = c(coef))
-
-mean_tests <- metric_mean_fit %>%
-  #filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
-   mutate(p_value = map(model, ~drop1(.x, test = "Chisq") %>% select(`Pr(Chi)`) %>% slice(2) %>% pull())) %>% 
-  select(metric, p_value) %>%
-  left_join(metric_mean_coef %>% 
-              filter(term == "year") %>% 
-              select(metric, estimate))
+metric_mean_fit_slope <- metrics %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ (year|study_id/rarefyID), 
+                                 data = .x, #control = lmerControl(optimizer ="Nelder_Mead"),
+                                 REML = FALSE)),
+           null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), 
+                                 data = .x, #control = lmerControl(optimizer ="Nelder_Mead"),
+                                 REML = FALSE)),
+           test = map2(model, null_model, anova),
+           test_res = map(test, tidy),
+           coef = map(model, tidy)
+           ) %>% 
+  unnest(cols = c(test_res)) %>%
+  select(metric, model, coef, p.value) %>%
+  filter(!is.na(p.value)) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year") %>%
+  select(-c(effect, group, term, statistic))
 ```
 
 Fit model to individual studies - if there is more than one timeseries in a study, account for that
