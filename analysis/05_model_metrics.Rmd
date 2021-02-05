@@ -22,7 +22,8 @@ metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
   select(-cYEAR) %>%
   pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  mutate(logvalue = log(value + abs(floor(min(na.omit(value)))))) # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  mutate(logvalue = log(value + abs(floor(min(na.omit(value)))))) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  filter(!is.na(value))
 ```
 ####Data exploration
 
@@ -55,46 +56,120 @@ hist_numYears <- metrics %>%
 ```
 
 Fit GLM to overall metric trend
+
+Convergence problems!! See here:
+https://joshua-nugent.github.io/allFit/
+https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html
+https://biologyforfun.wordpress.com/2018/04/09/help-i-have-convergence-warnings/
+
+Maybe need something other than a gaussian distribution?
+
+Model checks:
+https://debruine.github.io/posts/normality/
+performance::check_model()
+
 ```{r}
 # model for overall trend (random effect w/varying intercept)
-## should be GLS according to Dornelas supplement, but glmer isn't happy
 metric_mean_fit <- metrics %>%
-  filter(!is.na(value)) %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id) + (1|rarefyID), data = .x)))
+  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id/rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))),
+           null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))),
+           test = map2(model, null_model, anova),
+           test_res = map(test, tidy),
+           coef = map(model, tidy)
+           ) %>% 
+  unnest(cols = c(test_res)) %>%
+  select(metric, model, coef, p.value) %>%
+  filter(!is.na(p.value)) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year") %>%
+  select(-c(effect, group, term, statistic))
 
-metric_mean_coef <- metric_mean_fit %>%
-  mutate(coef = map(model, tidy)) %>% 
-  #mutate(confint = map(model, confint)) %>%
-  select(-data, -model) %>% 
-  unnest(cols = c(coef))
-
-# model for overall trend (random effect w/varying intercept and slope)
-# metric_slope_fit <- metrics %>%
-#   filter(!is.na(value)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(logvalue ~ year + (1 + year | rarefyID), data = .x)))
-# 
-# metric_slope_coef <- metric_slope_fit %>%
-#   mutate(coef = map(model, tidy)) %>% 
-#   #mutate(confint = map(model, confint)) %>%
-#   select(-data, -model) %>% 
-#   unnest(cols = c(coef))
+metric_mean_fit_slope <- metrics %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ (year|study_id/rarefyID), 
+                                 data = .x, #control = lmerControl(optimizer ="Nelder_Mead"),
+                                 REML = FALSE)),
+           null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), 
+                                 data = .x, #control = lmerControl(optimizer ="Nelder_Mead"),
+                                 REML = FALSE)),
+           test = map2(model, null_model, anova),
+           test_res = map(test, tidy),
+           coef = map(model, tidy)
+           ) %>% 
+  unnest(cols = c(test_res)) %>%
+  select(metric, model, coef, p.value) %>%
+  filter(!is.na(p.value)) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year") %>%
+  select(-c(effect, group, term, statistic))
 ```
 
-
+Fit model to individual studies - if there is more than one timeseries in a study, account for that
 ```{r}
-indiv_ts_fit <- metrics %>% 
-  filter(!is.na(value)) %>%
-  group_by_at(setdiff(names(metrics), c("year", "value"))) %>%
-  filter(n_distinct(year) > 1) %>% #filter out rarefyID's that don't have multiple years after dropping Na's
-  group_nest() %>%
-  mutate(model = map(data, ~ lm(value ~ year, data = .x)))
+sing_study <- metrics %>%
+  group_by(study_id) %>%
+  filter(n_distinct(rarefyID) == 1) %>% 
+  pull(study_id) %>% unique()
 
-indiv_ts_coef <- indiv_ts_fit %>%
+# indiv_data <- metrics %>%
+#   mutate(rarefyID = as.factor(rarefyID)) %>%
+#   group_by_at(setdiff(names(metrics), c("year", "value", "logvalue", "rarefyID", "cell", "samplen"))) %>% 
+#   #filter(n_distinct(year) > 1) %>% #filter out rarefyID's that don't have multiple years after dropping Na's
+#   group_nest()
+
+indiv_data <- metrics %>%
+  mutate(rarefyID = as.factor(rarefyID)) %>%
+  group_by(study_id) %>%
+  group_nest()
+
+indiv_ts_sing_fit <- indiv_data %>%
+  filter(study_id %in% sing_study) %>%
+  mutate(model = map(data, ~ lm(logvalue ~ year, data = .x))) %>%
+  mutate(model_type = "lm")
+  
+  
+indiv_ts_fit <- indiv_data %>%
+  filter(!study_id %in% sing_study) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ (1 + year|rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead")))) %>%
+  mutate(model_type = "mixed",
+         p_value = map(model, ~drop1(.x, test = "Chisq") %>% select(`Pr(Chi)`) %>% slice(2) %>% pull()))
+
+  
+indiv_ts_coef <- bind_rows(indiv_ts_fit, indiv_ts_sing_fit) %>%
   mutate(coef = map(model, tidy)) %>% 
   select(-data, -model) %>% 
   unnest(cols = c(coef))
+```
+
+```{r}
+fit_mod <- function(data){
+  print(unique(data$rarefyID)) %>%
+  lmer(logvalue ~ (1 + year|rarefyID), 
+                                 data = data, control = lmerControl(optimizer ="Nelder_Mead"))
+}
+
+indiv_data %>%
+  filter(!study_id %in% sing_study) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ ( 1+ year|rarefyID), 
+                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))))
+
+fit_mod <- function(filter_id){
+  filter_data <- metrics %>% filter(study_id == filter_id)
+  
+  print(filter_id)
+  lmer(logvalue ~ (1+ year|rarefyID), 
+                                 data = filter_data)
+}
+
+mult_studies <- metrics %>% filter(!study_id %in% sing_study) %>% pull(study_id) %>% unique()
+map(mult_studies, fit_mod)
+
 ```
 
 Plot of S and diversity metrics
@@ -112,5 +187,69 @@ indiv_ts_coef %>%
   theme_bw() +
   theme(panel.grid.minor.x = element_blank()) +
   facet_wrap(vars(metric), scales = "free")
+```
+Reproduce Dornelas figure - all data points & regressions w/overall mean
+```{r}
+#get climate classification
+metadata <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS"))
+
+fric_trend <- metrics %>%
+  filter(metric == "FRic") %>%
+  ggplot(aes(x = year, y = logvalue)) +
+  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
+  # geom_point(aes(color = climate, group = plot_id)) +
+  geom_smooth(aes(group = rarefyID), color = "grey", method = "glm", se = FALSE) +
+  geom_point(aes(group = rarefyID) ,color = "grey") +
+  geom_smooth(color = "black", method = "glm", se = FALSE) +
+  theme(legend.position = "none") 
+ggsave("fric_trends.png", fric_plot)
+```
+
+```{r}
+library(lme4)
+
+plot_metric <- function(metric_name, ylabel){
+
+  data <- metrics %>%
+    filter(metric == metric_name, !is.na(value), !is.infinite(value))
+
+  model_coef <- metric_mean_coef %>%
+    filter(metric == metric_name) %>%
+    select(term, estimate)
+  
+  intercept <- model_coef %>% filter(term == "(Intercept)") %>% pull(estimate)
+  slope <- model_coef %>% filter(term == "year") %>% pull(estimate)
+  
+  pred <- data.frame(year = min(data$year):max(data$year)) %>%
+    mutate(pred = intercept + year * slope)
+
+  trend_plot <- data %>%
+    left_join(pred, by = "year") %>%
+    #left_join(metadata %>% select(study_id, climate)) %>%
+    ggplot(aes(x = year, y = logvalue)) +
+    # geom_smooth(aes(color = climate, group = rarefyID), method = "glm", se = FALSE) +
+    # geom_point(aes(color = climate, group = rarefyID)) +
+    geom_point(aes(group = rarefyID) ,color = "grey", size = 0.30) +
+    geom_smooth(aes(color = climate_mod, group = rarefyID), method = "glm", se = FALSE, size = 0.5) +
+    #geom_smooth(color = "black", method = "glm", se = FALSE) +
+    geom_line(mapping = aes(y = pred)) +
+    theme(legend.position = "none") +
+    theme_classic() +
+    ylab(ylabel) +
+    labs(color = "Climate")
+  
+  ggsave(paste0(metric_name, "_trend.png"), trend_plot)
+  return(trend_plot)
+}
+
+plot_metric("FRic", "log(FD)")
+
+plot_map <- tibble(metric_name = c("S", "FRic", "FEve", "FDiv", "FDis"), 
+           ylabel = c("log(S)", "log(FD)", "log(Evenness)", "log(Divergence)", "log(Dispersion)"))
+pmap(plot_map, plot_metric)
+```
+
+```{r}
+
 ```
 
