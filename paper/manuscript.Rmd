@@ -84,12 +84,34 @@ invasive species.
 
 Biodiversity timeseries were obtained from the Biotime database, a
 global repository of assemblage timeseries with 386 individual studies
-from multiple taxa. Timeseries were paired with their functional trait
-data based on the predominant taxa in the timeseries. Due to limitations
-in trait data and processing feasability, we included only mammal, bird,
-and amphibian timeseries. Trait data were obtained from Elton Trait
-Database (mammals and birds; [@wilman2014]) and Amphibio (amphibians,
-[@oliveira2017]).
+from multiple taxa. Following best practices for the dataset
+[@blowes2019] to account for differences in scale between studies, we
+aggregated based on a grid system:
+
+*annotation of* `01_biotime_grid.R`
+
+-   label single location (SL) or multiple location (ML), ML with an
+    extent less than ((SL extent mean + SL extent SD) are assigned to be
+    SL
+
+    -   SL coords are the central lat and long, ML coords are the center
+        of convex hull of locations within a rarefyID (grid cell)
+
+-   exclude studies with one year of data
+
+-   create global grid with resolution based on the cutoff study area
+    size (SL extent mean + SL extent SD)
+
+-   collate observations for the same study within cells/years
+
+-   remove years (for count) or rarefyID's (for abundance and biomass)
+    that do not meet coverage requirement of
+
+Timeseries were paired with their functional trait data based on the
+predominant taxa in the timeseries. Due to limitations in trait data and
+processing feasability, we included only mammal, bird, and amphibian
+timeseries. Trait data were obtained from Elton Trait Database (mammals
+and birds; [@wilman2014]) and Amphibio (amphibians, [@oliveira2017]).
 
 -   something here describing where the data in those databases comes
     from, that they're species-level means, etc**;**
@@ -119,7 +141,7 @@ timeseries.
 
 -   raw abundance counts within a year for each plot
 
-#### *Functional diversity metrics* 
+#### *Functional diversity metrics*
 
 We calculated yearly metrics of functional diversity and turnover for
 each plot within each study. All available trait data for each study was
