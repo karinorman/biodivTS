@@ -22,7 +22,7 @@ header-includes:
 output: 
   rticles::elsevier_article:
     includes:
-      in_header: preamble.tex
+     # in_header: preamble.tex
 editor_options: 
   markdown: 
     wrap: 72
@@ -30,31 +30,47 @@ editor_options:
 
 ### Introduction
 
-Change is a fundamental process shaping ecological communities across
-the globe. Natural background rates of change are also now punctated by
-shifts as a result of anthropogenic pressures such as climate change,
-land use change, and invasive species. One of the most widely accepted
-phenomena characterizing the world's ecological communities is that of
-change.
-
 Ecological communities are experiencing unprecedented change as a result
 of anthropogenic pressures such as climate change, land use change, and
-invasive species. Impacts of these pressures are well documented in an
-accelerating global extinction rate (citation), shifts in the nature of
-well studied systems (natural history sense, e.g. forests (FIA), coral
-bleaching?), increasing fragmentation etc (how do we know things are
-bad??). Despite all this, a developing body of work indicates that one
-of the most ubiquitous metrics of an local-scale ecosystem, the number
-of species, does not show a clear global decline. How do we reconcile
-documented change in communities with this finding? We assess/make the
-case for/present a powerful alternative approach to understanding
-biodiveristy change through a functional lens by assess functional
-change through time for mammal, bird, and amphibian communities across
-the globe.
+invasive species. Impacts of these pressures are well documented on a
+global scale with an accelerating global extinction rate (citation) and
+fundamental changes in some of the most well-known systems (e.g. coral
+bleaching. At the local scale however the most common metric of
+biodiversity, species richness, tells a different story. Recent
+large-scale assessments of trends in biodiversity over time have shown a
+decoupling of community composition from richness [@brose2016], evidence
+of community-level regulation of richness [@gotelli2017], and no net
+change in local biodiversity despite widespread environmental change
+[@brown2001; @dornelas2014; @vellend2013;, @vellend2017] despite ongoing
+species turnover. While communities are clearly changing, our most
+common species-based approaches do not fully capture the nature of that
+change.
 
-The number of species (species richness) is the defualt approach for
-measuring community structure, especially in studies comparing trends
-across many assemblages of different types.
+Functional diversity offers a potentially powerful alternative for
+detecting and describing community change by providing a mechanistic
+link between the organisms in a system and the processes they perform
+[@mcgill2006]. By summarizing functional traits rather than species,
+functional diversity metrics capture the disproportionate impact of
+losses or gains of functionally unique species. Functional diversity
+metrics are particularly suited for understanding local-scale
+biodiversity patterns as they can detect shifts in community structure
+independent of species change. The rich history of connecting functional
+diversity to ecosystem function and resilience and community assembly
+provide further context in which to interpret changes in functional
+diversity.
+<!-- turn that last sentence into its own paragraph? e.g. what functional diversity tells us about community structure and function -->
+
+Assessments of broad-scale temporal change in functional diversity have
+previously been limited by a lack of functional trait data. The majority
+of work has therefore focused largely on system-specific studies with
+traits collected in situ. However, ongoing efforts to assemble
+functional traits for a variety of taxa have made synthesis of existing
+community assemblage data with functional traits possible for the first
+time [@trindade-santos2020; @jarzyna2016; @barnagaud2017], providing
+initial looks at how functional diversity changes on a broad-scale. We
+approach local biodiversity change through this lens, providing the
+first cross-taxa and cross-system assessment of functional diversity
+change through time.
 
 #### Paragraph 1 - communities are changing, we need to know how and what that means for ecosystem properties
 
