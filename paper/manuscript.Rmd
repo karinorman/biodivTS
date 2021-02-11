@@ -30,9 +30,31 @@ editor_options:
 
 ### Introduction
 
+Change is a fundamental process shaping ecological communities across
+the globe. Natural background rates of change are also now punctated by
+shifts as a result of anthropogenic pressures such as climate change,
+land use change, and invasive species. One of the most widely accepted
+phenomena characterizing the world's ecological communities is that of
+change.
+
 Ecological communities are experiencing unprecedented change as a result
 of anthropogenic pressures such as climate change, land use change, and
-invasive species.
+invasive species. Impacts of these pressures are well documented in an
+accelerating global extinction rate (citation), shifts in the nature of
+well studied systems (natural history sense, e.g. forests (FIA), coral
+bleaching?), increasing fragmentation etc (how do we know things are
+bad??). Despite all this, a developing body of work indicates that one
+of the most ubiquitous metrics of an local-scale ecosystem, the number
+of species, does not show a clear global decline. How do we reconcile
+documented change in communities with this finding? We assess/make the
+case for/present a powerful alternative approach to understanding
+biodiveristy change through a functional lens by assess functional
+change through time for mammal, bird, and amphibian communities across
+the globe.
+
+The number of species (species richness) is the defualt approach for
+measuring community structure, especially in studies comparing trends
+across many assemblages of different types.
 
 #### Paragraph 1 - communities are changing, we need to know how and what that means for ecosystem properties
 
