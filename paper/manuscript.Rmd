@@ -19,9 +19,9 @@ layout: 3p
 header-includes:
    - \usepackage{lineno}
    - \linenumbers
-output: 
-  rticles::elsevier_article:
-    includes:
+output: word_document
+  #rticles::elsevier_article:
+   # includes:
      # in_header: preamble.tex
 editor_options: 
   markdown: 
@@ -34,17 +34,16 @@ Ecological communities are experiencing unprecedented change as a result
 of anthropogenic pressures such as climate change, land use change, and
 invasive species. Impacts of these pressures are well documented on a
 global scale with an accelerating global extinction rate (citation) and
-fundamental changes in some of the most well-known systems (e.g. coral
-bleaching. At the local scale however the most common metric of
-biodiversity, species richness, tells a different story. Recent
-large-scale assessments of trends in biodiversity over time have shown a
-decoupling of community composition from richness [@brose2016], evidence
-of community-level regulation of richness [@gotelli2017], and no net
-change in local biodiversity despite widespread environmental change
-[@brown2001; @dornelas2014; @vellend2013;, @vellend2017] despite ongoing
-species turnover. While communities are clearly changing, our most
-common species-based approaches do not fully capture the nature of that
-change.
+fundamental changes in some of the most well-studied systems (e.g. coral
+bleaching). At the local scale however, species diversity tells a
+different story. Recent synthesis of local trends in biodiversity over
+time have shown a decoupling of community composition from richness
+[@brose2016], evidence of community-level regulation of richness
+[@gotelli2017], and no net change in local biodiversity despite
+widespread environmental change and ongoing species turnover
+[@brown2001; @dornelas2014; @vellend2013; , @vellend2017]. While
+communities are clearly changing, our most common species-based
+approaches do not fully capture the nature of that change.
 
 Functional diversity offers a potentially powerful alternative for
 detecting and describing community change by providing a mechanistic
@@ -54,140 +53,92 @@ functional diversity metrics capture the disproportionate impact of
 losses or gains of functionally unique species. Functional diversity
 metrics are particularly suited for understanding local-scale
 biodiversity patterns as they can detect shifts in community structure
-independent of species change. The rich history of connecting functional
-diversity to ecosystem function and resilience and community assembly
-provide further context in which to interpret changes in functional
-diversity.
-<!-- turn that last sentence into its own paragraph? e.g. what functional diversity tells us about community structure and function -->
+independent of species change.
+
+<!-- Functional diversity also sheds light on critical ecological processes. -->
+
+Functional diversity also sheds further light on critical ecosystem and
+community processes. For example, there is increasing evidence that
+functional diversity is a better predictor of ecosystem function than
+species-based metrics [@cadotte2011; @gagic2015], and that different
+facets of functional diversity also play a role in maintaining ecosystem
+stability [\@craven2018; @morin2014]. Further, biogeographic assessments
+of functional diversity give foundational insight into how community
+assembly plays out across systems at a standardized scale [@violle2014;
+@weiher2011].
+
+<!-- What can we say about how global change is impacting:stability, resilience, function, assembly, ecosystem processes (and ecosystem services) - need a functional grounding for all those concepts. Link specific patterns in FD metrics to impacts on those concepts. -->
 
 Assessments of broad-scale temporal change in functional diversity have
 previously been limited by a lack of functional trait data. The majority
 of work has therefore focused largely on system-specific studies with
-traits collected in situ. However, ongoing efforts to assemble
-functional traits for a variety of taxa have made synthesis of existing
-community assemblage data with functional traits possible for the first
-time [@trindade-santos2020; @jarzyna2016; @barnagaud2017], providing
-initial looks at how functional diversity changes on a broad-scale. We
-approach local biodiversity change through this lens, providing the
-first cross-taxa and cross-system assessment of functional diversity
-change through time.
+traits collected *in situ*. Ongoing efforts to assemble functional
+traits for a variety of taxa have made synthesis of existing community
+assemblage data and functional traits possible for the first time,
+providing initial looks at how functional diversity changes on a
+broad-scale [@trindade-santos2020; @jarzyna2016; @barnagaud2017].
+<!-- so what do these studies say? does that go here? --> However to
+date there has been no comprehensive assessment of functional change
+through time on a broad geographic and taxonomic extent.\
 
-#### Paragraph 1 - communities are changing, we need to know how and what that means for ecosystem properties
-
--   communities are changing as a result of a whole bunch of different
-    pressures
-
--   a few well documented phenomena: accelerating extinction rates, what
-    else?
-
--   it's essential for conservation and ecology to understand what these
-    changes mean for ecosystem properties like stability, function, etc
-
-#### Paragraph 2 - species diversity is the go to - it's not working
-
--   traditionally the most common method of capturing change in
-    communities is biodiversity
-
--   despite other well documented changes, species diversity doesn't
-    seem to capture local community-level changes
-    ([@dornelasAssemblageTimeSeries2014],
-    [@suppSpecieslevelCommunitylevelResponses2014],
-    [@vellendGlobalMetaanalysisReveals2013]), though there is evidence
-    of a significant increase in turnover
-
--   We need to look beyond species and their abundances to understand
-    the kinds of changes happening in communities
-
-#### Paragraph 3 - functional diversity is the answer!
-
--   Functional diversity provides a potentially powerful tool for
-    examining biodiversity changes because it captures characteristics
-    beyond species identity.
-
--   Powerful functional lens ([@mcgillRebuildingCommunityEcology2006])
-
--   Functional diversity can tells us a story independent of species
-    richness, as huge functional changes can occur while species
-    richness (or even diversity!) stays the same. This especially gives
-    insight into the turnover we know is occurring
-
--   We examine 100's of mammal, bird, and amphibian timeseries from the
-    Biotime database paired with functional trait data to assess overall
-    trends in functional change and identify where functional diversity
-    tells us a story beyond species richness
+Here we perform the first cross-taxa and cross-system assessment of
+functional diversity change through time. We assess 100's of mammal,
+bird, and amphibian functional diversity timeseries to determine how
+functional diversity change compares to species change. We also identify
+3 distinct types of functional change common across communities and
+their implications for ecological processes.
 
 ### Methods
 
 #### *Data*
 
-Biodiversity timeseries were obtained from the Biotime database, a
-global repository of assemblage timeseries with 386 individual studies
-from multiple taxa. Following best practices for the dataset
-[@blowes2019] to account for differences in scale between studies, we
-aggregated based on a grid system:
+We obtained mammal, bird, and amphibian timeseries from the Biotime
+database, a global repository of high quality assemblage timeseries. All
+studies included in the database follow consistent sampling protocols
+and represent full assemblages rather than population-level data
+[@dornelas2018]. Following best practices for the database [@blowes2019]
+and to maintain a consistently defined local scale, studies with
+multiple sample locations were split into separate time series based a
+global grid wherein all samples within a single grid cell were
+considered a single time series. The size of the cell was determined
+based on the sample extent of the single location studies (see
+[@dornelas2018] for details on how sample extents were defined), with
+the area of each cell set to one standard deviation away from the mean
+of the single extent locations.
 
-*annotation of* `01_biotime_grid.R`
-
--   label single location (SL) or multiple location (ML), ML with an
-    extent less than ((SL extent mean + SL extent SD) are assigned to be
-    SL
-
-    -   SL coords are the central lat and long, ML coords are the center
-        of convex hull of locations within a rarefyID (grid cell)
-
--   exclude studies with one year of data
-
--   create global grid with resolution based on the cutoff study area
-    size (SL extent mean + SL extent SD)
-
--   collate observations for the same study within cells/years
-
--   remove years (for count) or rarefyID's (for abundance and biomass)
-    that do not meet coverage requirement of
-
-Timeseries were paired with their functional trait data based on the
-predominant taxa in the timeseries. Due to limitations in trait data and
-processing feasability, we included only mammal, bird, and amphibian
-timeseries. Trait data were obtained from Elton Trait Database (mammals
-and birds; [@wilman2014]) and Amphibio (amphibians, [@oliveira2017]).
-
--   something here describing where the data in those databases comes
-    from, that they're species-level means, etc**;**
-
--   also more description of how biotime is structured (studies, some
-    with plots, etc)
+We gathered trait data from the Elton Trait Database (mammals and birds;
+[@wilman2014]) and Amphibio (amphibians, [@oliveira2017]). These
+databases include species-level means for traits that best define
+species' function in the community including body size, diet, and
+behavioral characteristics <!-- what's in the amphibian database? -->.
+For the full list of traits included in the analysis see the
+supplemental materials.
 
 In order to ensure taxonomic consistency across datasets, biotime
 species were paired with trait data based on their species identifier
 from the Integrated Taxonomic Information System database (citation),
-obtained through the taxadb R package
-([@normanTaxadbHighperformanceLocal2020]). If more than one species in
-the assemblage data resolved to the same identifier, observations were
-considered the same species. For trait data, traits for all species of
-the same identifier were averaged. Only studies with at least 85% trait
-coverage were included. In order to have a sufficient number of
-observation years to observe a trend and a sufficient number of species
-to calculate functional diversity metrics, studies with fewer than 4
-years and years with fewer than 4 species observed were also excluded.
+obtained through the taxadb R package ([@norman2020]). If more than one
+species in the assemblage data resolved to the same identifier,
+observations were considered the same species. For trait data, traits
+for all species of the same identifier were averaged. Only studies with
+at least 85% trait coverage were included. In order to have a sufficient
+number of species to calculate functional diversity metrics years with
+fewer than 4 species observed were excluded.
 
-Functional diversity metrics were calculated for total yearly abundance.
-For many studies there were a different number of samples within each
-year. To adjust for this inconsistency in sampling effort we used
-sample-based rarefaction by bootstrap resampling within year for each
-timeseries based on the smallest number of samples in a year for that
-timeseries.
-
--   raw abundance counts within a year for each plot
+Many studies had a variable number of samples within years. To adjust
+for this sampling effort inconsistency we used sample-based rarefaction
+by bootstrap resampling within years for each timeseries based on the
+smallest number of samples in a year for that timeseries.
 
 #### *Functional diversity metrics*
 
 We calculated yearly metrics of functional diversity and turnover for
-each plot within each study. All available trait data for each study was
-included in the trait matrix with the exception of traits that were the
-same value for all observed species in the study. All continuous traits
-were z-score scaled to give each trait equal weight in the trait space
-([@lepsQuantifyingInterpretingFunctional2006],
-[@schleuterUserGuideFunctional2010]).
+each timeseries within each study. All available trait data for each
+study was included in the trait matrix with the exception of traits that
+were the same value for all observed species in the study. All
+continuous traits were z-score scaled to give each trait equal weight in
+the trait space ([@leps2006; @schleuter2010]). We also calculated basic
+species richness, *S.*
 
 We used the function dbFD from the FD package (citation) to calculated
 PCA-scaled trait matrices for each species in a timeseries and
@@ -199,16 +150,10 @@ number of species and \$t\$ is the number of traits. This limitation
 allows for a sufficient number of axes to capture the trait space while
 maintaining computational feasibility for metric calculations. Metrics
 incorporated weighting based on either species abundance or biomass
-based on the methods for each study. The PCA-scaled trait matrices were
-then used as input to the BAT package....
-
--   needed euclidian distance matrix - used calliez correction because
-    it was a sufficient correction for all plots even though it led to a
-    marginal decrease in "quality" for the corrected hull
-
--   null model stuff via [@swensonBiogeographyFilteringWoody2012] - for
-    years where all species in the species pool were observed the null
-    model sd is zero for functional richness, since FRic does not
-    incorporate abundance changes. - drop species with trait match
+based on the methods for each study.
 
 #### *Analysis*
+
+We modeled each diversity metric using a Generalized Linear Mixed
+Effects model with year as the predictor and mixed effects of timeseries
+nested within study. <!-- more to come! -->
