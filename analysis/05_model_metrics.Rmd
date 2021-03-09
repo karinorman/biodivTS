@@ -22,8 +22,9 @@ metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
   select(-cYEAR) %>%
   pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  mutate(logvalue = log(value + abs(floor(min(na.omit(value)))))) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
-  filter(!is.na(value))
+  mutate(logvalue = log(value + abs(floor(min(na.omit(value))))),
+         year_scaled = scale(year)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  filter(!is.na(value)) 
 ```
 ####Data exploration
 
@@ -55,6 +56,25 @@ hist_numYears <- metrics %>%
   theme(panel.grid.minor.x = element_blank())
 ```
 
+Visualize distributions of response
+```{r}
+metrics %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  ggplot() +
+  geom_histogram(aes(x = logvalue),
+                 bins = 60) +
+  facet_wrap(~metric, scales = "free") +
+  labs(title = "Distribution of Log values")
+
+metrics %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  ggplot() +
+  geom_histogram(aes(x = value),
+                 bins = 60) +
+  facet_wrap(~metric, scales = "free") +
+  labs(title = "Distribution of raw values")
+```
+
 Fit GLM to overall metric trend
 
 Convergence problems!! See here:
@@ -71,12 +91,21 @@ performance::check_model()
 ```{r}
 # model for overall trend (random effect w/varying intercept)
 metric_mean_fit <- metrics %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S_int")) %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year + (1|study_id/rarefyID), 
-                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))),
-           null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), 
-                                 data = .x, control = lmerControl(optimizer ="Nelder_Mead"))),
+  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (1|study_id/rarefyID), data = .x,
+                  control = lmerControl(optCtrl = list(maxit = 1e9,
+                                                    maxfun = 1e9,
+                                                    xtol_abs = 1e-11,
+                                                    ftol_abs = 1e-11,
+                                                    maxeval = 1e9)))),
+         null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), data = .x,
+                  control = lmerControl(optCtrl = list(maxit = 1e9,
+                                                    maxfun = 1e9,
+                                                    xtol_abs = 1e-11,
+                                                    ftol_abs = 1e-11,
+                                                    maxeval = 1e9)))),
+           
            test = map2(model, null_model, anova),
            test_res = map(test, tidy),
            coef = map(model, tidy)
@@ -85,18 +114,16 @@ metric_mean_fit <- metrics %>%
   select(metric, model, coef, p.value) %>%
   filter(!is.na(p.value)) %>%
   unnest(cols = c(coef)) %>%
-  filter(term == "year") %>%
+  filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
 
 metric_mean_fit_slope <- metrics %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "S_int")) %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ (year|study_id/rarefyID), 
-                                 data = .x, #control = lmerControl(optimizer ="Nelder_Mead"),
-                                 REML = FALSE)),
-           null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), 
-                                 data = .x, #control = lmerControl(optimizer ="Nelder_Mead"),
-                                 REML = FALSE)),
+  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
+                                 data = .x)),
+           null_model = map(data, ~lmer(logvalue ~ (year_scaled|study_id/rarefyID), 
+                                 data = .x)),
            test = map2(model, null_model, anova),
            test_res = map(test, tidy),
            coef = map(model, tidy)
@@ -105,7 +132,7 @@ metric_mean_fit_slope <- metrics %>%
   select(metric, model, coef, p.value) %>%
   filter(!is.na(p.value)) %>%
   unnest(cols = c(coef)) %>%
-  filter(term == "year") %>%
+  filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
 ```
 
@@ -146,8 +173,52 @@ indiv_ts_coef <- bind_rows(indiv_ts_fit, indiv_ts_sing_fit) %>%
   select(-data, -model) %>% 
   unnest(cols = c(coef))
 ```
-
+Fit a single model to play around with 
 ```{r}
+eve <- metrics %>% 
+  filter(metric == "FEve")
+
+feve_fit <- glmer(value ~ year + (1|study_id/rarefyID), data = eve, family = Gamma,
+                  control = glmerControl(optCtrl = list(maxit = 1e9,
+                                                    maxfun = 1e9,
+                                                    xtol_abs = 1e-11,
+                                                    ftol_abs = 1e-11,
+                                                    maxeval = 1e9)))
+
+#find best optimizer
+diff_optims <- allFit(feve_fit, maxfun = 1e5)
+
+
+optimx_options <- c("L-BFGS-B", "nlminb", "nlm", "bobyqa", "nmkb", "hjkb")
+
+for(i in 1:length(optimx_options)){
+  model_flex <- glmer(value ~ year + (1|study_id/rarefyID), data = eve, family = Gamma,
+                     control = glmerControl(optimizer = "optimx",
+                                           optCtrl = list(method = optimx_options[i],
+                                                                   maxit = 1e9)))
+  print(model_flex@optinfo$conv$lme4$messages)
+}
+
+algoptions <- c("NLOPT_LN_PRAXIS", "NLOPT_GN_CRS2_LM",
+"NLOPT_LN_COBYLA", "NLOPT_LN_NEWUOA",
+"NLOPT_LN_NEWUOA_BOUND", "NLOPT_LN_NELDERMEAD",
+"NLOPT_LN_SBPLX", "NLOPT_LN_BOBYQA")
+
+for(i in 1:length(algoptions)){
+  model_flex <- glmer(value ~ year + (1|study_id/rarefyID), data = eve, family = Gamma,
+                     control = glmerControl(optimizer = "nloptwrap",
+                                           optCtrl = list(algorithm = algoptions[i],
+                                                          maxeval = 1e7,
+                                                          xtol_abs = 1e-9,
+                                                          ftol_abs = 1e-9)))
+  if(is.null(model_flex@optinfo$conv$lme4$messages)){
+    print(paste0("One of the nloptwrap options, ", algoptions[i],", worked!"))
+    print(summary(model_flex))
+    break
+  }
+}
+
+
 fit_mod <- function(data){
   print(unique(data$rarefyID)) %>%
   lmer(logvalue ~ (1 + year|rarefyID), 

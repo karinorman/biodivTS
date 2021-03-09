@@ -22,14 +22,17 @@ metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
 ```
 
 ```{r}
-usa <- map_data("usa")
+world <- map_data("world")
 
 plt <- ggplot() +
-  geom_polygon(data = usa, aes(x=long, y = lat, group = group), fill = NA, color = "black") +
-  coord_fixed(1.3)
+  geom_polygon(data = world, aes(x=long, y = lat, group = group), fill = NA, color = "black", size = .25) +
+  coord_fixed(1.3) +
+  theme_minimal()
 
 plt +
-  geom_point(data = biotime_data %>% filter(taxa == "Fish"), aes(x = longitude, y = latitude), color = "black", size = .25)
+  geom_point(data = metrics %>% distinct(cent_lat, cent_long), aes(x = cent_long, y = cent_lat), color = "#cc5968", size = .75)
+
+ggsave("study_map.png")
 
 ```
 
