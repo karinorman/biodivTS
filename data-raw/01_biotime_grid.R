@@ -233,198 +233,206 @@ bt_grid <- bt_grid %>% unite(col=rarefyID, STUDY_ID, cell, sep="_", remove=FALSE
 # add column for ObsEventID (STUDY_ID + PLOT + YEAR = discrete sampling events within a year)
 bt_grid <- bt_grid %>% unite(col=ObsEventID, rarefyID, PLOT, YEAR, sep="_", remove=FALSE)
 
-#save locally
-usethis::use_data(bt_grid)
-
-#save to cache
-pins::pin(bt_grid, board = "github")
-
-
-##==================================== EXPLORE AND FILTER ON COVERAGE ========================================
-##	first collate taxa within cells, to calculate coverage for count data (see below for incidence)
 bt_grid_collate <- bt_grid %>%
-  group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
+  group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, BIOMASS_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
   summarise(
     Abundance = sum(as.numeric(Abundance), na.rm=TRUE),
     Biomass = sum(as.numeric(Biomass), na.rm=TRUE)) %>%
-  ungroup()
-
-abund_coverage <- bt_grid_collate %>%
-  # get only rows representing count data (abundance)
-  filter(ABUNDANCE_TYPE!='Presence/Absence' & ABUNDANCE_TYPE!='<NA>') %>%
-  # remove zeroes and NAs(some studies are designated count, but record Biomass estimates)
-  filter(Abundance > 0 & !is.na(Abundance)) %>%
-  group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, rarefyID, STUDY_ID, YEAR, cell) %>%
-  summarise(
-    # how many singletons
-    singletons = sum(Abundance==1),
-    # how many doubletons
-    doubletons = sum(Abundance==2),
-    # how many individuals in total sample
-    N = sum(Abundance),
-    # eqn 4a in Chao & Jost 2012 Ecology (==eqn 12 in Chao et al 2014 Ecol Monogr)
-    Chat = 1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2*doubletons)),
-    # with fix from Chao et al 2014 Subroutine for iNEXT code (appendix)
-    # correction for communities with no doubletons (this prevents NaN results for either singletons==0 or doubletons==0)
-    Chat_corrected = ifelse(doubletons>0,
-                            1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2*doubletons)),
-                            1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2))),
-    # the iNEXT coverage calculation has some extras in it that I don't understand
-    # e.g., it corrects using f0.hat, the number of unobserved species (Chao1 estimator)? Why? Exactly how? Ref?
-    f1_iNEXT = DataInfo(Abundance)$f1,
-    f2_iNEXT = DataInfo(Abundance)$f2,
-    #n_iNEXT = DataInfo(Abundance)$n,
-    coverage = DataInfo(Abundance)$SC) %>%
-  ungroup()
-
-# are my estimates of singletons and doubletons equal to the iNEXT estimates?
-sum(abund_coverage$singletons!=abund_coverage$f1_iNEXT)		# yes, good
-sum(abund_coverage$doubletons!=abund_coverage$f2_iNEXT)		# yes, good
-
-#png('count_coverage_comparison_cell_level', width=800, height=600)
-with(abund_coverage, plot(x=Chat, y=coverage, type='n', xlim=c(0,1), ylim=c(0, 1),
-                                xlab='Chat or Chat_corrected', ylab='Coverage (iNEXT)', main='Count data coverage calculation check'))
-with(abund_coverage, points(x=Chat, y=coverage))
-with(abund_coverage, points(x=Chat_corrected, y=coverage, col=2))
-abline(c(0,1), lty=2)
-legend('bottomright', legend=c('eqn4', 'eqn4 corrected for f2=0'), col=c(1,2), pch=1, lty=1)
-#dev.off()
-
-mn=mean(abund_coverage$Chat_corrected, na.rm=TRUE)
-sd=sd(abund_coverage$Chat_corrected, na.rm=TRUE)
-ggplot(abund_coverage, aes(Chat_corrected)) + geom_histogram(aes(fill=Chat_corrected>=mn-sd), binwidth=0.05) + geom_vline(xintercept=mn)
-
-#-------------------
-## PRESENCE/ABSENCE coverage (for INCIDENCE DATA)... by rarefyID (year as samples)
-bt_grid_collate_incidence <- bt_grid %>%
-  # incidence data and remove NAs
-  filter(ABUNDANCE_TYPE=='Presence/Absence' & ABUNDANCE_TYPE!='<NA>') %>%
-  filter(!is.na(Abundance)) %>%
-  #took out ObsEventID and PLOT as groups b/c no distinct plots for P/A data (Each year has only 1 sample)
-  group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
-  summarise(
-    Abundance = sum(Abundance, na.rm=TRUE)) %>%
   ungroup() %>%
-  dplyr::select(-CLIMATE, -REALM, -TAXA, -StudyMethod, -ABUNDANCE_TYPE) %>%
-  # create incidence column
-  mutate(incidence = ifelse(Abundance==0, 0, 1))
-
-pa_coverage <- data.frame()
-for (r in unique(bt_grid_collate_incidence$rarefyID)){
-  dat <- bt_grid_collate_incidence[bt_grid_collate_incidence$rarefyID == r,]
-  if(length(unique(dat$YEAR))<2){ next }
-  dat_pa <- dat %>%
-    dplyr::select(YEAR, Species, incidence) %>%
-    complete(YEAR, Species, fill = list(incidence = 0)) %>%
-    #each row is a unique cell and Species, each column is a year
-    spread(YEAR, incidence)
-  # how many singletons (present in only 1 year)    #FIXME: This is a *really* ugly way to count
-  singletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==1))
-  # how many doubletons (present in only 2 years)
-  doubletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==2))
-  # how many incidences in the whole matrix
-  N <- length(which(dat_pa[,2:ncol(dat_pa)] == 1))
-  # how many samples (years) in the matrix
-  T <- ncol(dat_pa) - 1
-  # Chat for incidence: eqn Chat_sample(T) from Table 2, Chao et al. 2014, similar to eqn 4a in Chao & Jost Ecology
-  Chat_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2*doubletons))
-  # with fix from Chao et al 2014 Subroutine for iNEXT code (appendix)
-  # correction for communities with no doubletons (this prevents NaN results for
-  # either singletons==0 or doubletons==0)
-  if (doubletons > 0) {
-    Chat_corrected_i <- Chat_i  }
-  else {
-    Chat_corrected_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2))  }
-  calcs <- data.frame(rarefyID=r, singletons, doubletons, N, Chat_i, Chat_corrected_i)
-  pa_coverage <- rbind(pa_coverage, calcs)
-  rm(dat_pa)
-}
-
-#what is the mean and sd of the presence data?
-mean(pa_coverage$Chat_corrected_i)
-sd(pa_coverage$Chat_corrected_i)
-#plot the presence coverage data using the abundance-based mean and standard deviation as a guide
-ggplot(pa_coverage, aes(Chat_corrected_i)) + geom_histogram(aes(fill=Chat_corrected_i>=mn-sd), binwidth=0.05) + geom_vline(xintercept=mn)
-
-#-------------------
-# BIOMASS DATA coverage (as INCIDENCE)... by rarefyID (year as samples)
-bt_grid_collate_biomass <- bt_grid %>%
-  # incidence data and remove NAs
-  filter(is.na(ABUNDANCE_TYPE)) %>%
-  filter(!is.na(Biomass)) %>%
-  #took out ObsEventID and PLOT as groups b/c no distinct plots for biomass data (Few years have > 1 sample)
-  group_by(CLIMATE, REALM, TAXA, StudyMethod, BIOMASS_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
-  summarise(
-    Biomass = sum(Biomass, na.rm=TRUE)) %>%
-  ungroup() %>%
-  dplyr::select(-CLIMATE, -REALM, -TAXA, -StudyMethod, -BIOMASS_TYPE) %>%
-  # create incidence column
-  mutate(incidence = ifelse(Biomass==0, 0, 1))
-
-bm_coverage <- data.frame()
-for (r in unique(bt_grid_collate_biomass$rarefyID)){
-  dat <- bt_grid_collate_biomass[bt_grid_collate_biomass$rarefyID == r,]
-  if(length(unique(dat$YEAR))<2){ next }
-  dat_pa <- dat %>%
-    dplyr::select(YEAR, Species, incidence) %>%
-    complete(YEAR, Species, fill = list(incidence = 0)) %>%
-    #each row is a unique cell and Species, each column is a year
-    spread(YEAR, incidence)
-  # how many singletons (present in only 1 year)    #FIXME: This is a *really* ugly way to count
-  singletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==1))
-  # how many doubletons (present in only 2 years)
-  doubletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==2))
-  # how many incidences in the whole matrix
-  N <- length(which(dat_pa[,2:ncol(dat_pa)] == 1))
-  # how many samples (years) in the matrix
-  T <- ncol(dat_pa) - 1
-  # Chat for incidence: eqn Chat_sample(T) from Table 2, Chao et al. 2014, similar to eqn 4a in Chao & Jost Ecology
-  Chat_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2*doubletons))
-  # with fix from Chao et al 2014 Subroutine for iNEXT code (appendix)
-  # correction for communities with no doubletons (this prevents NaN results for
-  # either singletons==0 or doubletons==0)
-  if (doubletons > 0) {
-    Chat_corrected_i <- Chat_i  }
-  else {
-    Chat_corrected_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2))  }
-  calcs <- data.frame(rarefyID=r, singletons, doubletons, N, Chat_i, Chat_corrected_i)
-  bm_coverage <- rbind(bm_coverage, calcs)
-  rm(dat_pa)
-}
-
-mean(bm_coverage$Chat_corrected_i)
-sd(bm_coverage$Chat_corrected_i)
-#plot the presence coverage data using the abundance-based mean and standard deviation as a guide
-ggplot(bm_coverage, aes(Chat_corrected_i)) + geom_histogram(aes(fill=Chat_corrected_i>=mn-sd), binwidth=0.05)
-
-
-## Make a list of the rarefyIDs to keep for analysis based on coverage threshold (>= mn-sd of count data)
-##  NOTE: Count data will drop individual years that don't meet the criteria, and Presence and Biomass data will drop entire rarefyIDs
-countkeep <- unique(abund_coverage[abund_coverage$Chat_corrected>=mn-sd,c('rarefyID', 'YEAR')])
-countkeep <- unite(countkeep, col=keep, rarefyID, YEAR, sep="_")
-countkeep <- as.vector(countkeep$keep)
-
-pakeep <- unique(pa_coverage[pa_coverage$Chat_corrected_i>=mn-sd,'rarefyID']) # presence
-bmkeep <- unique(bm_coverage[bm_coverage$Chat_corrected_i>=mn-sd,'rarefyID']) # biomass
-
-
-# Filter gridded studies for the coverage cutoff, prior to rarefaction
-bt_count_filtered <- bt_grid %>%
-  unite(col=keep, rarefyID, YEAR, sep="_", remove=FALSE) %>%
-  filter(keep %in% countkeep) %>%
-  dplyr::select(-keep)
-
-bt_pabm_filtered <- bt_grid %>%
-  filter(rarefyID %in% pakeep | rarefyID %in% bmkeep)
-
-# DATASET filtered for coverage (>= mean-sd of count data) to be used for rarefaction
-#   Note: count data was filtered at rarefyID + YEAR, and presence and biomass data was filtered at rarefyID
-bt_grid_filtered <- rbind(bt_count_filtered, bt_pabm_filtered)
+  group_by(rarefyID) %>%
+  filter(n_distinct(YEAR) > 1)
 
 #save locally
-usethis::use_data(dgg)
-usethis::use_data(bt_grid_filtered)
+usethis::use_data(bt_grid_collate)
 
 #save to cache
-pins::pin(dgg, board = "github")
-pins::pin(bt_grid_filtered, board = "github")
+pins::pin(bt_grid_collate, board = "github")
+
+##==================================== EXPLORE AND FILTER ON COVERAGE ========================================
+# ##	first collate taxa within cells, to calculate coverage for count data (see below for incidence)
+# bt_grid_collate <- bt_grid %>%
+#   group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
+#   summarise(
+#     Abundance = sum(as.numeric(Abundance), na.rm=TRUE),
+#     Biomass = sum(as.numeric(Biomass), na.rm=TRUE)) %>%
+#   ungroup()
+#
+# abund_coverage <- bt_grid_collate %>%
+#   # get only rows representing count data (abundance)
+#   filter(ABUNDANCE_TYPE!='Presence/Absence' & ABUNDANCE_TYPE!='<NA>') %>%
+#   # remove zeroes and NAs(some studies are designated count, but record Biomass estimates)
+#   filter(Abundance > 0 & !is.na(Abundance)) %>%
+#   group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, rarefyID, STUDY_ID, YEAR, cell) %>%
+#   summarise(
+#     # how many singletons
+#     singletons = sum(Abundance==1),
+#     # how many doubletons
+#     doubletons = sum(Abundance==2),
+#     # how many individuals in total sample
+#     N = sum(Abundance),
+#     # eqn 4a in Chao & Jost 2012 Ecology (==eqn 12 in Chao et al 2014 Ecol Monogr)
+#     Chat = 1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2*doubletons)),
+#     # with fix from Chao et al 2014 Subroutine for iNEXT code (appendix)
+#     # correction for communities with no doubletons (this prevents NaN results for either singletons==0 or doubletons==0)
+#     Chat_corrected = ifelse(doubletons>0,
+#                             1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2*doubletons)),
+#                             1 - (singletons/N) * (((N-1)*singletons)/((N-1)*singletons + 2))),
+#     # the iNEXT coverage calculation has some extras in it that I don't understand
+#     # e.g., it corrects using f0.hat, the number of unobserved species (Chao1 estimator)? Why? Exactly how? Ref?
+#     f1_iNEXT = DataInfo(Abundance)$f1,
+#     f2_iNEXT = DataInfo(Abundance)$f2,
+#     #n_iNEXT = DataInfo(Abundance)$n,
+#     coverage = DataInfo(Abundance)$SC) %>%
+#   ungroup()
+#
+# # are my estimates of singletons and doubletons equal to the iNEXT estimates?
+# sum(abund_coverage$singletons!=abund_coverage$f1_iNEXT)		# yes, good
+# sum(abund_coverage$doubletons!=abund_coverage$f2_iNEXT)		# yes, good
+#
+# #png('count_coverage_comparison_cell_level', width=800, height=600)
+# with(abund_coverage, plot(x=Chat, y=coverage, type='n', xlim=c(0,1), ylim=c(0, 1),
+#                                 xlab='Chat or Chat_corrected', ylab='Coverage (iNEXT)', main='Count data coverage calculation check'))
+# with(abund_coverage, points(x=Chat, y=coverage))
+# with(abund_coverage, points(x=Chat_corrected, y=coverage, col=2))
+# abline(c(0,1), lty=2)
+# legend('bottomright', legend=c('eqn4', 'eqn4 corrected for f2=0'), col=c(1,2), pch=1, lty=1)
+# #dev.off()
+#
+# mn=mean(abund_coverage$Chat_corrected, na.rm=TRUE)
+# sd=sd(abund_coverage$Chat_corrected, na.rm=TRUE)
+# ggplot(abund_coverage, aes(Chat_corrected)) + geom_histogram(aes(fill=Chat_corrected>=mn-sd), binwidth=0.05) + geom_vline(xintercept=mn)
+#
+# #-------------------
+# ## PRESENCE/ABSENCE coverage (for INCIDENCE DATA)... by rarefyID (year as samples)
+# bt_grid_collate_incidence <- bt_grid %>%
+#   # incidence data and remove NAs
+#   filter(ABUNDANCE_TYPE=='Presence/Absence' & ABUNDANCE_TYPE!='<NA>') %>%
+#   filter(!is.na(Abundance)) %>%
+#   #took out ObsEventID and PLOT as groups b/c no distinct plots for P/A data (Each year has only 1 sample)
+#   group_by(CLIMATE, REALM, TAXA, StudyMethod, ABUNDANCE_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
+#   summarise(
+#     Abundance = sum(Abundance, na.rm=TRUE)) %>%
+#   ungroup() %>%
+#   dplyr::select(-CLIMATE, -REALM, -TAXA, -StudyMethod, -ABUNDANCE_TYPE) %>%
+#   # create incidence column
+#   mutate(incidence = ifelse(Abundance==0, 0, 1))
+#
+# pa_coverage <- data.frame()
+# for (r in unique(bt_grid_collate_incidence$rarefyID)){
+#   dat <- bt_grid_collate_incidence[bt_grid_collate_incidence$rarefyID == r,]
+#   if(length(unique(dat$YEAR))<2){ next }
+#   dat_pa <- dat %>%
+#     dplyr::select(YEAR, Species, incidence) %>%
+#     complete(YEAR, Species, fill = list(incidence = 0)) %>%
+#     #each row is a unique cell and Species, each column is a year
+#     spread(YEAR, incidence)
+#   # how many singletons (present in only 1 year)    #FIXME: This is a *really* ugly way to count
+#   singletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==1))
+#   # how many doubletons (present in only 2 years)
+#   doubletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==2))
+#   # how many incidences in the whole matrix
+#   N <- length(which(dat_pa[,2:ncol(dat_pa)] == 1))
+#   # how many samples (years) in the matrix
+#   T <- ncol(dat_pa) - 1
+#   # Chat for incidence: eqn Chat_sample(T) from Table 2, Chao et al. 2014, similar to eqn 4a in Chao & Jost Ecology
+#   Chat_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2*doubletons))
+#   # with fix from Chao et al 2014 Subroutine for iNEXT code (appendix)
+#   # correction for communities with no doubletons (this prevents NaN results for
+#   # either singletons==0 or doubletons==0)
+#   if (doubletons > 0) {
+#     Chat_corrected_i <- Chat_i  }
+#   else {
+#     Chat_corrected_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2))  }
+#   calcs <- data.frame(rarefyID=r, singletons, doubletons, N, Chat_i, Chat_corrected_i)
+#   pa_coverage <- rbind(pa_coverage, calcs)
+#   rm(dat_pa)
+# }
+#
+# #what is the mean and sd of the presence data?
+# mean(pa_coverage$Chat_corrected_i)
+# sd(pa_coverage$Chat_corrected_i)
+# #plot the presence coverage data using the abundance-based mean and standard deviation as a guide
+# ggplot(pa_coverage, aes(Chat_corrected_i)) + geom_histogram(aes(fill=Chat_corrected_i>=mn-sd), binwidth=0.05) + geom_vline(xintercept=mn)
+#
+# #-------------------
+# # BIOMASS DATA coverage (as INCIDENCE)... by rarefyID (year as samples)
+# bt_grid_collate_biomass <- bt_grid %>%
+#   # incidence data and remove NAs
+#   filter(is.na(ABUNDANCE_TYPE)) %>%
+#   filter(!is.na(Biomass)) %>%
+#   #took out ObsEventID and PLOT as groups b/c no distinct plots for biomass data (Few years have > 1 sample)
+#   group_by(CLIMATE, REALM, TAXA, StudyMethod, BIOMASS_TYPE, rarefyID, STUDY_ID, YEAR, cell, Species) %>%
+#   summarise(
+#     Biomass = sum(Biomass, na.rm=TRUE)) %>%
+#   ungroup() %>%
+#   dplyr::select(-CLIMATE, -REALM, -TAXA, -StudyMethod, -BIOMASS_TYPE) %>%
+#   # create incidence column
+#   mutate(incidence = ifelse(Biomass==0, 0, 1))
+#
+# bm_coverage <- data.frame()
+# for (r in unique(bt_grid_collate_biomass$rarefyID)){
+#   dat <- bt_grid_collate_biomass[bt_grid_collate_biomass$rarefyID == r,]
+#   if(length(unique(dat$YEAR))<2){ next }
+#   dat_pa <- dat %>%
+#     dplyr::select(YEAR, Species, incidence) %>%
+#     complete(YEAR, Species, fill = list(incidence = 0)) %>%
+#     #each row is a unique cell and Species, each column is a year
+#     spread(YEAR, incidence)
+#   # how many singletons (present in only 1 year)    #FIXME: This is a *really* ugly way to count
+#   singletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==1))
+#   # how many doubletons (present in only 2 years)
+#   doubletons <- length(which(rowSums(dat_pa[,2:ncol(dat_pa)])==2))
+#   # how many incidences in the whole matrix
+#   N <- length(which(dat_pa[,2:ncol(dat_pa)] == 1))
+#   # how many samples (years) in the matrix
+#   T <- ncol(dat_pa) - 1
+#   # Chat for incidence: eqn Chat_sample(T) from Table 2, Chao et al. 2014, similar to eqn 4a in Chao & Jost Ecology
+#   Chat_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2*doubletons))
+#   # with fix from Chao et al 2014 Subroutine for iNEXT code (appendix)
+#   # correction for communities with no doubletons (this prevents NaN results for
+#   # either singletons==0 or doubletons==0)
+#   if (doubletons > 0) {
+#     Chat_corrected_i <- Chat_i  }
+#   else {
+#     Chat_corrected_i <- 1 - (singletons/N) * (((T-1)*singletons)/((T-1)*singletons + 2))  }
+#   calcs <- data.frame(rarefyID=r, singletons, doubletons, N, Chat_i, Chat_corrected_i)
+#   bm_coverage <- rbind(bm_coverage, calcs)
+#   rm(dat_pa)
+# }
+#
+# mean(bm_coverage$Chat_corrected_i)
+# sd(bm_coverage$Chat_corrected_i)
+# #plot the presence coverage data using the abundance-based mean and standard deviation as a guide
+# ggplot(bm_coverage, aes(Chat_corrected_i)) + geom_histogram(aes(fill=Chat_corrected_i>=mn-sd), binwidth=0.05)
+#
+#
+# ## Make a list of the rarefyIDs to keep for analysis based on coverage threshold (>= mn-sd of count data)
+# ##  NOTE: Count data will drop individual years that don't meet the criteria, and Presence and Biomass data will drop entire rarefyIDs
+# countkeep <- unique(abund_coverage[abund_coverage$Chat_corrected>=mn-sd,c('rarefyID', 'YEAR')])
+# countkeep <- unite(countkeep, col=keep, rarefyID, YEAR, sep="_")
+# countkeep <- as.vector(countkeep$keep)
+#
+# pakeep <- unique(pa_coverage[pa_coverage$Chat_corrected_i>=mn-sd,'rarefyID']) # presence
+# bmkeep <- unique(bm_coverage[bm_coverage$Chat_corrected_i>=mn-sd,'rarefyID']) # biomass
+#
+#
+# # Filter gridded studies for the coverage cutoff, prior to rarefaction
+# bt_count_filtered <- bt_grid %>%
+#   unite(col=keep, rarefyID, YEAR, sep="_", remove=FALSE) %>%
+#   filter(keep %in% countkeep) %>%
+#   dplyr::select(-keep)
+#
+# bt_pabm_filtered <- bt_grid %>%
+#   filter(rarefyID %in% pakeep | rarefyID %in% bmkeep)
+#
+# # DATASET filtered for coverage (>= mean-sd of count data) to be used for rarefaction
+# #   Note: count data was filtered at rarefyID + YEAR, and presence and biomass data was filtered at rarefyID
+# bt_grid_filtered <- rbind(bt_count_filtered, bt_pabm_filtered)
+#
+# #save locally
+# usethis::use_data(dgg)
+# usethis::use_data(bt_grid_filtered)
+#
+# #save to cache
+# pins::pin(dgg, board = "github")
+# pins::pin(bt_grid_filtered, board = "github")
