@@ -60,7 +60,7 @@ example, there is increasing evidence that functional diversity is a
 better predictor of ecosystem function than species-based metrics
 [@cadotte2011; @gagic2015], and that different facets of functional
 diversity also play a role in maintaining ecosystem stability
-[\@craven2018; @morin2014]. Further, biogeographic assessments of
+[@craven2018; @morin2014]. Further, biogeographic assessments of
 functional diversity give foundational insight into how community
 assembly plays out across systems at a standardized scale [@violle2014;
 @weiher2011].
@@ -149,7 +149,7 @@ feasibility for metric calculations. Metrics incorporated weighting
 based on either species abundance or biomass based on the methods for
 each study.
 
-***Null Models***
+#### ***Null Models***
 
 In order to control for changes in functional diversity metrics due to
 species richness, we calculated the standardized effect size (SES) for
