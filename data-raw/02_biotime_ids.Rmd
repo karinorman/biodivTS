@@ -73,14 +73,13 @@ Replace NA plots with a plot label (these are studies with no plot subdivision)
 ### Or, from the grid processing script
 ```{r}
 #file created by 01_biotime_grid.R
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
-bt_grid_col <- pins::pin_get("bt-grid-collate", board = "github")
+bt_grid <- pins::pin_get("bt-grid", board = "github_data")
 
-data <- bt_grid_col %>%
+data <- bt_grid %>%
   rename_with(tolower) %>%
   mutate(species = str_replace(species, "_", " "))
 
-rm(bt_grid_col)
+rm(bt_grid)
 ```
 
 ### Now get id's
