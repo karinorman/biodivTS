@@ -73,7 +73,8 @@ Replace NA plots with a plot label (these are studies with no plot subdivision)
 ### Or, from the grid processing script
 ```{r}
 #file created by 01_biotime_grid.R
-bt_grid <- pins::pin_get("bt-grid", board = "github_data")
+pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master", name = "github")
+bt_grid <- pins::pin_get("bt-grid", board = "github")
 
 data <- bt_grid %>%
   rename_with(tolower) %>%
@@ -117,7 +118,9 @@ biotime_ids <- unres %>%
     "ITIS:527684", 
     "ITIS:782604", 
     "ITIS:159807", 
-    "ITIS:28034"
+    "ITIS:28034",
+    "ITIS:71868",
+    "ITIS:683103"
   )) %>%
   bind_rows(biotime_ids %>% filter(!sort %in% unres$sort)) #join to resolved ID's, excluding the observations we resolved manually
 

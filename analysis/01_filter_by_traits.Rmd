@@ -71,7 +71,7 @@ Get data w/traits for all studies that have >85% trait coverage
 `scientificName` is `NA` when there was no trait data for a given ID
 ```{r}
 #set coverage threshold for analysis dataset
-percent <- 0.85
+percent <- 0.75
 
 traits <- list(elton_bird, elton_mamm, amphibio)
 
@@ -102,11 +102,6 @@ biotime_traits <- comp_biotime_traits %>%
   group_by(rarefyid, year) %>%
   filter(n_distinct(id) > 4) %>%
   ungroup()
-```
-
-```{r}
-usethis::use_data(biotime_traits)
-pins::pin(biotime_traits, board = "github")
 ```
 
 Get biotime data filtered by trait coverage
