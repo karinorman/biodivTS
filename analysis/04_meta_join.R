@@ -42,11 +42,11 @@ rarefied_medians <- rarefied_medians %>% filter(!(rarefyID %in% one_year_only$ra
 
 ##	centre year so intercept is mean year of time series
 ##  add log-transformed responses for modelling
-rarefied_medians <- rarefied_medians %>%
-  mutate(cYEAR = YEAR - mean(YEAR),
-         logS = log(S),
-         logN = log(N),
-         logENSPIE = log(ENSPIE))
+# rarefied_medians <- rarefied_medians %>%
+#   mutate(cYEAR = YEAR - mean(YEAR),
+#          logS = log(S),
+#          logN = log(N),
+#          logENSPIE = log(ENSPIE))
 
 ##	want coordinates of rarefyIDs (cells)
 #load('~/Dropbox/BiogeoBioTIME/rarefyID_cell_centre_011017.Rdata')
