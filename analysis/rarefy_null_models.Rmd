@@ -1,0 +1,147 @@
+---
+title: "Rarefied Null Models"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(FD)
+library(furrr)
+
+pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
+```
+
+Get dataframe of filenames and corresponding rarefyID's
+```{r}
+path <- here::here("data", "rarefied_samples")
+files <- list.files(path) %>%
+  paste0(path, "/", .)
+
+samples <- purrr::map_dfr(files, function(x) {load(x)
+  return(rare_comm_save)
+	}) %>% distinct()
+```
+
+Function to get all rarefied samples for an ID
+```{r}
+# get_rarefy_samps <- function(id, path = here::here("data", "rarefied_samples")){
+#   print(id)
+#   samp_data <- list.files(path = path, pattern = paste0( "*.", id, ".*")) %>% 
+#     paste0(path, "/", .) %>%
+#      purrr::map_dfr(., function(x) {load(x)
+#        return(rare_comm_save)
+#        }) 
+#   return(samp_data)
+# }
+```
+Get species pools for each timeseries
+```{r}
+bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github")
+trait_ref <- pins::pin_get("trait-ref", board = "github")
+
+species_pools <- bt_grid_filtered %>%
+  select(rarefyid, species) %>% 
+  distinct()
+
+rm(bt_grid_filtered)
+```
+
+Simulation functions
+```{r}
+get_plot_sample <- function(file, n){
+  #print(filter_id)
+  load(file)
+  comm <- rare_comm_save %>%
+    pivot_longer(cols = starts_with("ITIS"), names_to = "species", values_to = "weight") %>%
+    filter(weight != 0) %>%
+    rename_with(tolower)
+  
+  #check that there are at least two species for all years, otherwise stop sampling
+  species_count <- comm %>% select(year, species) %>% count(year)
+  if (min(species_count$n) < 2){
+    save_dir <- here::here("data", "no_null_sample")
+    fs::dir_create(save_dir)
+    write.csv(rare_comm_save, paste0(save_dir, "/", filter_rarefyid, "_samp", samp_rarefy_resamp, ".csv"))
+  }
+  filter_rarefyid <- unique(comm$rarefyid) %>% unlist()
+  samp_rarefy_resamp <- unique(comm$rarefy_resamp) %>% unlist()
+  
+  # plot_data <- data %>% filter(rarefyID == filter_id) %>%
+  #   select(year, id, weight)
+  
+  species_pool <- species_pools %>%
+    filter(rarefyid == filter_rarefyid) %>%
+    pull(species) %>%
+    na.omit() %>%
+    unique() #get column of unique scientific names
+  
+  get_samp_species <- function(data){
+    samp_species <- sample(species_pool, n_distinct(data$species))
+    samp_abun <- sample(data$weight)
+      
+    df <- as_tibble(cbind(samp_species, samp_abun)) %>% mutate(year = unique(data$year))
+    return(df)
+  }
+  
+  site_samples <- data.frame()
+  for (j in 1:n){
+    iter_samples <- data.frame()
+    for(i in unique(comm$year)){
+      year_data <- comm %>% filter(year == i)
+      iter_samples <- rbind(iter_samples, get_samp_species(year_data))
+    }
+    site_samples <- rbind(site_samples, iter_samples %>% mutate(n = j))
+  }
+  plot_samples <- site_samples %>%
+    mutate(rarefyid = filter_rarefyid, rarefy_resamp = samp_rarefy_resamp) %>%
+    pivot_wider(names_from = samp_species, values_from = samp_abun)
+  
+  save_dir <- here::here("data", "null_samples")
+  fs::dir_create(save_dir)
+  write.csv(plot_samples, paste0(save_dir, "/", filter_rarefyid, "_samp", samp_rarefy_resamp, ".csv"))
+  
+  return(plot_samples)
+}
+```
+
+Get sample dataframe
+```{r}
+future::plan(multiprocess)
+sample_occurrence <- future_map(files, get_plot_sample, n = 100) %>%
+  bind_rows() %>%
+  replace(is.na(.), 0)
+```
+Figure out which samples didn't get null samples
+```{r}
+null_files <- list.files(here::here("data", "null_samples")) %>%
+  paste0(here::here("data", "null_samples"), "/", .)
+
+null_samples <- map_dfr(null_files, ~read_csv(.x) %>% select(rarefyid, rarefy_resamp) %>% distinct()) %>%
+  mutate(rarefy_samp_file = paste0(path, "/count_cell", rarefyid, "_sample", rarefy_resamp, ".rda"))
+
+missing_files <- setdiff(files, null_samples$rarefy_samp_file)
+
+future::plan(multiprocess)
+sample_occurrence <- future_map(missing_files, get_plot_sample, n = 100) %>%
+  bind_rows() %>%
+  replace(is.na(.), 0)
+```
+
+Get richness levels for a rarefyID
+```{r}
+get_rarefy_richness <- function(id){
+  get_rarefy_samps(id) %>%
+    pivot_longer(starts_with("ITIS:"), names_to = "speciesID", values_to = "abundance") %>% 
+    select(YEAR, rarefy_resamp, speciesID) %>%
+    group_by(rarefy_resamp, YEAR) %>% 
+    summarise(richness = n_distinct(speciesID)) %>% 
+    distinct()
+}
+
+rich_levels <- map_dfr(ids, get_rarefy_richness)
+```
+
