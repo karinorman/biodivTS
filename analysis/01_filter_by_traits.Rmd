@@ -108,10 +108,44 @@ Get biotime data filtered by trait coverage
 ```{r}
 bt_cols <- colnames(biotime_data)[!colnames(biotime_data) %in% 
                                          c("sourceName", "obsID", "scientificName")]
-bt_traitfiltered <- biotime_traits %>% 
+biotime_traits <- biotime_traits %>% 
   select(all_of(bt_cols)) %>%
   rename(species = id)
+```
 
+Split timeseries that have more than one class of species (split up birds and mammals)
+```{r}
+#get the class of each species
+tax_info <- taxadb::filter_id(unique(biotime_traits$species), "itis")
+biotime_traits <- biotime_traits %>% 
+  left_join(tax_info %>% select(input, class), by = c("species" = "input"))
+
+#find all the studies with more than one taxa type
+mix_study <- biotime_traits %>% 
+  select(species, class, taxa, study_id) %>% 
+  distinct() %>% 
+  count(study_id, class, taxa) %>% 
+  group_by(study_id) %>%
+  filter(n_distinct(class, na.rm = TRUE) > 1) %>% 
+  pull(study_id) %>%
+  unique()
+
+#split into two different timeseries based on whether they're bird or mammal observations,
+#remove years with too few species
+mix_split <- biotime_traits %>%
+  filter(study_id %in% mix_study) %>%
+  mutate(rarefyid = if_else(class == "Aves", paste0(rarefyid, "_bird"), paste0(rarefyid, "_mamm"))) %>%
+  group_by(rarefyid, year) %>% 
+  filter(n_distinct(species) > 4)
+
+#update that studies that needed to be split with new rarefyid breakdowns
+bt_traitfiltered <- biotime_traits %>%
+  filter(!study_id %in% mix_study) %>%
+  bind_rows(mix_split) %>%
+  select(-class)
+```
+
+```{r}
 #save locally and in cache
 usethis::use_data(bt_traitfiltered)
 pins::pin(bt_traitfiltered, board = "github")
