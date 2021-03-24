@@ -11,11 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
-library(biodivTS)
+#library(biodivTS)
 library(FD)
 library(furrr)
 
-pins::board_register_github(repo = "karinorman/biodivTS", branch = "master")
+pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 ```
 
 Create null models that would be transferable to any timeseries by treating the species pool as all species observed across the timeseries.
@@ -63,7 +63,7 @@ get_plot_sample <- function(data, filter_plot, n){
 
 Get dataframe of samples for each plot and corresponding species and trait matrices
 ```{r}
-biotime_traits <- pins::pin_get("biotime-traits", board = "github")
+biotime_traits <- pins::pin_get("bt-traitfiltered", board = "github")
 
 n = 100
 
