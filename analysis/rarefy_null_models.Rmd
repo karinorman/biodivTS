@@ -197,32 +197,33 @@ null_files <-  dir(path, "*.tsv") %>%
   paste0(path, "/", .)
 
 process_nulls <- function(file_path, n){
-  data <- read_tsv(file_path, col_types = cols(plot_id = "c")) %>%
-    select(year, plot_id, richness = nbsp, everything(), -sing.sp, -starts_with("CWM"), -n) %>%
+  data <- read_tsv(file_path) %>%
+    rename(richness = nbsp) %>%
+    select(-sing.sp) %>%
     group_by(year)
   
   means <- data %>%
-    select(-plot_id, -richness) %>%
+    select(-rarefyid, -richness) %>%
     summarise(across(everything(), mean)) %>%
     pivot_longer(cols = -year, names_to = "metric", values_to = "mean")
   
   sds <- data %>%
-    select(-plot_id, -richness) %>%
+    select(-rarefyid, -richness) %>%
     summarise(across(everything(), sd)) %>%
     pivot_longer(cols = -year, names_to = "metric", values_to = "sd")
   
   stats <- left_join(means, sds, by = c("year", "metric")) %>%
-    left_join(data %>% select(year, plot_id, richness) %>% distinct(), by = "year") %>%
+    left_join(data %>% select(year, rarefyid, rarefy_resamp, richness) %>% distinct(), by = "year") %>%
     mutate(se = sd/sqrt(n),
            lowerCI = mean - qt(0.975, n - 1) * se, 
            upperCI = mean + qt(0.975, n - 1) * se)  %>%
-    select(year, plot_id, everything())
+    select(year, rarefyid, everything())
   
   return(stats)
 }
 
 plan(multiprocess)
-null_table <- future_map_dfr(null_files, process_nulls, n = n)
+null_table <- future_map_dfr(null_files, process_nulls, n = 500)
 
 usethis::use_data(null_table)
 pins::pin(null_table, board = "github")

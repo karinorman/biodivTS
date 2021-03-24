@@ -3,6 +3,7 @@
 ##	for analysis
 library(dplyr)
 library(tibble)
+library(stringr)
 ##============================================================
 ##	set the pattern to load the files to be compiled
 path <- here::here("data", "rarefied_metrics")
@@ -17,18 +18,23 @@ path <- here::here("data", "rarefied_metrics", "fd")
 filelist <-  dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
+# fd_metrics <- purrr::map_dfr(filelist, function(x) {
+#   load(x)
+#   split_path <- str_split(x, "/") %>%
+#     unlist(.) %>%
+#     last() %>%
+#     str_split(., "_") %>%
+#     unlist()
+#
+#   rarefyID <- paste0(str_replace(split_path[2], "cell", ""), "_", split_path[3])
+#
+#   biochange_metrics <- biochange_metrics %>%
+#     mutate(rarefyID = rarefyID)
+#   return(biochange_metrics)
+# }) %>% distinct()
+
 fd_metrics <- purrr::map_dfr(filelist, function(x) {
   load(x)
-  split_path <- str_split(x, "/") %>%
-    unlist(.) %>%
-    last() %>%
-    str_split(., "_") %>%
-    unlist()
-
-  rarefyID <- paste0(str_replace(split_path[2], "cell", ""), "_", split_path[3])
-
-  biochange_metrics <- biochange_metrics %>%
-    mutate(rarefyID = rarefyID)
   return(biochange_metrics)
 }) %>% distinct()
 
