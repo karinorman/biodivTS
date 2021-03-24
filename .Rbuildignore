@@ -4,3 +4,8 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^data$
+^data_old_11_12$
+^data_no$
+^check_model$
+^paper$
+^fric_data\.csv$

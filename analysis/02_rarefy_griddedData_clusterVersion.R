@@ -514,6 +514,6 @@ path <- here::here("data", "rarefied_samples")
 files <- dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
-plan("multiprocess", workers = 4)
+plan("multiprocess", workers = 30)
 furrr::future_map(files, calc_FD_mets, traits = trait_ref)
 
