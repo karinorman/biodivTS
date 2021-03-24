@@ -140,6 +140,28 @@ model_comp <- metric_mean_fit %>%
   select(metric, slope_estimate = estimate, slope_pval = p.value ))
 ```
 
+Kitchen sink model
+```{r}
+all_model <- metrics %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "S_int")) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + taxa + realm + (year_scaled|study_id/rarefyID), 
+                                 data = .x)))#,
+  #          null_model = map(data, ~lmer(logvalue ~ (year_scaled|study_id/rarefyID), 
+  #                                data = .x)),
+  #          test = map2(model, null_model, anova),
+  #          test_res = map(test, tidy),
+  #          coef = map(model, tidy)
+  #          ) %>% 
+  # unnest(cols = c(test_res)) %>%
+  # select(metric, model, coef, p.value) %>%
+  # filter(!is.na(p.value)) %>%
+  # unnest(cols = c(coef)) %>%
+  # filter(term == "year_scaled") %>%
+  # select(-c(effect, group, term, statistic))
+
+```
+
 Reproduce Dornelas figure - all data points & regressions w/overall mean
 ```{r}
 #get climate classification

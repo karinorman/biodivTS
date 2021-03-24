@@ -134,7 +134,8 @@ mix_study <- biotime_traits %>%
 #remove years with too few species
 mix_split <- biotime_traits %>%
   filter(study_id %in% mix_study) %>%
-  mutate(rarefyid = if_else(class == "Aves", paste0(rarefyid, "_bird"), paste0(rarefyid, "_mamm"))) %>%
+  mutate(rarefyid = if_else(class == "Aves", paste0(rarefyid, "_bird"), paste0(rarefyid, "_mamm")),
+         taxa = if_else(class == "Aves", "Birds", paste0(rarefyid, "Mammals"))) %>%
   group_by(rarefyid, year) %>% 
   filter(n_distinct(species) > 4)
 

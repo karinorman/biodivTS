@@ -78,7 +78,7 @@ rm(biotime_traits)
 Get sample dataframe
 ```{r}
 future::plan(multiprocess)
-sample_occurrence <- future_map(unique(biotime_traits$plot_id), get_plot_sample, data = biotime_traits, n = n) %>%
+sample_occurrence <- future_map(unique(biotime_traits$rarefyid), get_plot_sample, data = biotime_traits, n = n) %>%
   bind_rows() %>%
   replace(is.na(.), 0)
 ```
