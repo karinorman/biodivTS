@@ -1,0 +1,70 @@
+---
+title: "GBIF invasive species"
+author: "Kari Norman"
+date: "3/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(rgbif)
+library(geonames)
+```
+
+Get GBIF data
+```{r}
+#get all the datasets from the Invasive Species Specialist Group
+datasets <- dataset_search(publishingOrg = "cdef28b1-db4e-4c58-aa71-3c5238c2d0b5", limit = 300)
+datasets_list <- datasets$data
+
+occ <- occ_download(dataset = "b351a324-77c4-41c9-a909-f30f77268bc4")
+```
+
+Figure out which country each study is located in 
+```{r}
+pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
+options(geonamesUsername="getafreeusernamefromgeonames.org")
+options(gbif_u)
+
+obs_data <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+  select(study_id, species) %>%
+  distinct()
+
+meta <- pins::pin_get("meta", board = "github") %>%
+  select(study_id, cent_lat, cent_long) %>%
+  filter(study_id %in% obs_data$study_id)
+
+get_GNcountry <- possibly(GNcountryCode, otherwise = NA_character_)
+
+get_country <- function(study_id, cent_lat, cent_long){
+  con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, lang = "en", radius = 50)
+  name <- ifelse(length(con_data) == 1, con_data, con_data$countryName)
+  
+  return(tibble(study_id = study_id, country = name))
+}
+
+country_data <- pmap_dfr(meta, get_country) %>%
+  #hand resolve study_ids in the ocean
+  mutate(country = case_when(
+  study_id == 108 ~ "Namibia", 
+  study_id %in% c(166, 169) ~ "United States", 
+  study_id == 172 ~ "Morocco", 
+  TRUE ~ country
+)) 
+
+obs_data <- obs_data %>%
+  left_join(country_data)
+```
+
+Get datasets relevant for observed studies
+```{r}
+countries <- unique(country_data$country)
+datasets_list %>% filter(str_detect(datasetTitle, countries)) %>% View()
+
+
+```
+
