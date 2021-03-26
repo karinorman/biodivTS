@@ -199,7 +199,7 @@ null_files <-  dir(path, "*.tsv") %>%
 process_nulls <- function(file_path, n){
   data <- read_tsv(file_path) %>%
     rename(richness = nbsp) %>%
-    select(-sing.sp) %>%
+    select(-sing.sp, -n) %>%
     group_by(year)
   
   means <- data %>%
