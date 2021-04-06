@@ -27,8 +27,7 @@ occ <- occ_download(dataset = "b351a324-77c4-41c9-a909-f30f77268bc4")
 Figure out which country each study is located in 
 ```{r}
 pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
-options(geonamesUsername="getafreeusernamefromgeonames.org")
-options(gbif_u)
+options(geonamesUsername="karinorman")
 
 obs_data <- pins::pin_get("bt-traitfiltered", board = "github") %>%
   select(study_id, species) %>%
@@ -59,6 +58,20 @@ country_data <- pmap_dfr(meta, get_country) %>%
 obs_data <- obs_data %>%
   left_join(country_data)
 ```
+
+Read in Invasive Data
+```{r}
+invasive_files <- list.dirs(here::here("data", "invasive"))
+
+taxon <- read_tsv(paste0(invasive_files[2], "/", "taxon.txt"))
+profile <- read_tsv(paste0(invasive_files[2], "/", "speciesprofile.txt"))
+dist <- read_tsv(paste0(invasive_files[2], "/", "distribution.txt")) %>%
+  select(id, countryCode)
+
+data <- left_join(taxon, profile) %>% left_join(dist)
+
+```
+
 
 Get datasets relevant for observed studies
 ```{r}
