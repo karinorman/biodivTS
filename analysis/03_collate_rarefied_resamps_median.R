@@ -48,7 +48,22 @@ metric_cols <- ungroup(rarefied_metrics) %>%
   select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, CWM, type)) %>%
   pivot_longer(-c(rarefyID, rarefied, YEAR, cell, rarefy_resamp), names_to = "metric") %>%
   left_join(null_table %>% select(-c(richness, se, lowerCI, upperCI)),
-            by = c("YEAR" = "year", "rarefyID" = "rarefyid", "rarefy_resamp" = "rarefy_resamp", "metric" = "metric")) %>%
+            by = c("YEAR" = "year", "rarefyID" = "rarefyid", "rarefy_resamp" = "rarefy_resamp", "metric" = "metric"))
+
+# get a dataframe of rarefyID's and rarefication samples that we don't have null_model for, and a count of the number of resamples that are missing
+no_null <- metric_cols %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis"), is.na(mean)) %>%
+  select(rarefyID, YEAR, rarefy_resamp) %>%
+  distinct()
+
+missing_nulls <- null_table %>%
+  right_join(no_null, by = c("rarefyid" = "rarefyID", "year" = "YEAR", "rarefy_resamp")) %>%
+  group_by(rarefyid) %>%
+  summarise(n_missing_nulls = n_distinct(rarefy_resamp)) %>%
+  mutate(commplete_null_samps = "FALSE")
+
+# calculate SES and incorporate into metric columns
+metric_cols <- metric_cols %>%
   mutate(SES = (value - mean)/sd) %>%
   select(-c(mean, sd)) %>%
   #the next three lines go back to wide format for both SES and unadjusted values, then to long format incorporating SES values
@@ -78,7 +93,8 @@ rarefied_medians <- metric_cols %>%
 #   ungroup()
 
 ##	recombine with new metadata
-rarefied_metrics <- inner_join(new_meta, rarefied_medians, by='rarefyID') #%>%
+rarefied_metrics <- inner_join(new_meta, rarefied_medians, by='rarefyID') %>%
+  left_join(missing_nulls, by = c("rarefyID" = "rarefyid"))
   #inner_join(rarefied_ints)
 
 ##	save

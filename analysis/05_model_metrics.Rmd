@@ -18,12 +18,13 @@ Get data and put it in long form
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 
-metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
-  pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
+metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
+  # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  mutate(logvalue = log(value + abs(floor(min(na.omit(value))))),
-         year_scaled = scale(year)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
-  filter(!is.na(value)) 
+  filter(!is.na(value)) %>%
+  mutate(logvalue = log(value + 1),
+         year_scaled = scale(year)) # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  
 ```
 ####Data exploration
 
@@ -66,7 +67,7 @@ metrics %>%
   labs(title = "Distribution of Log values")
 
 metrics %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "SES_FDis", "SES_FDiv", "SES_FEve", "SES_FRic")) %>%
   ggplot() +
   geom_histogram(aes(x = value),
                  bins = 60) +
@@ -88,23 +89,55 @@ https://debruine.github.io/posts/normality/
 performance::check_model()
 
 ```{r}
+#find rarefyID's that have inf value for some metrics and exclude
+cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
+
+#get rarefyID's that don't have enough null samples
+missing_null <- bind_rows(metrics %>% 
+  filter(n_missing_nulls == 1, commplete_null_samps == FALSE),
+  metrics %>% filter(n_missing_nulls > 100)) %>%
+  pull(rarefyID) %>%
+  unique()
+
+model_data <- metrics %>% 
+  filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
+  mutate(study_id = substr(rarefyID, 1, 3))
+
 # model for overall trend (random effect w/varying intercept)
-metric_mean_fit <- metrics %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S_int")) %>%
+# metric_mean_fit <- model_data %>%
+#   filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(log(value + 1) ~ year_scaled + (1|study_id/rarefyID), data = .x, REML = FALSE,
+#                   control = lmerControl(optCtrl = list(maxit = 1e9,
+#                                                     maxfun = 1e9,
+#                                                     xtol_abs = 1e-11,
+#                                                     ftol_abs = 1e-11,
+#                                                     maxeval = 1e9)))),
+#          null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), data = .x, REML = FALSE,
+#                   control = lmerControl(optCtrl = list(maxit = 1e9,
+#                                                     maxfun = 1e9,
+#                                                     xtol_abs = 1e-11,
+#                                                     ftol_abs = 1e-11,
+#                                                     maxeval = 1e9)))),
+#            
+#            test = map2(model, null_model, anova),
+#            test_res = map(test, tidy),
+#            coef = map(model, tidy)
+#            ) %>% 
+#   unnest(cols = c(test_res)) %>%
+#   select(metric, model, coef, p.value) %>%
+#   filter(!is.na(p.value)) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+
+SES_rand_slope <- model_data %>%
+  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis")) %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (1|study_id/rarefyID), data = .x,
-                  control = lmerControl(optCtrl = list(maxit = 1e9,
-                                                    maxfun = 1e9,
-                                                    xtol_abs = 1e-11,
-                                                    ftol_abs = 1e-11,
-                                                    maxeval = 1e9)))),
-         null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), data = .x,
-                  control = lmerControl(optCtrl = list(maxit = 1e9,
-                                                    maxfun = 1e9,
-                                                    xtol_abs = 1e-11,
-                                                    ftol_abs = 1e-11,
-                                                    maxeval = 1e9)))),
-           
+  mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
+                                 data = .x)),
+           null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
+                                 data = .x)),
            test = map2(model, null_model, anova),
            test_res = map(test, tidy),
            coef = map(model, tidy)
@@ -116,13 +149,13 @@ metric_mean_fit <- metrics %>%
   filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
 
-metric_mean_fit_slope <- metrics %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "S_int")) %>%
+metric_rand_slope <- model_data %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
   group_nest(metric) %>%
   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
-                                 data = .x)),
+                                 data = .x, REML = FALSE)),
            null_model = map(data, ~lmer(logvalue ~ (year_scaled|study_id/rarefyID), 
-                                 data = .x)),
+                                 data = .x, REML = FALSE)),
            test = map2(model, null_model, anova),
            test_res = map(test, tidy),
            coef = map(model, tidy)
@@ -134,18 +167,20 @@ metric_mean_fit_slope <- metrics %>%
   filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
 
-model_comp <- metric_mean_fit %>%
-  select(metric, no_slope_estimate = estimate, no_slope_pval = p.value) %>%
-  left_join(metric_mean_fit_slope %>% 
-  select(metric, slope_estimate = estimate, slope_pval = p.value ))
+# model_comp <- metric_mean_fit %>%
+#   select(metric, no_slope_estimate = estimate, no_slope_pval = p.value) %>%
+#   left_join(metric_mean_fit_slope %>% 
+#   select(metric, slope_estimate = estimate, slope_pval = p.value ))
+
+metric_model_table <- bind_rows(select(SES_rand_slope, -model), select(metric_rand_slope, -model))
 ```
 
 Kitchen sink model
 ```{r}
-all_model <- metrics %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "S_int")) %>%
+all_model <- model_data %>%
+  filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis", "S")) %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + taxa + realm + (year_scaled|study_id/rarefyID), 
+  mutate(model = map(data, ~lmer(value ~ year_scaled + taxa + realm + (year_scaled|study_id/rarefyID), 
                                  data = .x)))#,
   #          null_model = map(data, ~lmer(logvalue ~ (year_scaled|study_id/rarefyID), 
   #                                data = .x)),
@@ -231,7 +266,76 @@ plot_map <- tibble(metric_name = c("S_int", "FRic", "FEve", "FDiv", "FDis"),
 pmap(plot_map, plot_metric, data = metrics, model_coef = model_coef)
 ```
 
+Get study level slop estimates
 ```{r}
+get_blup <- function(metric, model){
+  coef(model)$study_id %>%
+    rownames_to_column("study_id") %>%
+    mutate(metric = metric)
+}
 
+blup <- pmap_dfr(bind_rows(select(SES_rand_slope, metric, model), select(metric_rand_slope,  metric, model)), get_blup) %>%
+  select(-"(Intercept)") %>%
+  pivot_wider(names_from = "metric", values_from = "year_scaled")
+
+#pairwise plots using GGally
+ggpairs(blup %>% 
+          select(-c("study_id", "FDis", "FDiv", "FEve", "FRic")))
+
+#pairwise plots using GGPlot
+gatherpairs <- function(data, ..., 
+                        xkey = '.xkey', xvalue = '.xvalue',
+                        ykey = '.ykey', yvalue = '.yvalue',
+                        na.rm = FALSE, convert = FALSE, factor_key = FALSE) {
+  vars <- quos(...)
+  xkey <- enquo(xkey)
+  xvalue <- enquo(xvalue)
+  ykey <- enquo(ykey)
+  yvalue <- enquo(yvalue)
+
+  data %>% {
+    cbind(gather(., key = !!xkey, value = !!xvalue, !!!vars,
+                 na.rm = na.rm, convert = convert, factor_key = factor_key),
+          select(., !!!vars)) 
+  } %>% gather(., key = !!ykey, value = !!yvalue, !!!vars,
+               na.rm = na.rm, convert = convert, factor_key = factor_key)
+}
+
+blup %>% 
+  gatherpairs("SES_FDis", "SES_FDiv", "SES_FEve", "SES_FRic", "S") %>% {
+  ggplot(., aes(x = .xvalue, y = .yvalue)) +
+      geom_point() + 
+      #geom_smooth(method = 'lm') +
+      facet_wrap(.xkey ~ .ykey, ncol = length(unique(.$.ykey)), scales = 'free', labeller = label_both) +
+      scale_color_brewer(type = 'qual')
+  }
+
+blup %>%
+  select(-c("FDis", "FDiv", "FEve", "FRic")) %>%
+  pivot_longer(-one_of("study_id", "S"), names_to = "metric") %>%
+  ggplot(aes(x = S, y = value)) +
+  geom_point() +
+  facet_wrap(~metric) +
+  xlim(-1.3, 1.3) +
+  ylim(-0.6, 0.6) +
+    theme_classic() +
+    geom_hline(yintercept = 0) +
+    geom_vline(xintercept = 0) + 
+  ylab("Metric Slope") +
+  xlab("Richness Slope")
+
+blup %>%
+  select(-c("FDis", "FDiv", "FEve", "FRic")) %>%
+  pivot_longer(-one_of("study_id", "SES_FRic"), names_to = "metric") %>%
+  ggplot(aes(x = SES_FRic, y = value)) +
+  geom_point() +
+  facet_wrap(~metric) +
+  xlim(-.25, .25) +
+  ylim(-0.6, 0.6) +
+    theme_classic() +
+    geom_hline(yintercept = 0) +
+    geom_vline(xintercept = 0) + 
+  ylab("Metric Slope") +
+  xlab("Functional Richness Slope")
 ```
 
