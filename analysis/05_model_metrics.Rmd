@@ -18,24 +18,33 @@ Get data and put it in long form
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 
+#get metadata
+meta <- pins::pin_get("meta", board = "github") %>%
+  select(study_id, realm, climate, habitat, protected_area, biome_map)
+
+meta <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+  select(study_id, rarefyid, taxa) %>% distinct() %>%
+  left_join(meta)
+
+#get metric data
 metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
   # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
   filter(!is.na(value)) %>%
-  mutate(logvalue = log(value + 1),
-         year_scaled = scale(year)) # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
-  
+  mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  left_join(meta, c("rarefyID" = "rarefyid"))
 ```
+
 ####Data exploration
 
 How many years are missing FD metrics? Only a handful! Let's exclude them so we can get an accurate view of the number of years for which we have data for each timeseries                                                                                                     
 ```{r}
-no_fd_years <- metrics %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis"), is.na(value))
-
-dim(no_fd_years)
-
-metrics <- setdiff(metrics, no_fd_years)
+# no_fd_years <- metrics %>%
+#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis"), is.na(value))
+# 
+# dim(no_fd_years)
+# 
+# metrics <- setdiff(metrics, no_fd_years)
 ```
 
 Visualize number of years for each timeseries
@@ -101,7 +110,10 @@ missing_null <- bind_rows(metrics %>%
 
 model_data <- metrics %>% 
   filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
-  mutate(study_id = substr(rarefyID, 1, 3))
+  mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
+  mutate(year_scaled = scale(year), 
+         scale_center = attributes(year_scaled)$`scaled:center`, 
+         scale = attributes(year_scaled)$`scaled:scale`)
 
 # model for overall trend (random effect w/varying intercept)
 # metric_mean_fit <- model_data %>%
@@ -132,7 +144,9 @@ model_data <- metrics %>%
 #   select(-c(effect, group, term, statistic))
 
 SES_rand_slope <- model_data %>%
-  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis")) %>%
+  #filter(protected_area == "FALSE") %>%
+  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis")) %>%
+  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv")) %>%
   group_nest(metric) %>%
   mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
                                  data = .x)),
@@ -150,7 +164,8 @@ SES_rand_slope <- model_data %>%
   select(-c(effect, group, term, statistic))
 
 metric_rand_slope <- model_data %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  #filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  filter(metric %in%  c("FRic", "FEve", "FDiv", "S")) %>%
   group_nest(metric) %>%
   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
                                  data = .x, REML = FALSE)),
@@ -178,22 +193,22 @@ metric_model_table <- bind_rows(select(SES_rand_slope, -model), select(metric_ra
 Kitchen sink model
 ```{r}
 all_model <- model_data %>%
-  filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis", "S")) %>%
+  filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis")) %>%
   group_nest(metric) %>%
   mutate(model = map(data, ~lmer(value ~ year_scaled + taxa + realm + (year_scaled|study_id/rarefyID), 
-                                 data = .x)))#,
-  #          null_model = map(data, ~lmer(logvalue ~ (year_scaled|study_id/rarefyID), 
-  #                                data = .x)),
-  #          test = map2(model, null_model, anova),
-  #          test_res = map(test, tidy),
-  #          coef = map(model, tidy)
-  #          ) %>% 
-  # unnest(cols = c(test_res)) %>%
-  # select(metric, model, coef, p.value) %>%
-  # filter(!is.na(p.value)) %>%
-  # unnest(cols = c(coef)) %>%
-  # filter(term == "year_scaled") %>%
-  # select(-c(effect, group, term, statistic))
+                                 data = .x)),
+           null_model = map(data, ~lmer(value ~ taxa + realm + (year_scaled|study_id/rarefyID),
+                                 data = .x)),
+           test = map2(model, null_model, anova),
+           test_res = map(test, tidy),
+           coef = map(model, tidy)
+           ) %>%
+  unnest(cols = c(test_res)) %>%
+  select(metric, model, coef, p.value) %>%
+  filter(!is.na(p.value)) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year_scaled") %>%
+  select(-c(effect, group, term, statistic))
 
 ```
 
@@ -337,5 +352,37 @@ blup %>%
     geom_vline(xintercept = 0) + 
   ylab("Metric Slope") +
   xlab("Functional Richness Slope")
+```
+
+Clustering 
+```{r}
+scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
+
+blup_mat <- blup %>%  
+  #these studies have NA's for some reason, remove them 
+  filter(!study_id %in% c(445, 446, 348, 382)) %>%
+  select(study_id, starts_with("SES"), S) %>%
+  column_to_rownames("study_id") %>%
+  mutate(across(.fns = scale2)) %>%
+  as.matrix()
+
+clmethods <- c("hierarchical","kmeans","pam")
+intern <- clValid(blup_mat, nClust = 2:6, clMethods = clmethods, validation = "internal")
+stab <- clValid(blup_mat, nClust = 2:6, clMethods = clmethods, validation = "stability")
+
+summary(intern)
+optimalScores(stab)
+
+#get the hierarchical clustering object
+clust <- intern@clusterObjs$hierarchical
+cat5 <- cutree(clust, k = 5)
+cat3 <- cutree(clust, k = 3)
+
+
+blup_clust <- blup %>% 
+  left_join(as.data.frame(cat3) %>%
+  rownames_to_column("study_id")) %>%
+  left_join(as.data.frame(cat5) %>%
+  rownames_to_column("study_id"))
 ```
 
