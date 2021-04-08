@@ -36,7 +36,8 @@ null_table <- pins::pin_get("null-table", board = "github")
 ##	put them all together
 rarefied_metrics <- full_join(species_metrics, fd_metrics,
                               c("YEAR", "cell", "rarefy_resamp", "rarefyID")) %>%
-  filter(S != 1) # remove samples that had one species as they result in strange metric values
+  filter(S != 1) %>% # remove samples that had one species as they result in strange metric values
+  select(-qual.FRic)
 
 
 ##	pull out new metadata
@@ -53,11 +54,11 @@ metric_cols <- ungroup(rarefied_metrics) %>%
 # get a dataframe of rarefyID's and rarefication samples that we don't have null_model for, and a count of the number of resamples that are missing
 no_null <- metric_cols %>%
   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis"), is.na(mean)) %>%
-  select(rarefyID, YEAR, rarefy_resamp) %>%
+  select(rarefyID, rarefy_resamp) %>%
   distinct()
 
 missing_nulls <- null_table %>%
-  right_join(no_null, by = c("rarefyid" = "rarefyID", "year" = "YEAR", "rarefy_resamp")) %>%
+  right_join(no_null, by = c("rarefyid" = "rarefyID","rarefy_resamp")) %>%
   group_by(rarefyid) %>%
   summarise(n_missing_nulls = n_distinct(rarefy_resamp)) %>%
   mutate(commplete_null_samps = "FALSE")
