@@ -110,10 +110,12 @@ missing_null <- bind_rows(metrics %>%
 
 model_data <- metrics %>% 
   filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
+  group_by(metric) %>%
   mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
   mutate(year_scaled = scale(year), 
          scale_center = attributes(year_scaled)$`scaled:center`, 
-         scale = attributes(year_scaled)$`scaled:scale`)
+         scale = attributes(year_scaled)$`scaled:scale`) %>%
+  ungroup()
 
 # model for overall trend (random effect w/varying intercept)
 # metric_mean_fit <- model_data %>%
@@ -209,7 +211,6 @@ all_model <- model_data %>%
   unnest(cols = c(coef)) %>%
   filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
-
 ```
 
 Reproduce Dornelas figure - all data points & regressions w/overall mean
