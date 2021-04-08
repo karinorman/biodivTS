@@ -119,6 +119,7 @@ sample_occurrence <- future_map(files, get_plot_sample, n = 500,
   # bind_rows() %>%
   # replace(is.na(.), 0)
 ```
+
 Figure out which samples didn't get null samples
 ```{r}
 null_files <- list.files(here::here("data", "null_samples")) %>%
@@ -149,12 +150,14 @@ get_nullplot_FD <- function(file_path, traits, ...) {
   
   plot_samples <- read_csv(file_path) %>% 
     replace(is.na(.), 0)
+  
+  plot_samples %>% select(rarefyid, rarefy_resamp) %>% distinct() %>% print()
 
   sample_species_mat <- plot_samples %>%
     select(starts_with("ITIS")) %>% #want only species x site info
     select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
   
-  print(head(sample_species_mat))
+  #print(head(sample_species_mat))
   trait_mat <- get_traitMat(colnames(sample_species_mat), trait_data = traits) 
   
   save_dir <- here::here("data", "fd_null_output")
@@ -190,6 +193,30 @@ null_FD <- future_map_dfr(null_files, ~get_nullplot_FD(.x, traits = trait_ref),
                            .options = furrr_options(seed = TRUE))
 ```
 
+Figure out which nulls still need to be calculated
+```{r}
+null_files <- dir(here::here("data", "null_samples"), "*.csv") 
+null_files <- as.data.frame(null_files) %>%
+  mutate(rarefyid = str_match(null_files, "(.*?)\\s*_samp")[,2],
+         rarefy_samp = str_match(null_files, "samp\\s*(.*?)\\s*.csv")[,2])
+
+fd_files <- dir(here::here("data", "fd_null_output"), "*.tsv")
+fd_files <- as.data.frame(fd_files) %>%
+  mutate(rarefyid = str_match(fd_files, "null_rarefy\\s*(.*?)\\s*samp")[,2],
+         rarefy_samp = str_match(fd_files, "samp\\s*(.*?)\\s*.tsv")[,2])
+
+missing_files <- null_files %>%
+  left_join(fd_files) %>% 
+  filter(is.na(fd_files)) %>%
+  pull(null_files) %>%
+  paste0(here::here("data", "null_samples/"), .)
+
+get_nullplot_FD_safe <- possibly(get_nullplot_FD, otherwise = data_frame())
+plan(multiprocess, workers = 120)
+null_FD <- future_map_dfr(missing_files, ~get_nullplot_FD_safe(.x, traits = trait_ref),
+                           .options = furrr_options(seed = TRUE))
+```
+
 Create Null table
 ```{r}
 path <- here::here("data", "fd_null_output")
@@ -203,13 +230,13 @@ process_nulls <- function(file_path, n){
     group_by(year)
   
   means <- data %>%
-    select(-rarefyid, -richness) %>%
-    summarise(across(everything(), mean)) %>%
+    select(-rarefyid, -richness, -rarefy_resamp) %>%
+    summarise(across(everything(), ~mean(.x, na.rm = TRUE))) %>%
     pivot_longer(cols = -year, names_to = "metric", values_to = "mean")
   
   sds <- data %>%
-    select(-rarefyid, -richness) %>%
-    summarise(across(everything(), sd)) %>%
+    select(-rarefyid, -richness, -rarefy_resamp) %>%
+    summarise(across(everything(), ~sd(.x, na.rm = TRUE))) %>%
     pivot_longer(cols = -year, names_to = "metric", values_to = "sd")
   
   stats <- left_join(means, sds, by = c("year", "metric")) %>%
@@ -217,12 +244,12 @@ process_nulls <- function(file_path, n){
     mutate(se = sd/sqrt(n),
            lowerCI = mean - qt(0.975, n - 1) * se, 
            upperCI = mean + qt(0.975, n - 1) * se)  %>%
-    select(year, rarefyid, everything())
+    select(year, rarefyid, rarefy_resamp, everything())
   
   return(stats)
 }
 
-plan(multiprocess)
+plan(multiprocess, workers = 120)
 null_table <- future_map_dfr(null_files, process_nulls, n = 500)
 
 usethis::use_data(null_table)
