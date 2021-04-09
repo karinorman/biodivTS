@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(rgbif)
 library(geonames)
+library(countrycode)
+library(taxadb)
 ```
 
 Get GBIF data
@@ -40,7 +42,8 @@ meta <- pins::pin_get("meta", board = "github") %>%
 get_GNcountry <- possibly(GNcountryCode, otherwise = NA_character_)
 
 get_country <- function(study_id, cent_lat, cent_long){
-  con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, lang = "en", radius = 50)
+  #con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, lang = "en", radius = 50)
+  con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, radius = 50)
   name <- ifelse(length(con_data) == 1, con_data, con_data$countryName)
   
   return(tibble(study_id = study_id, country = name))
@@ -50,10 +53,16 @@ country_data <- pmap_dfr(meta, get_country) %>%
   #hand resolve study_ids in the ocean
   mutate(country = case_when(
   study_id == 108 ~ "Namibia", 
-  study_id %in% c(166, 169) ~ "United States", 
+  study_id %in% c(56, 166, 169) ~ "United States", 
   study_id == 172 ~ "Morocco", 
   TRUE ~ country
-)) 
+)) %>%
+  mutate(code = countryname(country, destination = "genc2c")) %>%
+  mutate(code = case_when(
+    code == "CA" ~ "US", 
+    code == "PR" ~ "DO",
+    TRUE ~ code
+  ))
 
 obs_data <- obs_data %>%
   left_join(country_data)
@@ -63,15 +72,20 @@ Read in Invasive Data
 ```{r}
 invasive_files <- list.dirs(here::here("data", "invasive"))
 
-taxon <- read_tsv(paste0(invasive_files[2], "/", "taxon.txt"))
-profile <- read_tsv(paste0(invasive_files[2], "/", "speciesprofile.txt"))
-dist <- read_tsv(paste0(invasive_files[2], "/", "distribution.txt")) %>%
-  select(id, countryCode)
-
-data <- left_join(taxon, profile) %>% left_join(dist)
-
+invasive_data <- map_dfr(invasive_files[2:21], function(x){
+  taxon <- read_tsv(paste0(x, "/", "taxon.txt"))
+  profile <- read_tsv(paste0(x, "/", "speciesprofile.txt"))
+  dist <- read_tsv(paste0(x, "/", "distribution.txt")) %>%
+    select(id, countryCode)
+  
+  data <- left_join(taxon, profile) %>% left_join(dist)
+  return(data)
+})
 ```
 
+Substituting years:
+- orig: Canada, data: United States
+- orig: Puerto Rico, data: Dominican Republic
 
 Get datasets relevant for observed studies
 ```{r}
