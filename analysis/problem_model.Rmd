@@ -17,19 +17,32 @@ Get data and put it in long form
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 
-metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
-  select(-cYEAR) %>%
-  pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
+metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
+  # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  mutate(logvalue = log(value + abs(floor(min(na.omit(value)))))) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
-  filter(!is.na(value))
+  filter(!is.na(value)) %>%
+  mutate(logvalue = log(value + 1),
+         year_scaled = scale(year)) # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+
+cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
+
+#get rarefyID's that don't have enough null samples
+missing_null <- bind_rows(metrics %>% 
+  filter(n_missing_nulls == 1, commplete_null_samps == FALSE),
+  metrics %>% filter(n_missing_nulls > 100)) %>%
+  pull(rarefyID) %>%
+  unique()
+
+model_data <- metrics %>% 
+  filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
+  mutate(study_id = substr(rarefyID, 1, 3))
 ```
 
 ####Data exploration
 
 Visualize distributions of response
 ```{r}
-metrics %>%
+model_data %>%
   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S_int")) %>%
   ggplot() +
   geom_histogram(aes(x = logvalue),
@@ -37,7 +50,7 @@ metrics %>%
   facet_wrap(~metric, scales = "free") +
   labs(title = "Distribution of Log values")
 
-metrics %>%
+model_data %>%
   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S_int")) %>%
   ggplot() +
   geom_histogram(aes(x = value),
@@ -48,14 +61,12 @@ metrics %>%
 
 Fit a single model to play around with 
 ```{r}
-test_data <- metrics %>% 
-  filter(metric == "FRic") %>%
-  mutate(study_id = as.factor(study_id),
-         year_center = scale(year),
-         value_scale = scale(value))
+test_data <- model_data %>% 
+  filter(metric == "FEve") %>%
+  mutate(study_id = as.factor(study_id))
 
 #lognormal
-ln_fit <- lmer(value_scale ~ year_center + (year_center|study_id/rarefyID), data = test_data,
+ln_fit <- lmer(logvalue ~ year_center + (year_center|study_id/rarefyID), data = test_data,
                control = lmerControl(optCtrl = list(maxit = 1e9,
                                                     maxfun = 1e9,
                                                     xtol_abs = 1e-11,
@@ -161,5 +172,14 @@ for(i in 1:length(algoptions)){
   }
 }
 
+```
+
+```{r}
+test_data <- model_data %>% 
+  filter(metric == "SES_FEve") %>%
+  mutate(study_id = as.factor(study_id))
+
+all_model <- lmer(value ~ year_scaled + taxa + realm + (year_scaled|study_id/rarefyID), 
+                                 data = test_data)
 ```
 
