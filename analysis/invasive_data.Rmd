@@ -33,65 +33,120 @@ options(geonamesUsername="karinorman")
 
 obs_data <- pins::pin_get("bt-traitfiltered", board = "github") %>%
   select(study_id, species) %>%
-  distinct()
+  distinct() %>%
+  mutate(scientificName = get_names(species, "itis"),
+         gbifID = get_ids(scientificName, "gbif")) %>%
+  mutate(gbifID = case_when(
+    scientificName == "Oreortyx pictus" ~ "GBIF:2474320",
+    scientificName == "Aegithalos caudatus" ~ "GBIF:2495000",
+    scientificName == "Papio anubis" ~ "GBIF:5707341",
+    scientificName == "Boana bischoffi" ~ "GBIF:160065393",
+    scientificName == "Boana faber" ~ "GBIF:10863437",
+    scientificName == "Ololygon rizibilis" ~ "GBIF:10896287",
+    scientificName == "Ololygon perpusilla" ~ "GBIF:7341662",
+    scientificName == "Boana pardalis" ~ "GBIF:10842532",
+    scientificName == "Ololygon littoralis" ~ "GBIF:10733643",
+    scientificName == "Brachycephalus pitanga" ~ "GBIF:10846405",
+    TRUE ~ gbifID
+  )) %>%
+  separate(gbifID, c("gbif", "ID"), remove = F) %>%
+  select(-gbif)
+
+# "Boana caipora" and "Boana albomarginata" have no GBIF ID 
 
 meta <- pins::pin_get("meta", board = "github") %>%
   select(study_id, cent_lat, cent_long) %>%
   filter(study_id %in% obs_data$study_id)
 
-get_GNcountry <- possibly(GNcountryCode, otherwise = NA_character_)
+# get_GNcountry <- possibly(GNcountryCode, otherwise = NA_character_)
+# 
+# get_country <- function(study_id, cent_lat, cent_long){
+#   #con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, lang = "en", radius = 50)
+#   con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, radius = 50)
+#   name <- ifelse(length(con_data) == 1, con_data, con_data$countryName)
+#   
+#   return(tibble(study_id = study_id, country = name))
+# }
+# 
+# country_data <- pmap_dfr(meta, get_country)
+# missing_cd <- country_data %>% filter(is.na(country)) %>% pull(study_id)
+# 
+# country_data2 <- pmap_dfr(meta %>% filter(study_id %in% missing_cd), get_country)
+# missing_cd2 <- country_data2 %>% filter(is.na(country)) %>% pull(study_id)
+# 
+# country_data_bind <- bind_rows(country_data %>% filter(!study_id %in% country_data2$study_id),country_data2) %>%
+#   mutate(country = case_when(
+#   study_id == 108 ~ "Namibia",
+#   study_id %in% c(166, 169) ~ "United States",
+#   study_id == 172 ~ "Morocco",
+#   TRUE ~ country
+# )) %>%
+#   mutate(code = countryname(country, destination = "genc2c")) %>%
+#   mutate(code = case_when(
+#     code == "CA" ~ "US",
+#     code == "PR" ~ "DO",
+#     TRUE ~ code
+#   ))
 
-get_country <- function(study_id, cent_lat, cent_long){
-  #con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, lang = "en", radius = 50)
-  con_data <- get_GNcountry(lat = cent_lat, lng = cent_long, radius = 50)
-  name <- ifelse(length(con_data) == 1, con_data, con_data$countryName)
-  
-  return(tibble(study_id = study_id, country = name))
-}
-
-country_data <- pmap_dfr(meta, get_country) %>%
-  #hand resolve study_ids in the ocean
-  mutate(country = case_when(
-  study_id == 108 ~ "Namibia", 
-  study_id %in% c(56, 166, 169) ~ "United States", 
-  study_id == 172 ~ "Morocco", 
-  TRUE ~ country
-)) %>%
-  mutate(code = countryname(country, destination = "genc2c")) %>%
-  mutate(code = case_when(
-    code == "CA" ~ "US", 
-    code == "PR" ~ "DO",
-    TRUE ~ code
-  ))
+country_data_bind <- pins::pin_get("country-data-bind", board = "github")
 
 obs_data <- obs_data %>%
-  left_join(country_data)
+  left_join(country_data_bind)
 ```
 
-Read in Invasive Data
+Read in Invasive Data, first using rgbif
 ```{r}
-invasive_files <- list.dirs(here::here("data", "invasive"))
+#rgbif invasive id's 
+invasive_search <- occ_data(taxonKey = na.omit(obs_data$ID), establishmentMeans = "INVASIVE;INTRODUCED", limit = 3000)
+invasive_data <- map_dfr(invasive_search, ~.x$data) %>%
+  select(acceptedTaxonKey, countryCode, establishmentMeans)
 
-invasive_data <- map_dfr(invasive_files[2:21], function(x){
-  taxon <- read_tsv(paste0(x, "/", "taxon.txt"))
-  profile <- read_tsv(paste0(x, "/", "speciesprofile.txt"))
-  dist <- read_tsv(paste0(x, "/", "distribution.txt")) %>%
-    select(id, countryCode)
-  
-  data <- left_join(taxon, profile) %>% left_join(dist)
-  return(data)
-})
+gbif_invasive <- obs_data %>%
+  mutate(ID = as.integer(ID)) %>%
+  left_join(invasive_data, by = c("ID" = "acceptedTaxonKey", "code" = "countryCode")) %>%
+  distinct() %>%
+  filter(!is.na(establishmentMeans))
 ```
+
+Read in invasive data from hand downloading from GBIF
+```{r}
+#invasive data from manual download  
+# invasive_files <- list.dirs(here::here("data", "invasive")) %>%
+#   select(acceptedTaxonKey, countryCode, establishmentMeans, occurrenceStatus) %>% 
+#   distinct()
+# 
+# invasive_data <- map_dfr(invasive_files[2:21], function(x){
+#   taxon <- read_tsv(paste0(x, "/", "taxon.txt"))
+#   profile <- read_tsv(paste0(x, "/", "speciesprofile.txt"))
+#   dist <- read_tsv(paste0(x, "/", "distribution.txt")) %>%
+#     select(id, countryCode)
+#   
+#   data <- left_join(taxon, profile) %>% left_join(dist)
+#   return(data)
+# }) %>%
+#   mutate(cleanScientificName = clean_names(scientificName, lowercase = FALSE),
+#          itisID = get_ids(cleanScientificName, "itis")) 
+
+invasive_table <- pins::pin_get("invasive-data", board = "github") %>%
+  mutate(cleanScientificName = clean_names(scientificName, lowercase = FALSE),
+           itisID = get_ids(cleanScientificName, "itis"),
+         gbifID = get_ids(cleanScientificName, "gbif"))
+
+manual_invasive <-  obs_data %>%
+  left_join(invasive_table %>% 
+              select(itisID, countryCode, ITISisInvasive = isInvasive), 
+            by = c("species" = "itisID", "code" = "countryCode")) %>%
+  left_join(invasive_table %>% 
+              select(gbifID, countryCode, GBIFisInvasive = isInvasive), 
+            by = c("species" = "gbifID", "code" = "countryCode")) %>%
+  distinct() %>% 
+  filter(GBIFisInvasive == "invasive" | ITISisInvasive == "invasive")
+
+```
+Only six invasive species across three studies!
+"Mus musculus"      "Rattus rattus"     "Rattus norvegicus" "Sus scrofa"        "Microtus arvalis"  "Apodemus agrarius"
 
 Substituting years:
 - orig: Canada, data: United States
 - orig: Puerto Rico, data: Dominican Republic
-
-Get datasets relevant for observed studies
-```{r}
-countries <- unique(country_data$country)
-datasets_list %>% filter(str_detect(datasetTitle, countries)) %>% View()
-
-
-```
 
