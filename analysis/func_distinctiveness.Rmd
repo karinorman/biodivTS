@@ -1,0 +1,65 @@
+---
+title: "Functional Rarity"
+output: html_document
+---
+```{r}
+library(funrar)
+library(biodivTS)
+```
+
+Calculate functional distinctiveness for each species based on the species pool (defined by all species observed over the course of the timeseries)
+
+Get data
+```{r}
+pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
+
+##	Get the gridded data locally
+bt_data <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+  rename_with(tolower)
+
+trait_ref <- pins::pin_get("trait-ref", board = "github")
+
+bt_abund <- bt_data %>%
+  filter(abundance_type %in% c("Count", "Density", "MeanCount"))
+
+bt_pres <- bt_data %>%
+  filter(abundance_type == "Presence/Absence")
+```
+
+```{r}
+get_ts_distinct <- function(data, trait_data, ts_id){
+  species_data <- data %>% 
+    filter(rarefyid == ts_id) %>%
+    select(species, abundance, year) %>%
+    pivot_wider(names_from = "species", values_from = "abundance", values_fill = 0) %>%
+    column_to_rownames("year") 
+  
+  rel_species <- make_relative(as.matrix(species))
+  # traits <- trait_data %>% 
+  #   filter(Species %in% unique(species$species)) %>% 
+  #   select_if(~length(unique(na.omit(.))) > 1) %>%
+  #   column_to_rownames("Species")
+  trait_dist <- get_traitMat(colnames(species_data), trait_data)
+  #bin_vars <- map(trait_mat, ~all(na.omit(.) %in% 0:1))
+  
+  trait_dist <- trait_dist %>%
+    mutate_if(is.character, as.factor) %>%
+    compute_dist_matrix(., metric = "gower")
+
+  distinctive <- as.data.frame(distinctiveness(pres_matrix = rel_species, dist_matrix = trait_dist)) %>%
+    rownames_to_column("year") %>%
+    mutate(rarefyid = ts_id)
+  
+  return(distinctive)
+}
+
+get_ts_distinct(bt_data, trait_ref, "39_407478")
+
+path <- here::here("data", "rarefied_samples")
+files <- dir(path, "*.rda") %>%
+  paste0(path, "/", .)
+
+plan("multiprocess", workers = 30)
+furrr::future_map(files, get_ts_distinct, traits = trait_ref)
+```
+
