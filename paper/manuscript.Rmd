@@ -102,8 +102,8 @@ timeseries. All studies included in the database follow consistent
 sampling protocols and represent full assemblages rather than population
 of single species. [@dornelas2018]. Following best practices for the
 database [@blowes2019] studies with multiple sample locations were split
-into individual timeseries following a standardized scale. A global grid
-was defined with a cell size determined based on the sample extent of
+into individual timeseries following a standardized scale. Scale was set
+by a global grid with cell size determined based on the sample extent of
 studies with only a single location (see [@dornelas2018] for details on
 how sample extents were defined), with the area of each cell set to one
 standard deviation away from the mean of the single extent locations.
@@ -126,11 +126,11 @@ obtained through the taxadb R package [@norman2020]. If more than one
 species in the assemblage data resolved to the same identifier,
 observations were considered the same species. For trait data, traits
 for all species of the same identifier were averaged. Only studies with
-at least 85% trait coverage were included. In order to have a sufficient
+at least 75% trait coverage were included. In order to have a sufficient
 number of species to calculate functional diversity metrics years with
 fewer than 4 species observed were excluded.
 
-Many studies had a variable number of samples within years. To adjust
+Many studies had a variable number of samples within years. To account
 for this inconsistency in sampling effort we used sample-based
 rarefaction by bootstrap resampling within years for each timeseries
 based on the smallest number of samples in a year for that timeseries.
@@ -138,8 +138,8 @@ based on the smallest number of samples in a year for that timeseries.
 Our final dataset included 2439 timeseries from 54 studies in 21
 countries and 15 biomes. Only four studies (consisting of 11 timeseries)
 come from Amphibian studies due to the limited availability of amphibian
-timeseries and low species richness values in those timeseries. For a
-full breakdown of studies and their characteristics see the supplement.
+timeseries and low species richness values for assemblages. For a full
+breakdown of studies and their characteristics see the supplement.
 
 #### *Diversity Metrics*
 
@@ -189,9 +189,11 @@ expectation for the metric for that timeseries. We used these values to
 calculate SES using the following formula:
 $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$. Unless otherwise
 specified, functional diversity results are reported for standardized
-values.
+values for the rest of the paper.
 
 #### *Analysis*
+
+*Overall Trends*
 
 We estimated overall trends for each diversity metric using a Linear
 Mixed Effects model with a random slope and intercept for each
@@ -199,57 +201,91 @@ timeseries nested within study. Differences in trends by taxa, biome,
 and realm were also modeled individually as covariates in models of the
 same structure.
 
-We assessed the type of changes happening in studies across metrics by
-performing a cluster analysis of the study-level trends for each metric
-using hierarchical clustering. Studies were clustered based on the
-overall temporal slope for each metric. We included all standardized
-functional diversity metrics and species richness to represent
-independent facets of biodiversity change.
+*Study-level Trends*
+
+We obtained study-level estimates of temporal change from the Best
+Linear Unbiased Predictors (BLUP's) for each overall trend model and
+assessed them in two ways. First, we looked at pairwise relationships
+between all metrics to assess what kinds of community shifts are
+commonly found together. We obtained correlations and bootstrapped
+p-values using *corr.test* and *corCI* functions in the *psych* R
+package (citation). Second, we assessed the relationship between all
+metrics simultaneously by performing a cluster analysis which grouped
+each study based on their similarities across all metrics. We used a
+hierarchical clustering algorithm through the function *hclust* from the
+R package *stats.* We included all standardized functional diversity
+metrics, species richness, and Jaccard similarity in the analysis. We
+report a qualitative interpretation of the groups from the cluster
+analysis.
+
 <!-- why do some studies not have blup estimates for FRic?-->
 
 ### Results
 
 We found no significant temporal trend in species richness or functional
-diversity metrics for either observed or standardized metrics. The lack
-of trend also held when data was broken down by taxa, biome and realm.
-We did find a significant decrease in Jaccard similarity, indicating
-increasing turnover through time.
+diversity metrics for either observed or standardized metrics. There
+continued to be no trend for studies broken down by taxa, biome or
+realm. We did find a significant overall decrease in Jaccard similarity,
+indicating increasing turnover through time.
 
 At the study level, the majority of studies (78%) experienced a
 significant temporal change in species richness and all functional
-diversity metrics. Only four studies experienced no significant trend in
-species richness clustering analysis showed that all but a few sites
-were part of a cluster characterized by minimal deviance from a zero
-temporal trend estimate for all metrics (Table 1). We identified four
-other clusters containing six studies that were characterized by outlier
-trends in at least one of the metrics and near-zero trends in the rest.
-The first contained two studies with the most strongly decreasing
-evenness. The second, two studies with the most strongly increasing
-functional divergence and increasing functional richness. The third
-contained one study with strongly decreasing functional divergence and
-richness, and the fourth strongly decreasing species richness with
-increasing functional richness.
+diversity metrics. 92% of sites experienced a significant trend for
+species richness, 88% for functional functional richness, 96% for
+functional divergence, 88% for functional evenness, and 35% for Jaccard
+similarity. Only four studies experienced no significant trend in
+species richness and were also characterized by significantly decreasing
+functional evenness. There was only one significant pairwise correlation
+between the metrics, a positive relationship between Functional
+Divergence and Functional Evenness, indicating that studies experiencing
+an increase in Divergence frequently experience and increase in
+Evenness.
+
+Cluster analysis grouped all but a few studies into a cluster
+characterized by non-siginficant or very small significant slopes for
+all metrics. We identified four other clusters containing six studies
+that were characterized by outlier trends in at least one of the metrics
+and near-zero trends in the rest. The first contained two studies with
+the most strongly decreasing evenness. The second, two studies with the
+most strongly increasing functional divergence and increasing functional
+richness. The third contained one study with strongly decreasing
+functional divergence and richness, and the fourth strongly decreasing
+species richness with increasing functional richness.
 
 ### Discussion
 
-Our study represents the first broad-scale multi-taxa assessment of
+Our study represents the largest broad-scale multi-taxa assessment of
 functional change through time, giving a first look at overall trends in
 functional diversity and the range of changes happening in mammal, bird,
-and amphibian communities.
+and amphibian communities. We found no systematic temporal change in any
+measured dimension of functional diversity or species richness, even
+within specific realms, biomes, or taxonomic groups. Species-based
+results are consistent with other broad scale analyses of biodiversity
+change through time [@dornelas2014] that found no overall trend in
+species richness despite increasing turnover. While nearly all of the
+studies included in our data experienced a significant increase or
+decrease in species richness, they were observed in equal numbers
+resulting in an overall trend not significantly different from zero.
+Surprisingly, there was also no general trend in functional diversity
+metrics indicating that, similar to species richness, communities are
+experience a wide range of functional shifts. Non significant results
+for study characteristics confirm that functional changes cannot be
+explained by the taxa, realm, or climate characteristics of a given
+study.
 
-We found no systematic temporal change in any measured dimension of
-functional diversity or species richness, even within specific realms,
-biomes, or taxonomic groups. Species-based results are consistent with
-other broad scale analyses of biodiversity change through time
-[@dornelas2014] that found no overall trend in species richness despite
-increasing turnover. While nearly all of the studies included in our
-data experienced a significant increase or decrease in species richness,
-they were observed in equal numbers resulting in an overall trend not
-significantly different from zero. Surprisingly, functional diversity
-metrics also did not capture any overall trends, indicating that similar
-to species richness, communities are experience a wide range of
-functional shifts that cannot be explained by their taxa, realm, or
-climate.
+Individual studies in our dataset demonstrate the variety of species and
+functional shifts that can happen concurrently in a community. Notably,
+many studies did not experience increasing turnover (65%) despite having
+significant change in functional dimensions.
+
+-   very few sites experienced increasing turnover, but the ones that
+    did were significant!
+
+-   what does it me for turnover not to be increasing but the function
+    of communities to be changing
+
+-   Biological homogenization is one of the hypothesized meaningful
+    forces
 
 While species-level metrics are the only functional data available to
 perform an analysis of this scale, they are unable to detect functional
