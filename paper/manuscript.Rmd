@@ -36,23 +36,23 @@ invasive species. Impacts of these pressures are well documented at a
 global scale by an accelerating global extinction rate [@barnosky2011],
 and fundamental changes in some of the most well-studied systems (e.g.
 coral bleaching). At the local scale however, species diversity tells a
-different story. Recent synthesis of local trends in biodiversity over
-time have found no net change in local biodiversity despite ongoing
-species turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017]
-and evidence of a decoupling of community composition from richness
-[@brose2016; @gotelli2017] . Potential hypothesis for the balance of
-etc..<!-- potential indication of biological homogenization due to shifting ranges and/or invasive species-->
+different story. Recent syntheses of local trends in biodiversity over
+time have found no net change in local species diversity despite ongoing
+turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017] and
+evidence of a significant shifts in community composition underlying
+consistent species richness [@brose2016; @gotelli2017] .
+<!-- potential indication of biological homogenization due to shifting ranges and/or invasive species-->
 While communities are clearly changing, our most common species-based
 approaches do not fully capture the nature of that change.
 
 Functional diversity offers a potentially powerful alternative for
 detecting and describing community change by providing a mechanistic
 link between the organisms in a system and the processes they perform
-[@mcgill2006]. By summarizing functional traits rather than species,
-functional diversity metrics capture the disproportionate impact of
-losses or gains of functionally unique species. Functional diversity
-metrics are therefore particularly well suited for addressing change in
-communities with constant species richness.
+[@mcgill2006]. By describing the functional trait space rather than
+species, functional diversity metrics capture the disproportionate
+impact of losses or gains of functionally unique species. Functional
+diversity metrics are therefore particularly well-suited for addressing
+change in communities with constant species richness.
 
 Loss of functional diversity is also linked to impacts on critical
 ecosystem and community processes. For example, there is increasing
@@ -61,7 +61,7 @@ function than species-based metrics [@cadotte2011; @gagic2015], and that
 different facets of functional diversity play essential roles in
 maintaining ecosystem stability [@craven2018; @morin2014]. Further,
 maintenance of functional diversity is key for maximizing adaptive
-potential of communities under climate change.
+potential of communities under climate change (citation).
 
 <!-- Functional loss is often implicit in work linking species loss to impacts on ecosystem processes despite a wide range of documented relationships between functional and species change [@biswas2011]. Examining functional and species change side by side across a variety of communities -->
 
@@ -75,8 +75,8 @@ of work has therefore focused largely on system-specific studies with
 traits collected *in situ*. Ongoing efforts to assemble functional
 traits for a variety of taxa have made synthesis of existing community
 assemblage data and functional traits possible for the first time,
-providing initial looks at how functional diversity changes on a
-broad-scale for specific taxa (e.g. fish[@trindade-santos2020], birds
+providing initial insights into the ways functional diversity changes on
+a broad scale for specific taxa (e.g. fish[@trindade-santos2020], birds
 [@jarzyna2016; @barnagaud2017]).
 <!-- so what do these studies say? does that go here? --> However, to
 date there has been no cross-taxa assessment of temporal functional
@@ -85,8 +85,8 @@ change for a broad geographic and taxonomic extent.
 Here we perform the first multi-taxa, multi-system assessment of
 functional diversity change through time. We assess thousands of mammal,
 bird, and amphibian functional diversity timeseries to 1) determine how
-functional diversity change compares to species change and 2) assess the
-types of functional shifts common across communities.
+functional shifts compares to species change and 2) assess the types of
+functional shifts that are most common across communities.
 <!-- While our data represent the largest collection of functional diversity timeseries to date, they are not a representative sample of systems experiencing biodiversity change. We do not therefore seek to classify the global trend in functional diversity change, but rather assess the utility of a functional lens in understanding biodiversity change.-->
 
 ### Material and Methods
@@ -97,21 +97,22 @@ We obtained mammal, bird, and amphibian timeseries from the Biotime
 database, a global repository of high quality community assemblage
 timeseries. All studies included in the database follow consistent
 sampling protocols and represent full assemblages rather than population
-of single species. [@dornelas2018]. Following best practices for the
-database [@blowes2019] studies with multiple sample locations were split
-into individual timeseries following a standardized scale. Scale was set
-by a global grid with cell size determined based on the sample extent of
-studies with only a single location (see [@dornelas2018] for details on
-how sample extents were defined), with the area of each cell set to one
-standard deviation away from the mean of the single extent locations.
-All samples from a study within a single cell were considered to be a
-single timeseries, and species abundances were combined for all samples.
+of single species [@dornelas2018]. Following best practices for the
+database [@blowes2019], studies with multiple sample locations were
+split into individual timeseries following a standardized spatial scale.
+Scale was set by a global grid with cell size determined based on the
+sample extent of studies with only a single location (see
+[@dornelas2018] for details on how sample extents were defined), with
+the area of each cell set to one standard deviation away from the mean
+of the single extent locations. All samples from a study within a single
+cell were considered to be a single timeseries, and species abundances
+were combined for all samples.
 
 We gathered trait data from the Elton Trait Database (mammals and birds;
 [@wilman2014]) and Amphibio (amphibians, [@oliveira2017]). These
 databases include species-level means for traits that best define
 species' function in the community including body size, diet, and
-behavioral characteristics <!-- what's in the amphibian database? -->.
+behavioral characteristics<!-- what's in the amphibian database? -->.
 For the full list of traits included in the analysis see the
 supplemental materials.
 <!-- limitations of species level trait data? -->
@@ -124,7 +125,7 @@ species in the assemblage data resolved to the same identifier,
 observations were considered the same species. For trait data, traits
 for all species of the same identifier were averaged. Only studies with
 at least 75% trait coverage were included. In order to have a sufficient
-number of species to calculate functional diversity metrics years with
+number of species to calculate functional diversity metrics, years with
 fewer than 4 species observed were excluded.
 
 Many studies had a variable number of samples within years. To account
@@ -132,11 +133,12 @@ for this inconsistency in sampling effort we used sample-based
 rarefaction by bootstrap resampling within years for each timeseries
 based on the smallest number of samples in a year for that timeseries.
 
-Our final dataset included 2439 timeseries from 54 studies in 21
-countries and 15 biomes. Only four studies (consisting of 11 timeseries)
-come from Amphibian studies due to the limited availability of amphibian
-timeseries and low species richness values for assemblages. For a full
-breakdown of studies and their characteristics see the supplement.
+Our final dataset included 2,439 timeseries from 54 studies in 21
+countries and 15 biomes <!-- list traits -->. Only four studies
+(consisting of 11 timeseries) came from Amphibian studies due to the
+limited availability of amphibian timeseries and low species richness
+values for assemblages. For a full breakdown of studies and their
+characteristics, see the supplement.
 
 #### *Diversity Metrics*
 
@@ -144,7 +146,7 @@ We calculated yearly metrics of functional and species diversity for
 each timeseries. Species-based metrics include species richness (*S*)
 and Jaccard similarity (*J*) as a measure of turnover. Jaccard
 similarity was calculated relative to the first observed year for a
-timeseries. A negative trend would therefore indicate increasing
+timeseries. A negative trend in *J* would therefore indicate increasing
 turnover.
 
 Functional diversity metrics were calculated using the *dbFD* function
@@ -194,14 +196,14 @@ values for the remainder of the paper.
 
 We estimated overall trends for each diversity metric using a Linear
 Mixed Effects model with a random slope and intercept for each
-timeseries nested within study. Differences in trends by taxa, biome,
-and realm were each modeled individually as covariates in models of the
-same structure.
+timeseries nested within the study. Differences in trends by taxa,
+biome, and realm were each modeled individually as covariates in models
+of the same structure.
 
 *Study-level Trends*
 
 We obtained study-level estimates of temporal change from the Best
-Linear Unbiased Predictors (BLUP's) for each overall trend model and
+Linear Unbiased Predictors (BLUPs) for each overall trend model and
 assessed them in two ways. First, we looked at pairwise relationships
 between all metrics to assess what kinds of community shifts are
 commonly found together. We obtained correlations and bootstrapped
@@ -230,23 +232,25 @@ significant temporal change in species richness and all functional
 diversity metrics. 92% of sites experienced a significant trend for
 species richness, 88% for functional functional richness, 96% for
 functional divergence, 88% for functional evenness, and 35% for Jaccard
-similarity. Only four studies experienced no significant trend in
-species richness and were also characterized by significantly decreasing
-functional evenness. There was only one significant pairwise correlation
-between the metrics, a positive relationship between Functional
-Divergence and Functional Evenness, indicating that studies experiencing
-an increase in Divergence frequently experience an increase in Evenness.
+similarity. Only 4 (cite studies) out of 54 studies experienced no
+significant trend in species richness and were also characterized by
+significantly decreasing functional evenness. There was only one
+significant pairwise correlation between the metrics, a positive
+relationship between Functional Divergence and Functional Evenness,
+indicating that communities experiencing an increase in Divergence
+frequently experience an increase in Evenness.
 
 Cluster analysis grouped all but a few studies into a cluster
 characterized by non-significant or very small significant slopes for
 all metrics. We identified four other clusters containing six studies
-that were characterized by outlier trends in at least one of the metrics
-and near-zero trends in the rest. The first contained two studies with
-the most strongly decreasing evenness. The second, two studies with the
-most strongly increasing functional divergence and increasing functional
-richness. The third contained one study with strongly decreasing
-functional divergence and richness, and the fourth strongly decreasing
-species richness with increasing functional richness.
+(list studies) that were characterized by outlier trends in at least one
+of the metrics and near-zero trends in the rest. The first contained two
+studies with the most strongly decreasing evenness. The second, two
+studies with the most strongly increasing functional divergence and
+increasing functional richness. The third contained one study with
+strongly decreasing functional divergence and richness, and the fourth
+strongly decreasing species richness with increasing functional
+richness.
 
 ### Discussion
 
@@ -257,7 +261,7 @@ and amphibian communities. Consistent with previous species-based
 syntheses, we found no overall trend in species diversity accompanied by
 increasing turnover through time [@dornelas2018]. While nearly all of
 the studies included in our data experienced a significant increase or
-decrease in species richness, they were observed in equal numbers
+decrease in species richness, trends were observed in equal numbers
 resulting in an overall trend not significantly different from zero.
 
 Surprisingly, we did not detect an overall trend in any of the observed
@@ -281,10 +285,10 @@ no relationship between species richness change and change in functional
 richness, meaning that even for studies that may be experiencing species
 losses there is not necessarily an accompanying loss of functional
 richness and in some cases there may even be an increase. These
-communities are gaining new species that are functional distinct enough
-to make up for functional losses due to species losses, a pattern that
-would be further magnified if the species lost are not functionally
-distinct members of the assemblage.
+communities are gaining new species that are functionally distinct
+enough to make up for functional losses due to species losses. This
+pattern would be further magnified if the species lost are not
+functionally distinct members of the assemblage.
 
 The overall trend of increasing turnover is consistent with work
 indicating higher than expected background rates of turnover in
@@ -299,11 +303,13 @@ Our results have important implications for how we approach work linking
 species loss to ecosystem processes, which often implicitly assume
 concurrent functional loss. There is no evidence of directional
 functional loss or even functional shifts accompany species loss in
-these natural communities. Building on a rich body of work linking
-species diversity changes to changes in ecosystem function, resilience,
-and stability (citations), it will be essential to tease apart effects
-due to species change from those due to functional shifts if we want to
-infer impacts in natural communities.
+these natural communities.
+<!-- clarify that this is about relationship between concurrent patterns in a single community -->
+Building on a rich body of work linking species diversity changes to
+changes in ecosystem function, resilience, and stability (citations), it
+will be essential to tease apart effects due to species change from
+those due to functional shifts if we want to infer impacts in natural
+communities.
 
 <!-- The absence of systematic loss of functional richness or functional divergence suggests that widespread biological homogenization is not occurring in sampled communities. Biological homogenization occurs when endemic or rare species are lost and replaced with generalist or non-native species, resulting in a loss of -->
 
