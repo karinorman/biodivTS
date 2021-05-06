@@ -311,6 +311,8 @@ will be essential to tease apart effects due to species change from
 those due to functional shifts if we want to infer impacts in natural
 communities.
 
+**Notes**
+
 <!-- The absence of systematic loss of functional richness or functional divergence suggests that widespread biological homogenization is not occurring in sampled communities. Biological homogenization occurs when endemic or rare species are lost and replaced with generalist or non-native species, resulting in a loss of -->
 
 As the first broad scale analysis of temporal functional diversity
