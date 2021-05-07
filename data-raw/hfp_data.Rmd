@@ -1,0 +1,123 @@
+---
+title: "Human Footprint"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Extract zip files
+```{r}
+# library(archive)
+# hf_arhc <- archive_extract(here::here("data", "HumanFootprintv2.7z.zip"), here::here("data"))
+```
+
+Read in raster
+```{r}
+library(raster)
+library(sf)
+library(dplyr)
+library(geosphere)
+library(osmdata)
+
+# met_data <- pins::pin_get("rarefied-metrics", board = "github")
+# rarefyIDs <- met_data %>% pull(rarefyID) %>% unique()
+
+hfp_1993 <- raster(here::here("data/Dryadv3/Maps/HFP1993_int.tif")) %>%
+  reclassify(., c(100, 128, NA))
+
+hfp_2009 <- raster(here::here("data/Dryadv3/Maps/HFP2009_int.tif")) %>%
+  reclassify(., c(100, 128, NA))
+
+#study-level points
+# meta <- pins::pin_get("meta", board = "github")
+# study_points <- st_as_sf(meta, coords = c("cent_lat", "cent_long"))
+  
+#get rarefyid centers
+rare_cells <- pins::pin_get("rarefyID-cell-centre", board = "github")
+points <- st_as_sf(rare_cells, coords = c("rarefyID_x", "rarefyID_y"), crs = "EPSG:4326") %>%
+  st_transform(points, crs = st_crs(hfp_1993)) %>%
+  #filter(rarefyID %in% rarefyIDs) %>% 
+  dplyr::select(-cell_extent)
+
+# Get 1993 data
+ex_1993 <- extract(hfp_1993, points, buffer = 1000, fun = mean, na.rm = TRUE, sp = TRUE) %>%
+  st_as_sf(crs = st_crs(hfp_1993))
+ex_1993_bigbuff <- ex_1993 %>% filter(is.na(HFP1993_int)) %>% dplyr::select(-HFP1993_int) %>%
+  extract(hfp_1993, ., buffer = 45000, fun = mean, na.rm = TRUE, sp = TRUE) %>%
+  st_as_sf(crs = st_crs(hfp_1993))
+
+# Get2009 data
+ex_2009 <- extract(hfp_2009, points, buffer = 1000, fun = mean, na.rm = TRUE, sp = TRUE) %>%
+  st_as_sf(crs = st_crs(hfp_1993))
+ex_2009_bigbuff <- ex_2009 %>% filter(is.na(HFP2009_int)) %>% dplyr::select(-HFP2009_int) %>%
+  extract(hfp_2009, ., buffer = 45000, fun = mean, na.rm = TRUE, sp = TRUE) %>%
+  st_as_sf(crs = st_crs(hfp_1993))
+
+hfp_data <- bind_rows(bind_rows(ex_1993, ex_1993_bigbuff) %>% mutate(hfpYear = 1993), 
+          bind_rows(ex_2009, ex_2009_bigbuff) %>% mutate(hfpYear = 2009))
+
+hfp_data <- left_join(bind_rows(ex_1993 %>% filter(!rarefyID %in% ex_1993_bigbuff$rarefyID), ex_1993_bigbuff) %>% 
+                        rename(`1993` = HFP1993_int) %>%
+                        st_drop_geometry(), 
+          bind_rows(ex_2009 %>% filter(!rarefyID %in% ex_2009_bigbuff$rarefyID), ex_2009_bigbuff) %>% 
+            rename(`2009` = HFP2009_int) %>%
+            st_drop_geometry()) %>%
+  pivot_longer(c(`1993`, `2009`), names_to = "year", values_to = "hfp")
+
+pins::pin(hfp_data, board = "github")
+```
+
+Attempt at getting distance from shore
+```{r}
+#Get list of countries
+# pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
+# country_data <- pins::pin_get("country-data-bind", board = "github") %>%
+#   mutate(country = str_remove(country, "Commonwealth of The "),
+#          country = str_remove(country, "Kingdom of "),
+#          country = str_remove(country, "Republic of "),
+#          country = str_remove(country, "Kingdom of "),
+#          country = str_remove(country, "Federative Republic of "),
+#          country = str_remove(country, "Federative "),) %>%
+#   mutate(country = case_when(
+#     country == "United States" ~ "USA",
+#     country == "Russian Federation" ~ "Russia",
+#     country == "United Great Britain and Northern Ireland" ~ "UK",
+#     country == "Czechia" ~ "Czech",
+#     TRUE ~ country
+#   )) 
+# 
+# map(unique(country_data$country), osm_box)
+# 
+# get_coasts <- function(country_name) {
+#   osm_box <- getbb(place_name = country_name) %>%
+#   opq() %>%
+#   add_osm_feature("natural", "coastline") %>%
+#   osmdata_sf()
+# }
+# osm_box <- getbb(place_name = "World") %>%
+#   opq() %>%
+#   add_osm_feature("natural", "coastline") %>%
+#   osmdata_sf()
+# 
+# dist <- geosphere::dist2Line(p = st_as_sf(rare_cells, coords = c("rarefyID_x", "rarefyID_y"), crs = "EPSG:4326") %>% st_coordinates(), 
+#                          line = st_coordinates(osm_box$osm_lines)[,1:2])
+# 
+# #combine initial data with distance to coastline
+# df <- cbind( d1 %>% rename(y=lat,x=long),dist) %>%
+#   mutate(miles=distance/1609)
+# 
+# st_as_sf(rare_cells, coords = c("rarefyID_x", "rarefyID_y"), crs = "EPSG:4326")
+```
+
+Plot
+```{r}
+# plot all points 
+plot(hfp_1993) 
+plot(points, pch = 19, add = TRUE)
+
+plot(hfp_1993) 
+plot(ex_1993_bigbuff %>% filter(is.na(HFP1993_int), rarefyID %in% model_data$rarefyID) , pch = 10, add = TRUE)
+```
+

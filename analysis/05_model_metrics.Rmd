@@ -13,6 +13,7 @@ library(tidyverse)
 library(lme4)
 library(broom.mixed)
 library(lmerTest)
+library(cowplot)
 ```
 
 Get data and put it in long form 
@@ -188,19 +189,13 @@ metric_model_table <- bind_rows(select(SES_rand_slope, -model), select(metric_ra
 Kitchen sink model
 ```{r}
 all_model <- model_data %>%
-  filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis")) %>%
+  filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv", "S", "Jaccard_base")) %>%
   group_nest(metric) %>%
   mutate(model = map(data, ~lmer(value ~ year_scaled + taxa + realm + (year_scaled|study_id/rarefyID), 
                                  data = .x)),
-           null_model = map(data, ~lmer(value ~ taxa + realm + (year_scaled|study_id/rarefyID),
-                                 data = .x)),
-           test = map2(model, null_model, anova),
-           test_res = map(test, tidy),
            coef = map(model, tidy)
            ) %>%
-  unnest(cols = c(test_res)) %>%
-  select(metric, model, coef, p.value) %>%
-  filter(!is.na(p.value)) %>%
+  select(metric, model, coef) %>%
   unnest(cols = c(coef)) %>%
   filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
@@ -265,22 +260,88 @@ climate_slope_model_S <- model_data %>%
                                  data = ., REML = TRUE)
 ```
 
-Get study level slop estimates
+Get study level slope estimates
 ```{r}
-get_blup <- function(metric, model){
-  coef(model)$study_id %>%
-    rownames_to_column("study_id") %>%
-    mutate(metric = metric)
+get_study_slopes <- function(metric, model){
+  year_scaled_coef <- tidy(model) %>%
+    filter(term == "year_scaled") 
+  
+  year_scaled_est <- pull(year_scaled_coef, estimate) 
+  
+  year_scaled_var <- year_scaled_coef %>% 
+    mutate(var = std.error*std.error) %>%
+    pull(var)
+  
+  study_ests <- broom.mixed::tidy(model, effects="ran_vals") %>%
+    filter(group == "study_id", term == "year_scaled") %>% 
+    select(-c(effect, group, term)) %>%
+    rename(study_id = level, cond.std.error = std.error, cond.estimate = estimate) %>%
+    mutate(estimate = cond.estimate + year_scaled_est,
+      cond.var = cond.std.error*cond.std.error, 
+           var = cond.var + year_scaled_var,
+           std.error = sqrt(var),
+           upr.ci = estimate + (2*std.error),
+           lwr.ci = estimate - (2*std.error),
+           sig = case_when(
+             lwr.ci < 0 & upr.ci > 0 ~ TRUE,
+             TRUE ~ FALSE
+           ),
+           metric = metric)
 }
 
-blup <- pmap_dfr(bind_rows(select(SES_rand_slope, metric, model), select(metric_rand_slope,  metric, model)), get_blup) %>%
-  rename(intercept = "(Intercept)")
+study_slopes <- pmap_dfr(bind_rows(select(SES_rand_slope, metric, model), select(metric_rand_slope,  metric, model)), get_study_slopes)
 
-blup_slope <- blup %>%
-  pivot_wider(names_from = "metric", values_from = "year_scaled")
+slopes_wide <- study_slopes %>%
+  select(study_id, metric, estimate) %>%
+  pivot_wider(names_from = "metric", values_from = "estimate")
+```
 
+Summaries of study slopes
+```{r}
+#First - how many studys had a significant trend for each metric? 
+study_slopes %>% 
+  filter(sig == TRUE) %>% 
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
+  group_by(metric) %>% 
+  summarise(n_study_id = n_distinct(study_id)) %>%
+  mutate(percent = n_study_id/54) 
+
+#And how many were significant for all but Jaccard?
+study_slopes %>% 
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "S")) %>% 
+  group_by(study_id) %>% filter(sum(sig) == 4) %>% pull(study_id) %>% 
+  n_distinct()
+
+#Breakdown of relationship between functional richness and species richness
+s_sig <- study_slopes %>% filter(metric == "S", sig == TRUE) %>% pull(study_id) %>% unique()
+s_sig_not_fric <- study_slopes %>% 
+  filter(study_id %in% s_sig, metric == "FRic", sig == FALSE) %>% 
+  pull(study_id) %>%
+  unique()
+
+both_sig <- study_slopes %>% 
+  filter(study_id %in% s_sig, metric == "FRic", sig == TRUE) %>%
+  pull(study_id)
+
+both_pos
+fric_pos
+s_pos_fric_neg <- study_slopes %>%
+  filter(study_id %in% both_sig) %>% 
+  group_by(study_id) %>%
+  filter(sum(sign(estimate)) == 0) 
+
+```
+Pairwise correlation analysis
+```{r}
+slope_corr <- corr.test(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
+
+slope_corr_bootstrap <- corCi(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
+```
+
+Plots of study-level slopes
+```{r}
 #pairwise plots using GGally
-ggpairs(blup_slope %>% 
+ggpairs(slopes_wide %>% 
           select(-c("study_id", "FDiv", "FEve", "FRic")))
 
 #pairwise plots using GGPlot
@@ -302,7 +363,7 @@ gatherpairs <- function(data, ...,
                na.rm = na.rm, convert = convert, factor_key = factor_key)
 }
 
-blup_slope %>% 
+slopes_wide %>% 
   gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S") %>% {
   ggplot(., aes(x = .xvalue, y = .yvalue)) +
       geom_point() + 
@@ -311,7 +372,7 @@ blup_slope %>%
       scale_color_brewer(type = 'qual')
   }
 
-blup_slope %>%
+slopes_wide %>%
   select(-c("FDiv", "FEve", "FRic")) %>%
   pivot_longer(-one_of("study_id", "S"), names_to = "metric") %>%
   ggplot(aes(x = S, y = value)) +
@@ -325,7 +386,7 @@ blup_slope %>%
   ylab("Metric Slope") +
   xlab("Richness Slope")
 
-blup_slope %>%
+slopes_wide %>%
   select(-c("FDiv", "FEve", "FRic")) %>%
   pivot_longer(-one_of("study_id", "SES_FRic"), names_to = "metric") %>%
   ggplot(aes(x = SES_FRic, y = value)) +
@@ -345,17 +406,16 @@ Clustering
 library(clValid)
 scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
 
-blup_mat <- blup_slope %>%  
-  #these studies have NA's for some reason, remove them 
-  filter(!study_id %in% c(445, 446, 348, 382, 312)) %>%
-  select(study_id, starts_with("SES"), S) %>%
+scale_slopes <- slopes_wide %>%  
+  drop_na() %>%
+  select(study_id, starts_with("SES"), S, Jaccard_base) %>%
   column_to_rownames("study_id") %>%
   mutate(across(.fns = scale2)) %>%
   as.matrix()
 
 clmethods <- c("hierarchical","kmeans","pam")
-intern <- clValid(blup_mat, nClust = 2:6, clMethods = clmethods, validation = "internal")
-stab <- clValid(blup_mat, nClust = 2:6, clMethods = clmethods, validation = "stability")
+intern <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "internal")
+stab <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "stability")
 
 summary(intern)
 optimalScores(stab)
@@ -366,15 +426,17 @@ cat5 <- cutree(clust, k = 5)
 cat3 <- cutree(clust, k = 3)
 
 
-blup_clust <- blup_slope %>% 
+slopes_clust <- slopes_wide %>% 
+  ungroup() %>%
   left_join(as.data.frame(cat3) %>%
   rownames_to_column("study_id")) %>%
   left_join(as.data.frame(cat5) %>%
   rownames_to_column("study_id"))
 ```
+
 ```{r}
-blup_clust %>% 
-  gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S") %>% {
+slopes_clust %>% 
+  gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S", "Jaccard_base") %>% {
   ggplot(., aes(x = .xvalue, y = .yvalue, color = as.factor(cat5))) +
       geom_point() + 
       #geom_smooth(method = 'lm') +
@@ -435,7 +497,8 @@ plot_metric <- function(metric_name, ylabel, yval, data, model_coef){
     theme_classic() +
     ylab(ylabel) +
     labs(color = "Climate") +
-    scale_fill_jcolors(palette = "pal7")
+    scale_color_manual(values = c("#32a251", 
+                "#ff7f0f", "#39737c", "#b85a0d", "#ffd94a"))
   
   ggsave(paste0(here::here("figures"), "/",metric_name, "_trend.png"), trend_plot)
   return(trend_plot)
@@ -447,12 +510,12 @@ model_coef <- bind_rows(SES_rand_slope, metric_rand_slope) %>%
   select(-model) %>% 
   unnest(cols = c(coef))
 
-plot_metric("FRic", "log(FD)")
 
 plot_map <- tibble(metric_name = c("S", "SES_FRic", "Jaccard_base"), 
            ylabel = c("log(S)", "Functional Richness", "Jaccard"),
            yval = c("logvalue", "value", "value"))
 m_plots <- pmap(plot_map, plot_metric, data = model_data, model_coef = model_coef)
 
-plot_join <- plot_grid(plotlist=m_plots, labels = c("A", "B", "C"), nrow = 1)
+plot_join <- plot_grid(plotlist=m_plots, labels = c("A", "B", "C"), nrow = 3)
+ggsave2("3met_long.jpeg")
 ```
