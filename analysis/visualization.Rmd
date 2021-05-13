@@ -1,7 +1,5 @@
 ---
-title: "Visualization"
-author: "Kari Norman"
-date: "9/18/2019"
+title: "worldmap"
 output: html_document
 ---
 
@@ -9,130 +7,68 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-library(tidyverse)
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(mapproj)
+library(stringr)
 ```
 
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
+country_data <- pins::pin_get("country-data-bind", board = "github") %>%
+  mutate(country = str_remove(country, "Commonwealth of The "),
+         country = str_remove(country, "Kingdom of "),
+         country = str_remove(country, "Republic of "),
+         country = str_remove(country, "Kingdom of "),
+         country = str_remove(country, "Federative Republic of "),
+         country = str_remove(country, "Federative "),) %>%
+  mutate(country = case_when(
+    country == "United States" ~ "USA",
+    country == "Russian Federation" ~ "Russia",
+    country == "United Great Britain and Northern Ireland" ~ "UK",
+    country == "Czechia" ~ "Czech Republic",
+    TRUE ~ country
+  )) %>% 
+  count(country, code)
 
-metrics <- pins::pin_get("rarefied-medians", board = "github") %>%
-  pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "cYEAR", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
-  rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID"))) 
+mapdata <- map_data("world") %>%
+  left_join(country_data, by = c("region" = "country"))
+
+mapdata %>%
+  ggplot(aes(long, lat)) +
+  geom_polygon(mapping = aes(group = group, fill = n)) +
+  ggthemes::theme_map() +
+  #scale_fill_continuous(color = "#32A251")
+  scale_fill_gradient(low = "white", high = "#39737c")
+
+ggsave("study_map.jpeg")
 ```
 
 ```{r}
-world <- map_data("world")
+#get rarefyid centers
+included_ids <- pins::pin_get("model-data", board = "github") %>%
+  select(rarefyID, taxa, climate, realm) %>%
+  distinct() %>% 
+  mutate(rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
+  rarefyID = str_replace_all(rarefyID, pattern = "_mamm", ""))
 
-plt <- ggplot() +
-  geom_polygon(data = world, aes(x=long, y = lat, group = group), fill = NA, color = "black", size = .25) +
-  coord_fixed(1.3) +
-  theme_minimal()
+study_data <- pins::pin_get("rarefyID-cell-centre", board = "github") %>%
+  inner_join(included_ids)
 
-plt +
-  geom_point(data = metrics %>% distinct(cent_lat, cent_long), aes(x = cent_long, y = cent_lat), color = "#cc5968", size = .75)
-
-ggsave("study_map.png")
-
+map_data("world") %>%
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(fill = "white", colour = "grey") + 
+  coord_map(xlim=c(-180,180), ylim=c(-57, 90)) +
+  geom_point(data = study_data, aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.5, inherit.aes = FALSE) +
+  ggthemes::theme_map()
 ```
 
-#Visualizing FD trends
-```{r}
-#load(here::here("data", "fd_table.rda"))
-fd_table <- pins::pin_get("fd-table", board = "github")
-
-fric_plot <- fd_table %>%
-  filter(metric == "FRic") %>%
-  ggplot(aes(
-    x = year,
-    y = value,
-    colour = as.factor(plot)
-  )) +
-  geom_line() +
-  scale_x_continuous(breaks = scales::pretty_breaks()) +
-  facet_wrap( ~ as.factor(plot_id), scales = "free") +
-  theme(legend.position = "none") +
-  ylab("Fric")
-
-ggsave("fric_trends.png", fric_plot)
-```
-
-Reproduce Dornelas figure
-```{r}
-#get climate classification
-metadata <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS"))
-
-fric_trend <- fd_table %>%
-  filter(metric == "FRic") %>%
-  left_join(metadata %>% select(study_id, climate)) %>%
-  ggplot(aes(x = year, y = log(value))) +
-  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
-  # geom_point(aes(color = climate, group = plot_id)) +
-  geom_smooth(aes(group = plot_id), color = "grey", method = "glm", se = FALSE) +
-  geom_point(aes(group = plot_id) ,color = "grey") +
-  geom_smooth(color = "black", method = "glm", se = FALSE) +
-  theme(legend.position = "none") 
-ggsave("fric_trends.png", fric_plot)
-```
-
-metric plotting function
-```{r}
-library(lme4)
-
-plot_metric <- function(metric_name, ylabel){
-  data <- metrics %>%
-    filter(metric == metric_name, !is.na(value), !is.infinite(value)) %>%
-    mutate(logvalue = log(value))
-  
-  mod <- lmer(logvalue ~ year + (1|rarefyID), data = data)
-  coefs <- summary(mod)$coefficients
-  
-  print(metric_name) 
-  print(summary(mod))
-  confint(mod)
-  
-  pred <- data.frame(year = min(data$year):max(data$year)) %>%
-    mutate(pred = coefs[1,1] + year * coefs[2,1])
-
-  trend_plot <- data %>%
-    left_join(pred, by = "year") %>%
-    #left_join(metadata %>% select(study_id, climate)) %>%
-    ggplot(aes(x = year, y = logvalue)) +
-    # geom_smooth(aes(color = climate, group = rarefyID), method = "glm", se = FALSE) +
-    # geom_point(aes(color = climate, group = rarefyID)) +
-    geom_point(aes(group = rarefyID) ,color = "grey") +
-    geom_smooth(aes(group = rarefyID), color = "darkgrey", method = "glm", se = FALSE) +
-    #geom_smooth(color = "black", method = "glm", se = FALSE) +
-    geom_line(mapping = aes(y = pred)) +
-    theme(legend.position = "none") +
-    theme_classic() +
-    ylab(ylabel)
-  
-  ggsave(paste0(metric_name, "_trend.png"), trend_plot)
-  return(trend_plot)
-}
-
-plot_metric("FRic", "log(FD)")
-
-plot_map <- tibble(metric_name = c("FRic", "FEve", "FDiv", "FDis"), 
-           ylabel = c("log(FD)", "log(Evenness)", "log(Divergence)", "log(Dispersion)"))
-pmap(plot_map, plot_metric)
-```
-
-get model info
-```{r}
-get_metric_conint <- function(metric_name){
- data <- metrics %>%
-    filter(metric == metric_name) %>%
-    mutate(rarefyID = as.factor(rarefyID), logValue = log(value))
-  
-  mod <- lmer(logValue ~ year + (1|rarefyID), data = data)
-  coefs <- summary(mod)$coefficients
-  
-  confint(mod)
-  # as_tibble(confint(mod)) %>%
-  #   mutate(metric = metric_name)
-}
-
-map(c("FRic", "FEve", "FDiv", "FDis"), get_metric_conint)
-```

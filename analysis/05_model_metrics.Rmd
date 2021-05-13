@@ -35,19 +35,49 @@ metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
   filter(!is.na(value)) %>%
   mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
   left_join(meta, c("rarefyID" = "rarefyid"))
+
+## Now the data that actually makes it into the model ##
+
+#find rarefyID's that have inf value for some metrics and exclude
+cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
+
+#get rarefyID's that don't have enough null samples
+missing_null <- bind_rows(metrics %>% 
+  filter(n_missing_nulls == 1, commplete_null_samps == FALSE),
+  metrics %>% filter(n_missing_nulls > 100)) %>%
+  pull(rarefyID) %>%
+  unique()
+
+model_data <- metrics %>% 
+  filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
+  group_by(metric) %>%
+  mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
+  mutate(year_scaled = scale(year), 
+         scale_center = attributes(year_scaled)$`scaled:center`, 
+         scale = attributes(year_scaled)$`scaled:scale`) %>%
+  ungroup()
+
+pins::pin(model_data, board = "github")
+```
+Add human footprint data
+```{r}
+hfp_data <- pins::pin_get("hfp-data", board = "github")
+
+model_data_hfp <- model_data %>% 
+  #dplyr::select(rarefyID, year) %>% 
+  #distinct() %>%
+  mutate(hfp_year = case_when(
+    year < 2001 ~ 1993,
+    TRUE ~ 2009
+  ), 
+  hfp_rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
+  hfp_rarefyID = str_replace_all(hfp_rarefyID, pattern = "_mamm", "")) %>%
+  left_join(hfp_data %>% dplyr::select(-STUDY_ID) %>% mutate(year = as.numeric(year)), by = c("hfp_year" = "year", "hfp_rarefyID" = "rarefyID")) %>%
+  dplyr::select(-hfp_year)
+
 ```
 
 ####Data exploration
-
-How many years are missing FD metrics? Only a handful! Let's exclude them so we can get an accurate view of the number of years for which we have data for each timeseries                                                                                                     
-```{r}
-# no_fd_years <- metrics %>%
-#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis"), is.na(value))
-# 
-# dim(no_fd_years)
-# 
-# metrics <- setdiff(metrics, no_fd_years)
-```
 
 Visualize number of years for each timeseries
 ```{r}
@@ -86,7 +116,7 @@ metrics %>%
   labs(title = "Distribution of raw values")
 ```
 
-Fit GLM to overall metric trend
+####Fit GLM to overall metric trend
 
 Convergence problems!! See here:
 https://joshua-nugent.github.io/allFit/
@@ -100,25 +130,6 @@ https://debruine.github.io/posts/normality/
 performance::check_model()
 
 ```{r}
-#find rarefyID's that have inf value for some metrics and exclude
-cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
-
-#get rarefyID's that don't have enough null samples
-missing_null <- bind_rows(metrics %>% 
-  filter(n_missing_nulls == 1, commplete_null_samps == FALSE),
-  metrics %>% filter(n_missing_nulls > 100)) %>%
-  pull(rarefyID) %>%
-  unique()
-
-model_data <- metrics %>% 
-  filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
-  group_by(metric) %>%
-  mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
-  mutate(year_scaled = scale(year), 
-         scale_center = attributes(year_scaled)$`scaled:center`, 
-         scale = attributes(year_scaled)$`scaled:scale`) %>%
-  ungroup()
-
 # model for overall trend (random effect w/varying intercept)
 # metric_mean_fit <- model_data %>%
 #   filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
