@@ -17,13 +17,23 @@ Get data and put it in long form
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 
+#get metadata
+meta <- pins::pin_get("meta", board = "github") %>%
+  select(study_id, realm, climate, habitat, protected_area, biome_map)
+
+meta <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+  select(study_id, rarefyid, taxa) %>% distinct() %>%
+  left_join(meta)
+
+#get metric data
 metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
   # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
   filter(!is.na(value)) %>%
-  mutate(logvalue = log(value + 1),
-         year_scaled = scale(year)) # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
+  left_join(meta, c("rarefyID" = "rarefyid"))
 
+#find rarefyID's that have inf value for some metrics and exclude
 cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
 
 #get rarefyID's that don't have enough null samples
@@ -35,7 +45,12 @@ missing_null <- bind_rows(metrics %>%
 
 model_data <- metrics %>% 
   filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
-  mutate(study_id = substr(rarefyID, 1, 3))
+  group_by(metric) %>%
+  mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
+  mutate(year_scaled = scale(year), 
+         scale_center = attributes(year_scaled)$`scaled:center`, 
+         scale = attributes(year_scaled)$`scaled:scale`) %>%
+  ungroup()
 ```
 
 ####Data exploration
@@ -43,7 +58,7 @@ model_data <- metrics %>%
 Visualize distributions of response
 ```{r}
 model_data %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S_int")) %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_base")) %>%
   ggplot() +
   geom_histogram(aes(x = logvalue),
                  bins = 60) +
@@ -51,7 +66,7 @@ model_data %>%
   labs(title = "Distribution of Log values")
 
 model_data %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S_int")) %>%
+  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_base")) %>%
   ggplot() +
   geom_histogram(aes(x = value),
                  bins = 60) +
@@ -62,11 +77,11 @@ model_data %>%
 Fit a single model to play around with 
 ```{r}
 test_data <- model_data %>% 
-  filter(metric == "FEve") %>%
+  filter(metric == "FRic") %>%
   mutate(study_id = as.factor(study_id))
 
 #lognormal
-ln_fit <- lmer(logvalue ~ year_center + (year_center|study_id/rarefyID), data = test_data,
+ln_fit <- lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), data = test_data,
                control = lmerControl(optCtrl = list(maxit = 1e9,
                                                     maxfun = 1e9,
                                                     xtol_abs = 1e-11,
@@ -80,13 +95,40 @@ poiss_fit <- glmer(value ~ year_center + (year_center|study_id/rarefyID), data =
 nb_fit <- glmer.nb(value ~ year_center + (year_center|study_id/rarefyID), data = test_data)
 ```
 
+
+Get p-values for blups 
 ```{r}
-options(mc.cores = parallel::detectCores())
-stan_fit <- stan_lmer(value_scale ~ year_center + (year_center|study_id/rarefyID), data = test_data, iter = 500)
+cV <- ranef(ln_fit, effects = "ran_vals", drop = TRUE)
+ranvar <- attr(cV[[1]], "postVar")
 
-launch_shinystan(stan_fit,ppd = FALSE)
+ng <- dim(ranvar)[3]
+np <- dim(ranvar)[2]
+mm <- matrix(ranvar[cbind(rep(seq(np),ng),
+             rep(seq(np),ng),
+             rep(ng,each=np))],
+       byrow=TRUE,
+       nrow=ng)
+
+sumVar <- vcov(ln_fit)[1,1]+mm[,1]
+
+year_scaled_var <- tidy(ln_fit) %>%
+  filter(term == "year_scaled") %>% 
+  mutate(var = std.error*std.error) %>%
+  pull(var) 
+
+study_ests <- broom.mixed::tidy(ln_fit, effects="ran_vals") %>%
+  filter(group == "study_id", term == "year_scaled") %>% 
+  rename(cond.std.error = std.error) %>%
+  mutate(cond.var = cond.std.error*cond.std.error, 
+         var = cond.var + year_scaled_var,
+         std.error = sqrt(var),
+         upr.ci = estimate + (2*std.error),
+         lwr.ci = estimate - (2*std.error),
+         sig = case_when(
+           lwr.ci < 0 & upr.ci > 0 ~ FALSE,
+           TRUE ~ TRUE
+         ))
 ```
-
 
 Look for best optimizer using `allFit()`, doesn't look like any of them work
 ```{r}

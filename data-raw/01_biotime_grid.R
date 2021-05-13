@@ -219,7 +219,10 @@ ML_coords <- ungroup(bt) %>%
 rarefyID_cell_centre <- bind_rows(rarefyID_cell_centre, SL_coords, ML_coords)
 ##	not sure why but I have multiple entries for each rarefyID!
 rarefyID_cell_centre <- rarefyID_cell_centre %>% distinct(STUDY_ID, rarefyID, cell_extent, rarefyID_x, rarefyID_y)
-#save(rarefyID_cell_centre, file='rarefyID_cell_centre_011017.Rdata')
+
+#save to cache
+pins::pin(rarefyID_cell_centre, board = "github")
+
 ##======================================================================
 ##	reduce to data required for rarefying, and rename a couple of columns
 ##	NB: we will rarefy to the smallest number of ObsEventID's within studies

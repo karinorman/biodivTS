@@ -27,20 +27,22 @@ bt_pres <- bt_data %>%
 ```
 
 ```{r}
-get_ts_distinct <- function(data, trait_data, ts_id){
-  species_data <- data %>% 
-    filter(rarefyid == ts_id) %>%
-    select(species, abundance, year) %>%
-    pivot_wider(names_from = "species", values_from = "abundance", values_fill = 0) %>%
-    column_to_rownames("year") 
+loadRData <- function(file_name){
+  load(file_name)
+  get(ls()[ls() != "file_name"])
+}
+
+get_ts_distinct <- function(file_path, trait_data){
   
-  rel_species <- make_relative(as.matrix(species))
-  # traits <- trait_data %>% 
-  #   filter(Species %in% unique(species$species)) %>% 
-  #   select_if(~length(unique(na.omit(.))) > 1) %>%
-  #   column_to_rownames("Species")
-  trait_dist <- get_traitMat(colnames(species_data), trait_data)
-  #bin_vars <- map(trait_mat, ~all(na.omit(.) %in% 0:1))
+  rare_comm_save <- loadRData(file_path)
+
+  species_mat <- rare_comm_save %>%
+    column_to_rownames("YEAR") %>%
+    dplyr::select(-c(rarefyID, cell, type, rarefy_resamp))
+  
+  rel_species <- make_relative(as.matrix(species_mat))
+
+  trait_dist <- get_traitMat(colnames(species_mat), trait_data)
   
   trait_dist <- trait_dist %>%
     mutate_if(is.character, as.factor) %>%
@@ -48,18 +50,40 @@ get_ts_distinct <- function(data, trait_data, ts_id){
 
   distinctive <- as.data.frame(distinctiveness(pres_matrix = rel_species, dist_matrix = trait_dist)) %>%
     rownames_to_column("year") %>%
-    mutate(rarefyid = ts_id)
+    mutate(rarefyid = unique(rare_comm_save$rarefyID), 
+           rarefy_resamp = unique(rare_comm_save$rarefy_resamp))
   
   return(distinctive)
 }
 
-get_ts_distinct(bt_data, trait_ref, "39_407478")
 
 path <- here::here("data", "rarefied_samples")
 files <- dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
-plan("multiprocess", workers = 30)
-furrr::future_map(files, get_ts_distinct, traits = trait_ref)
+plan("multiprocess", workers = 120)
+yearly_distinct <- furrr::future_map_dfr(files, get_ts_distinct, trait_data = trait_ref) %>%
+  pivot_longer(starts_with("ITIS:"), names_to = "species", values_to = "distinctiveness") %>%
+  filter(!is.na(distinctiveness))
+```
+
+Get species-pool level classifications of distinctiveness/scarcity
+```{r}
+sp_data <- bt_data %>%
+  select(species, rarefyid, abundance, abundance_type)
+
+## Break data down into different kinds of observations to aggregate across years
+# first presence/absence
+presence_sp <- sp_data %>%
+  filter(abundance_type == "Presence/Absence") %>%
+  select(species, rarefyid) %>%
+  distinct() %>%
+  mutate(abundance = 1)
+
+# and then things that act like counts
+count_sp <- sp_data %>%
+  filter(abundance_type != "Presence/Absence") %>%
+  group_by(rarefyid, species, abundance_type) %>%
+  mutate(abundance = sum(abundance))
 ```
 
