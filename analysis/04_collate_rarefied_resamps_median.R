@@ -66,6 +66,10 @@ missing_nulls <- null_table %>%
 # calculate SES and incorporate into metric columns
 metric_cols <- metric_cols %>%
   mutate(SES = (value - mean)/sd) %>%
+  #for years where species richness = richness of the species pool, FRic sd = 0, so use the original value with no SES correction
+  mutate(SES = case_when(
+    sd == 0 ~ value,
+    TRUE ~ SES)) %>%
   select(-c(mean, sd)) %>%
   #the next three lines go back to wide format for both SES and unadjusted values, then to long format incorporating SES values
   pivot_wider(names_from = "metric", values_from = c("value", "SES")) %>%
