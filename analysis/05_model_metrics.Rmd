@@ -15,7 +15,7 @@ library(broom.mixed)
 library(lmerTest)
 library(cowplot)
 ```
-
+#### Read in data, get final dataset for models
 Get data and put it in long form 
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
@@ -32,14 +32,10 @@ meta <- pins::pin_get("bt-traitfiltered", board = "github") %>%
 metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
   # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  filter(!is.na(value)) %>%
   mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
   left_join(meta, c("rarefyID" = "rarefyid"))
 
 ## Now the data that actually makes it into the model ##
-
-#find rarefyID's that have inf value for some metrics and exclude
-cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
 
 #get rarefyID's that don't have enough null samples
 missing_null <- bind_rows(metrics %>% 
@@ -49,13 +45,17 @@ missing_null <- bind_rows(metrics %>%
   unique()
 
 model_data <- metrics %>% 
-  filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "Jaccard_next",
+                       "FRic", "FEve", "FDiv", "S"),
+         !rarefyID %in% missing_null) %>%
   group_by(metric) %>%
   mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
   mutate(year_scaled = scale(year), 
          scale_center = attributes(year_scaled)$`scaled:center`, 
          scale = attributes(year_scaled)$`scaled:scale`) %>%
-  ungroup()
+  ungroup() %>%
+  #this study has many low species richness observations, so FD metrics weren't calculated, just drop it
+  filter(study_id != 348)
 
 pins::pin(model_data, board = "github")
 ```
@@ -116,14 +116,12 @@ metrics %>%
   labs(title = "Distribution of raw values")
 ```
 
-####Fit GLM to overall metric trend
+####Fit GLMs to overall patterns and data broken down by groups
 
 Convergence problems!! See here:
 https://joshua-nugent.github.io/allFit/
 https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html
 https://biologyforfun.wordpress.com/2018/04/09/help-i-have-convergence-warnings/
-
-Maybe need something other than a gaussian distribution?
 
 Model checks:
 https://debruine.github.io/posts/normality/
@@ -169,6 +167,24 @@ SES_rand_slope <- model_data %>%
            #                       data = .x)),
            # test = map2(model, null_model, anova),
            # test_res = map(test, tidy),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, model, coef) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year_scaled") %>%
+  select(-c(effect, group, term, statistic))
+
+#check that they all used the same number of observations
+map(SES_rand_slope$model, nobs)
+
+metric_rand_slope <- model_data %>%
+  #filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+  filter(metric %in%  c("S")) %>%
+  #it wants its own scaling to converge for some reason
+  mutate(year_scaled = scale(year)) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
+                                 data = .x, REML = TRUE)),
            coef = map(model, tidy)
            ) %>% 
   select(metric, model, coef) %>%
@@ -176,18 +192,8 @@ SES_rand_slope <- model_data %>%
   filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
 
-metric_rand_slope <- model_data %>%
-  #filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
-  filter(metric %in%  c("FRic", "FEve", "FDiv", "S")) %>%
-  group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
-                                 data = .x, REML = FALSE)),
-           coef = map(model, tidy)
-           ) %>% 
-  select(metric, model, coef) %>%
-  unnest(cols = c(coef)) %>%
-  filter(term == "year_scaled") %>%
-  select(-c(effect, group, term, statistic))
+#check that they all used the same number of observations
+map(metric_rand_slope$model, nobs)
 
 # model_comp <- metric_mean_fit %>%
 #   select(metric, no_slope_estimate = estimate, no_slope_pval = p.value) %>%
@@ -271,6 +277,8 @@ climate_slope_model_S <- model_data %>%
                                  data = ., REML = TRUE)
 ```
 
+#### Process Model Output
+
 Get study level slope estimates
 ```{r}
 get_study_slopes <- function(metric, model){
@@ -309,7 +317,7 @@ slopes_wide <- study_slopes %>%
 
 Summaries of study slopes
 ```{r}
-#First - how many studys had a significant trend for each metric? 
+#First - how many studies had a significant trend for each metric? 
 study_slopes %>% 
   filter(sig == TRUE) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
@@ -342,6 +350,8 @@ s_pos_fric_neg <- study_slopes %>%
   filter(sum(sign(estimate)) == 0) 
 
 ```
+
+#### Analizing slopes
 Pairwise correlation analysis
 ```{r}
 slope_corr <- corr.test(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
@@ -349,7 +359,53 @@ slope_corr <- corr.test(slopes_wide %>% ungroup() %>% select(starts_with("SES"),
 slope_corr_bootstrap <- corCi(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
 ```
 
-Plots of study-level slopes
+Clustering 
+```{r}
+library(clValid)
+scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
+
+scale_slopes <- slopes_wide %>%  
+  drop_na() %>%
+  select(study_id, starts_with("SES"), S, Jaccard_base) %>%
+  column_to_rownames("study_id") %>%
+  mutate(across(.fns = scale2)) %>%
+  as.matrix()
+
+clmethods <- c("hierarchical","kmeans","pam")
+intern <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "internal")
+stab <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "stability")
+
+summary(intern)
+optimalScores(stab)
+
+#get the hierarchical clustering object
+clust <- intern@clusterObjs$hierarchical
+cat5 <- cutree(clust, k = 5)
+cat3 <- cutree(clust, k = 3)
+
+
+slopes_clust <- slopes_wide %>% 
+  ungroup() %>%
+  left_join(as.data.frame(cat3) %>%
+  rownames_to_column("study_id")) %>%
+  left_join(as.data.frame(cat5) %>%
+  rownames_to_column("study_id"))
+```
+
+```{r}
+slopes_clust %>% 
+  gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S", "Jaccard_base") %>% {
+  ggplot(., aes(x = .xvalue, y = .yvalue, color = as.factor(cat5))) +
+      geom_point() + 
+      #geom_smooth(method = 'lm') +
+      facet_wrap(.xkey ~ .ykey, ncol = length(unique(.$.ykey)), scales = 'free', labeller = label_both) +
+      scale_color_brewer(type = 'qual')
+  }
+```
+
+####Figures
+
+Pairwise plots of study-level slopes
 ```{r}
 #pairwise plots using GGally
 ggpairs(slopes_wide %>% 
@@ -412,71 +468,7 @@ slopes_wide %>%
   xlab("Functional Richness Slope")
 ```
 
-Clustering 
 ```{r}
-library(clValid)
-scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
-
-scale_slopes <- slopes_wide %>%  
-  drop_na() %>%
-  select(study_id, starts_with("SES"), S, Jaccard_base) %>%
-  column_to_rownames("study_id") %>%
-  mutate(across(.fns = scale2)) %>%
-  as.matrix()
-
-clmethods <- c("hierarchical","kmeans","pam")
-intern <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "internal")
-stab <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "stability")
-
-summary(intern)
-optimalScores(stab)
-
-#get the hierarchical clustering object
-clust <- intern@clusterObjs$hierarchical
-cat5 <- cutree(clust, k = 5)
-cat3 <- cutree(clust, k = 3)
-
-
-slopes_clust <- slopes_wide %>% 
-  ungroup() %>%
-  left_join(as.data.frame(cat3) %>%
-  rownames_to_column("study_id")) %>%
-  left_join(as.data.frame(cat5) %>%
-  rownames_to_column("study_id"))
-```
-
-```{r}
-slopes_clust %>% 
-  gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S", "Jaccard_base") %>% {
-  ggplot(., aes(x = .xvalue, y = .yvalue, color = as.factor(cat5))) +
-      geom_point() + 
-      #geom_smooth(method = 'lm') +
-      facet_wrap(.xkey ~ .ykey, ncol = length(unique(.$.ykey)), scales = 'free', labeller = label_both) +
-      scale_color_brewer(type = 'qual')
-  }
-```
-
-##Figures
-Reproduce Dornelas figure - all data points & regressions w/overall mean
-```{r}
-#get climate classification
-metadata <- read_csv(system.file("extdata", "biotime/biotime_metadata.csv", package = "biodivTS"))
-
-fric_trend <- metrics %>%
-  filter(metric == "FRic") %>%
-  ggplot(aes(x = year, y = logvalue)) +
-  # geom_smooth(aes(color = climate, group = plot_id), method = "glm", se = FALSE) +
-  # geom_point(aes(color = climate, group = plot_id)) +
-  geom_smooth(aes(group = rarefyID), color = "grey", method = "glm", se = FALSE) +
-  geom_point(aes(group = rarefyID) ,color = "grey") +
-  geom_smooth(color = "black", method = "glm", se = FALSE) +
-  theme(legend.position = "none") 
-ggsave("fric_trends.png", fric_plot)
-```
-
-```{r}
-library(lme4)
-
 plot_metric <- function(metric_name, ylabel, yval, data, model_coef){
 
   data <- data %>%
