@@ -128,40 +128,11 @@ https://debruine.github.io/posts/normality/
 performance::check_model()
 
 ```{r}
-# model for overall trend (random effect w/varying intercept)
-# metric_mean_fit <- model_data %>%
-#   filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(log(value + 1) ~ year_scaled + (1|study_id/rarefyID), data = .x, REML = FALSE,
-#                   control = lmerControl(optCtrl = list(maxit = 1e9,
-#                                                     maxfun = 1e9,
-#                                                     xtol_abs = 1e-11,
-#                                                     ftol_abs = 1e-11,
-#                                                     maxeval = 1e9)))),
-#          null_model = map(data, ~lmer(logvalue ~ (1|study_id/rarefyID), data = .x, REML = FALSE,
-#                   control = lmerControl(optCtrl = list(maxit = 1e9,
-#                                                     maxfun = 1e9,
-#                                                     xtol_abs = 1e-11,
-#                                                     ftol_abs = 1e-11,
-#                                                     maxeval = 1e9)))),
-#            
-#            test = map2(model, null_model, anova),
-#            test_res = map(test, tidy),
-#            coef = map(model, tidy)
-#            ) %>% 
-#   unnest(cols = c(test_res)) %>%
-#   select(metric, model, coef, p.value) %>%
-#   filter(!is.na(p.value)) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-
 SES_rand_slope <- model_data %>%
-  #filter(protected_area == "FALSE") %>%
-  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "SES_FDis", )) %>%
-  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "Jaccard_next")) %>%
+  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
                                  data = .x)),
            # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
            #                       data = .x)),
@@ -177,8 +148,24 @@ SES_rand_slope <- model_data %>%
 #check that they all used the same number of observations
 map(SES_rand_slope$model, nobs)
 
-metric_rand_slope <- model_data %>%
-  #filter(metric %in%  c("FRic", "FEve", "FDiv", "FDis", "S")) %>%
+#these two metrics are cranky and want their own year scaling to converge
+
+#Jaccard Base
+jacc_base_mod <-  model_data %>%
+  filter(metric == ("Jaccard_base")) %>%
+  mutate(year_scaled = scale(year)) %>%
+  group_nest(metric) %>%
+  mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
+                                 data = .x)),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, model, coef) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year_scaled") %>%
+  select(-c(effect, group, term, statistic))
+
+# S model
+s_mod <- model_data %>%
   filter(metric %in%  c("S")) %>%
   #it wants its own scaling to converge for some reason
   mutate(year_scaled = scale(year)) %>%
@@ -192,15 +179,7 @@ metric_rand_slope <- model_data %>%
   filter(term == "year_scaled") %>%
   select(-c(effect, group, term, statistic))
 
-#check that they all used the same number of observations
-map(metric_rand_slope$model, nobs)
-
-# model_comp <- metric_mean_fit %>%
-#   select(metric, no_slope_estimate = estimate, no_slope_pval = p.value) %>%
-#   left_join(metric_mean_fit_slope %>% 
-#   select(metric, slope_estimate = estimate, slope_pval = p.value ))
-
-metric_model_table <- bind_rows(select(SES_rand_slope, -model), select(metric_rand_slope, -model))
+metric_model_table <- bind_rows(SES_rand_slope, s_mod, jacc_base_mod)
 ```
 
 Kitchen sink model
@@ -234,6 +213,7 @@ taxa_slope_model <- model_data %>%
   select(-c(effect, group, statistic))
 
 taxa_slope_model_S <- model_data %>% 
+  mutate(year_scaled = scale(year)) %>% 
   filter(metric == "S") %>%
   lmer(logvalue ~ year_scaled + taxa + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
                                  data = ., REML = TRUE)
@@ -253,6 +233,7 @@ realm_slope_model <- model_data %>%
   select(-c(effect, group, statistic))
 
 realm_slope_model_S <- model_data %>% 
+  mutate(year_scaled = scale(year)) %>% 
   filter(metric == "S") %>%
   lmer(logvalue ~ year_scaled + realm + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
                                  data = ., REML = TRUE)
@@ -272,6 +253,7 @@ climate_slope_model <- model_data %>%
   select(-c(effect, group, statistic))
 
 climate_slope_model_S <- model_data %>% 
+  mutate(year_scaled = scale(year)) %>% 
   filter(metric == "S") %>%
   lmer(logvalue ~ year_scaled + climate + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
                                  data = ., REML = TRUE)
@@ -308,7 +290,7 @@ get_study_slopes <- function(metric, model){
            metric = metric)
 }
 
-study_slopes <- pmap_dfr(bind_rows(select(SES_rand_slope, metric, model), select(metric_rand_slope,  metric, model)), get_study_slopes)
+study_slopes <- pmap_dfr(select(metric_model_table,  metric, model), get_study_slopes)
 
 slopes_wide <- study_slopes %>%
   select(study_id, metric, estimate) %>%
@@ -323,7 +305,7 @@ study_slopes %>%
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
   group_by(metric) %>% 
   summarise(n_study_id = n_distinct(study_id)) %>%
-  mutate(percent = n_study_id/54) 
+  mutate(percent = n_study_id/53) 
 
 #And how many were significant for all but Jaccard?
 study_slopes %>% 
@@ -354,7 +336,8 @@ s_pos_fric_neg <- study_slopes %>%
 #### Analizing slopes
 Pairwise correlation analysis
 ```{r}
-slope_corr <- corr.test(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
+library(psych)
+#slope_corr <- corr.test(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
 
 slope_corr_bootstrap <- corCi(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
 ```
@@ -469,8 +452,13 @@ slopes_wide %>%
 ```
 
 ```{r}
-plot_metric <- function(metric_name, ylabel, yval, data, model_coef){
+library(cowplot)
+library(RColorBrewer)
 
+plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, color_list){
+
+  if(is.na(xlabel)) xlabel <- NULL
+  
   data <- data %>%
     filter(metric == metric_name, !is.na(value), !is.infinite(value))
 
@@ -496,29 +484,65 @@ plot_metric <- function(metric_name, ylabel, yval, data, model_coef){
     geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
     #geom_smooth(color = "black", method = "glm", se = FALSE) +
     geom_line(mapping = aes(y = pred)) +
-    theme(legend.position = "none") +
     theme_classic() +
+    theme(axis.title = element_text(size=7), legend.position = "none") +
     ylab(ylabel) +
+    xlab(xlabel) +
     labs(color = "Climate") +
-    scale_color_manual(values = c("#32a251", 
-                "#ff7f0f", "#39737c", "#b85a0d", "#ffd94a"))
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 6)) +
+    scale_colour_manual(values = color_list, drop = FALSE)
+    
+    #scale_color_manual(values = c("#32a251", 
+               # "#ff7f0f", "#39737c", "#b85a0d", "#ffd94a"))
   
   ggsave(paste0(here::here("figures"), "/",metric_name, "_trend.png"), trend_plot)
   return(trend_plot)
 }
 
-model_coef <- bind_rows(SES_rand_slope, metric_rand_slope) %>%
+model_coef <- metric_model_table %>%
   select(metric, model) %>%
    mutate(coef = map(model, tidy)) %>% 
   select(-model) %>% 
   unnest(cols = c(coef))
 
+pal <- brewer.pal(n = 5, name = "Dark2")
+group_colors <- c("Global" = pal[1], "Polar/Temperate" = pal[2], "Temperate/Tropical" = pal[3], "Tropical" = pal[4], "Temperate" = pal[5], "Overall Mean" = "#000000")
 
-plot_map <- tibble(metric_name = c("S", "SES_FRic", "Jaccard_base"), 
-           ylabel = c("log(S)", "Functional Richness", "Jaccard"),
-           yval = c("logvalue", "value", "value"))
-m_plots <- pmap(plot_map, plot_metric, data = model_data, model_coef = model_coef)
+plot_map <- tibble(metric_name = c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", "SES_FEve"), 
+           ylabel = c("log(S)", "Jaccard", "Functional Richness SES", "Functional Divergence SES", "Functional Evenness SES"),
+           #ylabel = c("log(S)", "Jaccard", "FRic SES", "FDiv SES", "FEve SES"),
+           yval = c("logvalue", "value", "value", "value", "value"),
+           xlabel = c(NA, NA, NA, "year", "year"))
+m_plots <- pmap(plot_map, plot_metric, data = model_data, model_coef = model_coef, color_list = group_colors)
 
-plot_join <- plot_grid(plotlist=m_plots, labels = c("A", "B", "C"), nrow = 3)
-ggsave2("3met_long.jpeg")
+plot_join <- plot_grid(plotlist=m_plots, labels = "AUTO", nrow = 3, align = 'vh',
+                       hjust = -1, axis = "l", scale = 0.9)
+
+leg_plot <- model_data %>%
+  bind_rows(data.frame(climate = c("Overall Mean", "Overall Mean"), year = c(2019, 2020), value = c(1, 1))) %>%
+  ggplot(aes(x = year, y = value)) +
+  geom_point(color = "grey", size = 0.50) +
+  geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
+  theme_classic() +
+  theme(axis.title = element_text(size=7)) +
+  scale_colour_manual(values = group_colors, drop = FALSE)
+
+######
+group.colors <- c(A = "#333BFF", B = "#CC6600", C ="#9633FF", D = "#E2FF33", E = "#E3DB71")
+
+simplePlot <- function(DT, tit) 
+  ggplot(DT ,aes(x=Name, y=Value, fill=Group)) +
+  geom_bar(stat="identity") + xlab("") + ggtitle(tit) +
+  #Specify colours
+  scale_fill_manual(values=group.colors)
+#####
+
+# extract the legend from one of the plots
+legend <- get_legend(leg_plot)
+
+# add the legend to the row we made earlier. Give it one-third of 
+# the width of one plot (via rel_widths).
+plot_join + draw_grob(legend,  2/3.3, -0.3, .3/3.3, 1, scale = 0.9)
+
+ggsave2(here::here("figures", "3met_long.jpeg"))
 ```
