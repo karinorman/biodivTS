@@ -50,7 +50,7 @@ mapdata %>%
   #scale_fill_continuous(color = "#32A251")
   scale_fill_gradient(low = "white", high = "#39737c")
 
-ggsave("study_map.jpeg")
+#ggsave("study_map.jpeg")
 ```
 
 ```{r}
@@ -70,5 +70,7 @@ map_data("world") %>%
   coord_map(xlim=c(-180,180), ylim=c(-57, 90)) +
   geom_point(data = study_data, aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.5, inherit.aes = FALSE) +
   ggthemes::theme_map()
+
+ggsave(here::here("figures/study_map.jpeg"))
 ```
 
