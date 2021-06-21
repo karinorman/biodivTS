@@ -1,10 +1,12 @@
 ---
-title: "Functional timeseries reveal no systemic shifts for vertebrate communities"
+title: "Functional timeseries reveal no systemic shifts in vertebrate communities"
 author: 
   - name: "Kari E A Norman"
     affiliation: ucb
   - name: "Carl Boettiger"
     affiliation: ucb, ropensci
+  - name: "Perry de Valpine"
+    affiliation: ucb
 address:
   - code: ucb
     address: "Dept of Environmental Science, Policy, and Management, University of California Berkeley, Berkeley CA 94720-3114, USA"
@@ -212,12 +214,23 @@ However, many studies did not experience increasing turnover (65%), suggesting t
 Even for those studies without a turnover trend, significant functional shifts occurred.
 While some communities may be changing more rapidly than usual, that turnover is not necessarily an indication of specific kind of functional change.
 
-*Methodological Limitations*
+[@osullivan2021]
+
+<!-- Link turnover paragraph to background turnover rate, maintenence of species diversity (i.e. turnover is happening! what does that mean for speices div? maintained. for functional diversity? maintained.) -->
+
+*Implications for Future Work*
+
+Here's the prediction of the field, here is the data of the field, given that the data doesn't match the prediction it's on the field to resolve these issues.
+
+Why do we find no significant trend in the global data despite extensive predictions to the contrary from both theory and local studies?
+First, there are a variety of data limitations to consider:
 
 This study represents best practices in biodiversity synthesis and functional diversity analysis, however methodological limitations may still be obscuring potential systematic shifts in functional composition.
-First, as previously acknowledged, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
+First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
 While both of these challenges are pervasive in Ecology generally and could have potentially insidious implications for synthesis work, we can only use the data we have.
 We do however emphasize that our study included many timeseries that experienced a significant species loss (\~ 52%), indicating that this is not simply a synthesis of pristine systems.
+
+You'd imagine the pattern would still be visible even with North American birds...
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected along side monitoring data, especially for the longest running efforts.
@@ -227,7 +240,10 @@ Third, while we use here the most common metrics for describing functional diver
 There may be a significant shift in a characteristic of the functional space that was poorly captured by our chosen metrics.
 <!-- Further exploration of complementarity of traits... -->
 
-*Implications for Ecological Process*
+-   one opening sentence that links back to the null result
+
+Even with the right data and metrics, you may not see a result!
+Due to the wide variety of mechanisms at play we amy not expect to see a global trend even when the local trends are significant.
 
 Our results highlight a gap in both empirical and theoretical work linking shifts in community composition to functional change.
 While a large body of work assesses study-level insights into temporal functional responses (citations), a macroecological perspective illustrates the urgent need for future work exploring the factors important in determining functional change under different species change scenarios.
@@ -241,6 +257,16 @@ Our results have important implications for how we approach work linking species
 There is no evidence of directional functional loss or even functional shifts accompany species loss in these natural communities.
 <!-- clarify that this is about relationship between concurrent patterns in a single community --> Building on a rich body of work linking species diversity changes to changes in ecosystem function, resilience, and stability (citations), it will be essential to tease apart effects due to species change from those due to functional shifts if we want to infer impacts in natural communities.
 --\>
+
+We can not understand all functional loss in terms of species loss
+
+-   lean in to four points in the abstraction
+
+    -   raises questions for future data collection and theoretical development
+
+-   field that's full of idle speculation
+
+-   find papers that make claims we're "testing"
 
 <!-- call for theory development, punt back to community ecology - we don't know what this means! -->
 
@@ -313,3 +339,33 @@ Hilldebrand 2018
 #### Add to supplement
 
 -   breakdown of number of studies/timeseries for each taxa/realm etc
+
+They are limitations of the field not our limitations
+
+-   acknowledge those things without taking the blame
+
+-   lean into it as a conclusion
+
+-   we found a null result and its your fault
+
+-   fixing x, y, z could resolve the null result, but there are good reasons it might not
+
+-   talk about balance of local trends as the fourth reason
+
+There are reasons we haven't got trait data, hoped there would be an easy way out, but these results show that there isn't
+
+Is there a null result for some deep theoretical reason or
+
+we could've been lucky that we would see the pattern with crappy data, but it isn't
+
+-   the thing we thought would be there isn't there, so what can we do to solve it
+
+clever way to do temporal coverage - maps by decade?
+
+-   number of data points through time (bar chart colored by taxa)
+
+figure 1.
+illustrating functional diversity metrics
+
+figure 2.
+the processing workflow
