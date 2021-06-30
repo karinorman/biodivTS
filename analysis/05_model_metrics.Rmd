@@ -180,6 +180,10 @@ s_mod <- model_data %>%
   select(-c(effect, group, term, statistic))
 
 metric_model_table <- bind_rows(SES_rand_slope, s_mod, jacc_base_mod)
+
+#save coefficients and models
+usethis::use_data(metric_model_table)
+pins::pin(metric_model_table, board = "github")
 ```
 
 Kitchen sink model
@@ -200,23 +204,40 @@ Models with categorical study characteristics as random effects
 
 Taxa:
 ```{r}
-taxa_slope_model <- model_data %>%
-  filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv")) %>%
-  group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(value ~ year_scaled + taxa + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
-                                 data = .x, REML = TRUE)),
-           coef = map(model, tidy)) %>%
-  select(metric, coef) %>%
-  unnest(cols = c(coef)) %>%
-  #filter(term == "year_scaled") %>%
-  filter(term %in% c("year_scaled", "taxaBirds", "taxaMammals")) %>%
-  select(-c(effect, group, statistic))
+# taxa_slope_model <- model_data %>%
+#   filter(metric %in%   c("SES_FRic", "SES_FEve", "SES_FDiv")) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(value ~ year_scaled + taxa + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
+#                                  data = .x, REML = TRUE)),
+#            coef = map(model, tidy)) %>%
+#   select(metric, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   #filter(term == "year_scaled") %>%
+#   filter(term %in% c("year_scaled", "taxaBirds", "taxaMammals")) %>%
+#   select(-c(effect, group, statistic))
+# 
+# taxa_slope_model_S <- model_data %>% 
+#   mutate(year_scaled = scale(year)) %>% 
+#   filter(metric == "S") %>%
+#   lmer(logvalue ~ year_scaled + taxa + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
+#                                  data = ., REML = TRUE)
 
-taxa_slope_model_S <- model_data %>% 
-  mutate(year_scaled = scale(year)) %>% 
-  filter(metric == "S") %>%
-  lmer(logvalue ~ year_scaled + taxa + (year_scaled|study_id/rarefyID), # + (year_scaled|taxa), 
-                                 data = ., REML = TRUE)
+SES_rand_slope <- model_data %>%
+  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         model = map(data, ~lmer(value ~ taxa + (1|study_id) + (|study_id:rarefyID), 
+                                 data = .x)),
+           # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
+           #                       data = .x)),
+           # test = map2(model, null_model, anova),
+           # test_res = map(test, tidy),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, model, coef) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year_scaled") %>%
+  select(-c(effect, group, term, statistic))
 ```
 Realm:
 ```{r}
@@ -334,6 +355,89 @@ s_pos_fric_neg <- study_slopes %>%
 ```
 
 #### Analizing slopes
+Is slope a function of timeseries characteristics?
+```{r}
+study_slope_data <- study_slopes %>%
+  select(study_id, metric, estimate) %>%
+  left_join(meta %>% 
+              select(-rarefyid) %>% 
+              distinct() %>%
+              mutate(study_id = as.character(study_id))) %>%
+  left_join(model_data %>% select(study_id, startyear, duration) %>% distinct())
+
+#taxa model
+taxa_slope <- study_slope_data %>%
+  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
+         model = map(data, ~glm(estimate ~ taxa, 
+                                 data = .x)),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, coef) %>%
+  unnest(cols = c(coef)) %>%
+  mutate(covariate = "taxa")
+
+climate_slope <- study_slope_data %>%
+  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
+         model = map(data, ~glm(estimate ~ climate, 
+                                 data = .x)),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, coef) %>%
+  unnest(cols = c(coef)) %>%
+  mutate(covariate = "climate")
+
+realm_slope <- study_slope_data %>%
+  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
+         model = map(data, ~glm(estimate ~ realm, 
+                                 data = .x)),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, coef) %>%
+  unnest(cols = c(coef)) %>%
+  mutate(covariate = "realm")
+
+duration_slope <- study_slope_data %>%
+  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
+         model = map(data, ~glm(estimate ~ duration, 
+                                 data = .x)),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, coef) %>%
+  unnest(cols = c(coef)) %>%
+  mutate(covariate = "duration")
+
+startyear_slope <- study_slope_data %>%
+  #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
+         model = map(data, ~glm(estimate ~ startyear, 
+                                 data = .x)),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, coef) %>%
+  unnest(cols = c(coef)) %>%
+  mutate(covariate = "startyear")
+
+#All model estimates in one dataframe
+slope_models <- bind_rows(taxa_slope, realm_slope, climate_slope, duration_slope, startyear_slope)
+
+# Which predictor variables were significant?
+slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
+```
+
 Pairwise correlation analysis
 ```{r}
 library(psych)
@@ -480,7 +584,7 @@ plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, col
     ggplot(aes(x = year, y = !!sym(yval))) +
     # geom_smooth(aes(color = climate, group = rarefyID), method = "glm", se = FALSE) +
     # geom_point(aes(color = climate, group = rarefyID)) +
-    geom_point(aes(group = rarefyID) ,color = "grey", size = 0.50) +
+    geom_point(aes(group = rarefyID) ,color = "grey", size = 0.25) +
     geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
     #geom_smooth(color = "black", method = "glm", se = FALSE) +
     geom_line(mapping = aes(y = pred)) +
@@ -527,22 +631,13 @@ leg_plot <- model_data %>%
   theme(axis.title = element_text(size=7)) +
   scale_colour_manual(values = group_colors, drop = FALSE)
 
-######
-group.colors <- c(A = "#333BFF", B = "#CC6600", C ="#9633FF", D = "#E2FF33", E = "#E3DB71")
-
-simplePlot <- function(DT, tit) 
-  ggplot(DT ,aes(x=Name, y=Value, fill=Group)) +
-  geom_bar(stat="identity") + xlab("") + ggtitle(tit) +
-  #Specify colours
-  scale_fill_manual(values=group.colors)
-#####
-
 # extract the legend from one of the plots
 legend <- get_legend(leg_plot)
 
 # add the legend to the row we made earlier. Give it one-third of 
 # the width of one plot (via rel_widths).
-plot_join + draw_grob(legend,  2/3.3, -0.3, .3/3.3, 1, scale = 0.9)
+#plot_join + draw_grob(legend,  2/3.3, -0.3, .3/3.3, 1, scale = 0.6)
+plot_join + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
 
 ggsave2(here::here("figures", "3met_long.jpeg"))
 ```
