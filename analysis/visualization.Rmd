@@ -54,23 +54,43 @@ mapdata %>%
 ```
 
 ```{r}
+#library(forcats)
+
 #get rarefyid centers
 included_ids <- pins::pin_get("model-data", board = "github") %>%
-  select(rarefyID, taxa, climate, realm) %>%
+  select(rarefyID, taxa, climate, realm, duration) %>%
   distinct() %>% 
   mutate(rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
   rarefyID = str_replace_all(rarefyID, pattern = "_mamm", ""))
 
 study_data <- pins::pin_get("rarefyID-cell-centre", board = "github") %>%
-  inner_join(included_ids)
+  inner_join(included_ids) #%>%
+  #mutate(taxa = as.factor(taxa), taxa = fct_relevel(taxa, "Birds"))
+  
 
-map_data("world") %>%
+study_map <- map_data("world") %>%
   ggplot(aes(long, lat, group = group)) +
   geom_polygon(fill = "white", colour = "grey") + 
-  coord_map(xlim=c(-180,180), ylim=c(-57, 90)) +
-  geom_point(data = study_data, aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.5, inherit.aes = FALSE) +
-  ggthemes::theme_map()
+  coord_map(xlim=c(-180,180), ylim=c(-57, 90), projection = "mercator") +
+  geom_point(data = study_data, aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.3, inherit.aes = FALSE) +
+  ggthemes::theme_map() +
+  theme(legend.title  = element_blank())
 
 ggsave(here::here("figures/study_map.jpeg"))
+```
+
+```{r}
+duration_hist <- study_data %>% 
+  #filter(taxa == "Birds") %>%
+  ggplot(aes(duration)) + 
+  geom_histogram(aes(fill = taxa)) + 
+  theme_classic() + 
+  facet_wrap(~taxa, scales = "free") +
+  theme(strip.background = element_blank(), strip.text = element_blank(),
+        legend.position = "none")
+
+plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1))
+
+ggsave2(here::here("figures/study_map_hist.jpeg"))
 ```
 
