@@ -151,6 +151,8 @@ This process was repeated 500 times to get an estimate and standard deviation of
 We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
 Unless otherwise specified, functional diversity results are reported for standardized values for the remainder of the paper.
 
+<!-- description of edge case where community = species pool -->
+
 #### *Analysis*
 
 *Overall Trends*
