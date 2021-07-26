@@ -1,0 +1,270 @@
+---
+title: "Conceptual FD Figure"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+Plot a normal curve
+```{r}
+ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = 0, sd = .9), col='red', xlim = c(-3, 3)) +
+  stat_function(fun = dnorm, args = list(mean = 1, sd = .5), col='blue', xlim = c(-2, 4)) +
+  xlim(c(-5, 5)) +
+  ylim(c(0,1)) +
+  theme_classic() +
+  theme(axis.text.x=element_blank(),
+        #axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+```
+
+Richness plots 
+```{r}
+get_xlim <- function(center, edge){
+  return(list(center - edge, center + edge))
+}
+
+low_rich <- 
+  ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  ylab("S") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Low")
+
+low_rich
+
+high_rich <- 
+  ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-3, -2, -1.5, 0, 1.25, 3), 
+  sd = rep(0.9, 6)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, 2))),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("High")
+```
+
+Functional Richness
+```{r}
+low_fric <- 
+  ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-.5, 0,.25), 
+  sd = rep(0.9, 3)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, 2))),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  ylab("FRic") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+low_fric
+
+high_fric <- 
+  ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-3, -1.5, 1, 3), 
+  sd = rep(0.9, 4)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, 2))),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+high_fric
+```
+
+Evenness 
+```{r}
+low_eve <- 
+  ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-3, -2, -1.5, 0, 1.25, 3), 
+  sd = c(1.25, 0.5, 1.25, 1.25, 0.65, 1.25),
+  plot_range = c(2.5, 2, 2.5, 2.5, 2, 2.5)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, plot_range))) %>%
+    select(-plot_range),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5.25, 5.25)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  ylab("FEve") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+low_eve
+
+high_eve <- ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-3, -2, -1.5, 0, 1.25, 3), 
+  sd = rep(0.9, 6)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, 2))),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+```
+
+Divergence 
+```{r}
+low_div <-  
+ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-3, -2, -1.5, 0, 1.25, 3), 
+  sd = c(0.9, 0.9, 0.55, 0.5, 0.9, 0.9)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, 2))),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  ylab("FDiv") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+low_div
+
+-.5, 0,.25
+high_div <- 
+ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
+  #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
+  #stat_function(fun = dnorm, args = list(mean = 3, sd = .9), xlim = c(1, 5)) +
+  pmap(tibble(mean = c(-3, -.5, -0.15, 0,.25, 3), 
+  sd = c(0.55, 0.9, 0.9, 0.9, 0.9, 0.5)) %>%
+    rowwise %>%
+    mutate(xlim = list(get_xlim(mean, 2))),
+  function(mean, sd, xlim) stat_function(fun = dnorm, args = list(mean = mean, sd = sd), xlim = unlist(xlim))
+  )  +
+  xlim(c(-5, 5)) +
+  #ylim(c(0,1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, .1)), limits = c(.05, 1)) +
+  theme_classic() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+high_div
+```
+
+```{r}
+library(cowplot)
+library(grid)
+library(gridExtra)
+
+plot_join <- plot_grid(low_rich, high_rich, low_fric, high_fric, 
+                       low_eve, high_eve, low_div, high_div, 
+                       nrow = 4, align = 'vh',
+                       hjust = -1, axis = "l", scale = 0.9, 
+                       label_x = "Trait Axis", label_y = "Abundance") #+
+  #theme(plot.margin = margin(0, 0, 0, 30))
+
+plot_join
+
+# add_x <- ggdraw(add_sub(plot_join, "Trait Axis", 
+#                y=2, x=0.5, hjust = 0.5, vjust=4.5))
+# add_y <- add_sub(add_x, "Abundance",  
+#                y=2, x=0.03, hjust = 0, vjust=0.5, angle = 90)
+# ggdraw(add_y)
+# 
+# ggdraw(plot_join) + draw_label("Trait Axis", size = 14, hjust = 0.5, vjust = 0)
+
+y.grob <- textGrob("Abundance", rot=90)
+
+x.grob <- textGrob("Trait Axis")
+
+grid.arrange(arrangeGrob(plot_join, left = y.grob, bottom = x.grob))
+
+ggsave(here::here("figures/conceptual_fig.jpeg"))
+
+ grid.arrange(arrangeGrob(p,p,p,p,top=textGrob("Sample Title One"), ncol=1), 
+ arrangeGrob(p,p,p,p,top=textGrob("Sample Title Two"), ncol=1),   
+ ncol = 2)
+```
+patchwork
+```{r}
+library(patchwork)
+low_rich + high_rich + low_fric + high_fric + 
+                       low_eve + high_eve + low_div + high_div + plot_layout(ncol = 2) %>%
+  add_global_label(Ylab="Abundance", Ygap=0.05)
+```
+
