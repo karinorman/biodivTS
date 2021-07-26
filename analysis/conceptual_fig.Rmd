@@ -44,13 +44,13 @@ low_rich <-
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.title.y=element_text(angle = 0, vjust = 0.5),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
         plot.title = element_text(hjust = 0.5)) +
   ggtitle("Low")
 
-low_rich
+low_rich_fin <- low_rich + ylab(NULL)
 
 high_rich <- 
   ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
@@ -96,11 +96,11 @@ low_fric <-
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.title.y=element_text(angle = 0, vjust = 0.5),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
 
-low_fric
+low_fric_fin <- low_fric + ylab(NULL)
 
 high_fric <- 
   ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
@@ -148,11 +148,11 @@ low_eve <-
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.title.y=element_text(angle = 0, vjust = 0.5),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
 
-low_eve
+low_eve_fin <- low_eve + ylab(NULL)
 
 high_eve <- ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
   #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
@@ -195,13 +195,12 @@ ggplot(data.frame(x = c(-5, 5)), aes(x)) +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.title.y=element_text(margin = margin(t = 0, r = 50, b = 0, l = 0)),
+        axis.title.y=element_text(angle = 0, vjust = 0.5),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
 
-low_div
+low_div_fin <- low_div + ylab(NULL)
 
--.5, 0,.25
 high_div <- 
 ggplot(data.frame(x = c(-5, 5)), aes(x)) + 
   #stat_function(fun = dnorm, args = list(mean = -3, sd = .9), xlim = c(-5, -1)) +
@@ -231,40 +230,32 @@ library(cowplot)
 library(grid)
 library(gridExtra)
 
-plot_join <- plot_grid(low_rich, high_rich, low_fric, high_fric, 
-                       low_eve, high_eve, low_div, high_div, 
+plot_join <- plot_grid(get_plot_component(low_rich, "ylab-l"), low_rich_fin, high_rich, 
+                       get_plot_component(low_fric, "ylab-l"), low_fric_fin, high_fric, 
+                       get_plot_component(low_eve, "ylab-l"), low_eve_fin, high_eve, 
+                       get_plot_component(low_div, "ylab-l"), low_div_fin, high_div, 
                        nrow = 4, align = 'vh',
                        hjust = -1, axis = "l", scale = 0.9, 
-                       label_x = "Trait Axis", label_y = "Abundance") #+
-  #theme(plot.margin = margin(0, 0, 0, 30))
+                       label_x = "Trait Axis", label_y = "Abundance")
 
 plot_join
 
-# add_x <- ggdraw(add_sub(plot_join, "Trait Axis", 
-#                y=2, x=0.5, hjust = 0.5, vjust=4.5))
-# add_y <- add_sub(add_x, "Abundance",  
-#                y=2, x=0.03, hjust = 0, vjust=0.5, angle = 90)
-# ggdraw(add_y)
-# 
-# ggdraw(plot_join) + draw_label("Trait Axis", size = 14, hjust = 0.5, vjust = 0)
+y.grob <- textGrob("Abundance",  
+            gp = gpar(fontsize = 14),
+            vjust = 15, rot=90)
 
-y.grob <- textGrob("Abundance", rot=90)
+x.grob <- textGrob("Trait Axis", hjust = -1.25)
 
-x.grob <- textGrob("Trait Axis")
+final <- grid.arrange(arrangeGrob(plot_join, left = y.grob, bottom = x.grob))
 
-grid.arrange(arrangeGrob(plot_join, left = y.grob, bottom = x.grob))
+ggsave(here::here("figures/conceptual_fig.jpeg"), final, height = 6, width = 7)
 
-ggsave(here::here("figures/conceptual_fig.jpeg"))
-
- grid.arrange(arrangeGrob(p,p,p,p,top=textGrob("Sample Title One"), ncol=1), 
- arrangeGrob(p,p,p,p,top=textGrob("Sample Title Two"), ncol=1),   
- ncol = 2)
 ```
 patchwork
 ```{r}
-library(patchwork)
-low_rich + high_rich + low_fric + high_fric + 
-                       low_eve + high_eve + low_div + high_div + plot_layout(ncol = 2) %>%
-  add_global_label(Ylab="Abundance", Ygap=0.05)
+# library(patchwork)
+# low_rich + high_rich + low_fric + high_fric + 
+#                        low_eve + high_eve + low_div + high_div + plot_layout(ncol = 2) %>%
+#   add_global_label(Ylab="Abundance", Ygap=0.05)
 ```
 
