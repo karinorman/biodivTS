@@ -273,11 +273,10 @@ study_slope_data <- study_slopes %>%
 
 #taxa model
 taxa_slope <- study_slope_data %>%
+  mutate(taxa = as.factor(taxa)) %>%
   #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
   group_nest(metric) %>%
-  mutate(#year_center = map(data, ~scale(.x$year)),
-         #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
-         model = map(data, ~glm(estimate ~ taxa, 
+  mutate(model = map(data, ~glm(estimate ~ taxa, 
                                  data = .x)),
            coef = map(model, tidy),
            ) %>% 
