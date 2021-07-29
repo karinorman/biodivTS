@@ -61,19 +61,19 @@ pins::pin(model_data, board = "github")
 ```
 Add human footprint data
 ```{r}
-hfp_data <- pins::pin_get("hfp-data", board = "github")
-
-model_data_hfp <- model_data %>% 
-  #dplyr::select(rarefyID, year) %>% 
-  #distinct() %>%
-  mutate(hfp_year = case_when(
-    year < 2001 ~ 1993,
-    TRUE ~ 2009
-  ), 
-  hfp_rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
-  hfp_rarefyID = str_replace_all(hfp_rarefyID, pattern = "_mamm", "")) %>%
-  left_join(hfp_data %>% dplyr::select(-STUDY_ID) %>% mutate(year = as.numeric(year)), by = c("hfp_year" = "year", "hfp_rarefyID" = "rarefyID")) %>%
-  dplyr::select(-hfp_year)
+# hfp_data <- pins::pin_get("hfp-data", board = "github")
+# 
+# model_data_hfp <- model_data %>% 
+#   #dplyr::select(rarefyID, year) %>% 
+#   #distinct() %>%
+#   mutate(hfp_year = case_when(
+#     year < 2001 ~ 1993,
+#     TRUE ~ 2009
+#   ), 
+#   hfp_rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
+#   hfp_rarefyID = str_replace_all(hfp_rarefyID, pattern = "_mamm", "")) %>%
+#   left_join(hfp_data %>% dplyr::select(-STUDY_ID) %>% mutate(year = as.numeric(year)), by = c("hfp_year" = "year", "hfp_rarefyID" = "rarefyID")) %>%
+#   dplyr::select(-hfp_year)
 
 ```
 
@@ -127,63 +127,196 @@ Model checks:
 https://debruine.github.io/posts/normality/
 performance::check_model()
 
+Function approach to model
 ```{r}
-SES_rand_slope <- model_data %>%
-  filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
-  group_nest(metric) %>%
-  mutate(#year_center = map(data, ~scale(.x$year)),
-         model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
-                                 data = .x)),
-           # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
-           #                       data = .x)),
-           # test = map2(model, null_model, anova),
-           # test_res = map(test, tidy),
-           coef = map(model, tidy),
-           ) %>% 
-  select(metric, model, coef) %>%
-  unnest(cols = c(coef)) %>%
-  filter(term == "year_scaled") %>%
-  select(-c(effect, group, term, statistic))
+get_model <- function(metric_name, formula, model_id, data, ...){
+  print(c(metric_name, model_id))
+  qlmer <- quietly(lmer)
+  
+  fit <- data %>%
+    filter(metric == metric_name) %>%
+    mutate(year_scaled = scale(year)) %>%
+    qlmer(formula = formula, data = ., ...)
+  
+  tidy(fit$result) %>%
+   mutate(metric = metric_name, model = list(fit), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+}
 
-#check that they all used the same number of observations
-map(SES_rand_slope$model, nobs)
+get_model(data = model_data, metric_name = "SES_FRic", "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)", model_id = "base")
+```
 
-#these two metrics are cranky and want their own year scaling to converge
+Create dataframe of models to fit
+```{r}
+raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base"), 
+                         base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+                         realm = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+                         climate = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
-#Jaccard Base
-jacc_base_mod <-  model_data %>%
-  filter(metric == ("Jaccard_base")) %>%
-  mutate(year_scaled = scale(year)) %>%
-  group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
-                                 data = .x)),
-           coef = map(model, tidy),
-           ) %>% 
-  select(metric, model, coef) %>%
-  unnest(cols = c(coef)) %>%
-  filter(term == "year_scaled") %>%
-  select(-c(effect, group, term, statistic))
+log_value_mods <- tibble(metric_name = c("S"), 
+                         base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+                         realm = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+                         climate = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
-# S model
-s_mod <- model_data %>%
-  filter(metric %in%  c("S")) %>%
-  #it wants its own scaling to converge for some reason
-  mutate(year_scaled = scale(year)) %>%
-  group_nest(metric) %>%
-  mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
-                                 data = .x, REML = TRUE)),
-           coef = map(model, tidy)
-           ) %>% 
-  select(metric, model, coef) %>%
-  unnest(cols = c(coef)) %>%
-  filter(term == "year_scaled") %>%
-  select(-c(effect, group, term, statistic))
+mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
+  select(metric_name, formula, model_id)
+```
 
-metric_model_table <- bind_rows(SES_rand_slope, s_mod, jacc_base_mod)
+Fit models
+```{r}
+#Fit models with base settings
+mod_results <- pmap_dfr(mods, get_model, data = model_data)
 
-#save coefficients and models
+#get the models that had convergence warnings
+bad_models <- mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Turn of REML for these models 
+bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
+
+#One model still won't converge
+bad_models2 <- bad_mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Fit with a different algorithm
+bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
+
+metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
+          bad_mod_results %>% filter(is.na(warning)),
+          bad_mod_results2 %>% filter(is.na(warning)))
+
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
+```
+
+
+```{r}
+# SES_rand_slope <- model_data %>%
+#   filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
+#   group_nest(metric) %>%
+#   mutate(#year_center = map(data, ~scale(.x$year)),
+#          model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
+#                                  data = .x)),
+#            # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
+#            #                       data = .x)),
+#            # test = map2(model, null_model, anova),
+#            # test_res = map(test, tidy),
+#            coef = map(model, tidy),
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+# 
+# #check that they all used the same number of observations
+# map(SES_rand_slope$model, nobs)
+# 
+# #these two metrics are cranky and want their own year scaling to converge
+# 
+# #Jaccard Base
+# jacc_base_mod <-  model_data %>%
+#   filter(metric == ("Jaccard_base")) %>%
+#   mutate(year_scaled = scale(year)) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
+#                                  data = .x)),
+#            coef = map(model, tidy),
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+# 
+# # S model
+# s_mod <- model_data %>%
+#   filter(metric %in%  c("S")) %>%
+#   #it wants its own scaling to converge for some reason
+#   mutate(year_scaled = scale(year)) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
+#                                  data = .x, REML = TRUE)),
+#            coef = map(model, tidy)
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+# 
+# metric_model_table <- bind_rows(SES_rand_slope, s_mod, jacc_base_mod)
+# 
+# #save coefficients and models
+# usethis::use_data(metric_model_table)
+# pins::pin(metric_model_table, board = "github")
+# ```
+# Taxa model
+# ```{r}
+# taxa_rand_slope <- model_data %>%
+#   filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv")) %>%
+#   group_nest(metric) %>%
+#   mutate(#year_center = map(data, ~scale(.x$year)),
+#          model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
+#                                  data = .x)),
+#            # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
+#            #                       data = .x)),
+#            # test = map2(model, null_model, anova),
+#            # test_res = map(test, tidy),
+#            coef = map(model, tidy),
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef))
+# 
+# #Jaccard Base
+# jacc_taxa_base_mod <-  model_data %>%
+#   filter(metric == ("Jaccard_base")) %>%
+#   mutate(year_scaled = scale(year)) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
+#                                  data = .x)),
+#            coef = map(model, tidy),
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+# 
+#  s_taxa_mod <- model_data %>%
+#   filter(metric %in%  c("S")) %>%
+#   #it wants its own scaling to converge for some reason
+#   mutate(year_scaled = scale(year)) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
+#                                  data = .x, REML = TRUE)),
+#            coef = map(model, tidy)
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+# 
+# fric_taxa_mod <- model_data %>%
+#   filter(metric %in%  c("SES_FRic")) %>%
+#   #it wants its own scaling to converge for some reason
+#   mutate(year_scaled = scale(year)) %>%
+#   group_nest(metric) %>%
+#   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
+#                                  data = .x, REML = TRUE)),
+#            coef = map(model, tidy)
+#            ) %>% 
+#   select(metric, model, coef) %>%
+#   unnest(cols = c(coef)) %>%
+#   filter(term == "year_scaled") %>%
+#   select(-c(effect, group, term, statistic))
+# 
+# taxa_model_table <- bind_rows(taxa_rand_slope, jacc_taxa_base_mod, s_taxa_mod, fric_taxa_mod)
 ```
 
 #### Process Model Output
@@ -263,6 +396,8 @@ s_pos_fric_neg <- study_slopes %>%
 #### Analizing slopes
 Is slope a function of timeseries characteristics?
 ```{r}
+library(multcomp)
+
 study_slope_data <- study_slopes %>%
   select(study_id, metric, estimate) %>%
   left_join(meta %>% 
@@ -271,6 +406,23 @@ study_slope_data <- study_slopes %>%
               mutate(study_id = as.character(study_id))) %>%
   left_join(model_data %>% select(study_id, startyear, duration) %>% distinct())
 
+taxa_slope <- study_slope_data %>%
+  mutate(taxa = as.factor(taxa)) %>%
+  group_nest(metric) %>%
+  mutate(#year_center = map(data, ~scale(.x$year)),
+         model = map(data, ~lmer(estimate ~ (1|study_id) + year_scaled + (year_scaled|study_id/rarefyID), 
+                                 data = .x)),
+           # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
+           #                       data = .x)),
+           # test = map2(model, null_model, anova),
+           # test_res = map(test, tidy),
+           coef = map(model, tidy),
+           ) %>% 
+  select(metric, model, coef) %>%
+  unnest(cols = c(coef)) %>%
+  filter(term == "year_scaled") %>%
+  select(-c(effect, group, term, statistic))
+
 #taxa model
 taxa_slope <- study_slope_data %>%
   mutate(taxa = as.factor(taxa)) %>%
@@ -278,11 +430,11 @@ taxa_slope <- study_slope_data %>%
   group_nest(metric) %>%
   mutate(model = map(data, ~glm(estimate ~ taxa, 
                                  data = .x)),
-           coef = map(model, tidy),
-           ) %>% 
-  select(metric, coef) %>%
-  unnest(cols = c(coef)) %>%
-  mutate(covariate = "taxa")
+           tukey_mod = map(model, ~glht(., mcp(taxa="Tukey"))),
+         tukey_coef = map(tukey_mod, tidy)) %>% 
+  select(metric, tukey_coef) %>%
+  unnest(cols = c(tukey_coef)) %>%
+  rename(covariate = term)
 
 climate_slope <- study_slope_data %>%
   #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
@@ -291,11 +443,11 @@ climate_slope <- study_slope_data %>%
          #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
          model = map(data, ~glm(estimate ~ climate, 
                                  data = .x)),
-           coef = map(model, tidy),
-           ) %>% 
-  select(metric, coef) %>%
-  unnest(cols = c(coef)) %>%
-  mutate(covariate = "climate")
+           tukey_mod = map(model, ~glht(., mcp(climate="Tukey"))),
+         tukey_coef = map(tukey_mod, tidy)) %>% 
+  select(metric, tukey_coef) %>%
+  unnest(cols = c(tukey_coef)) %>%
+  rename(covariate = term)
 
 realm_slope <- study_slope_data %>%
   #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
@@ -304,11 +456,11 @@ realm_slope <- study_slope_data %>%
          #model = map(data, ~lmer(estimate ~ taxa + (1|taxa), 
          model = map(data, ~glm(estimate ~ realm, 
                                  data = .x)),
-           coef = map(model, tidy),
-           ) %>% 
-  select(metric, coef) %>%
-  unnest(cols = c(coef)) %>%
-  mutate(covariate = "realm")
+           tukey_mod = map(model, ~glht(., mcp(realm="Tukey"))),
+         tukey_coef = map(tukey_mod, tidy)) %>% 
+  select(metric, tukey_coef) %>%
+  unnest(cols = c(tukey_coef)) %>%
+  rename(covariate = term)
 
 duration_slope <- study_slope_data %>%
   #filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
