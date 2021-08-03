@@ -139,7 +139,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
     qlmer(formula = formula, data = ., ...)
   
   tidy(fit$result) %>%
-   mutate(metric = metric_name, model = list(fit), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+   mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
 }
 
 get_model(data = model_data, metric_name = "SES_FRic", "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)", model_id = "base")
@@ -192,7 +192,7 @@ bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data =
 
 metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
           bad_mod_results %>% filter(is.na(warning)),
-          bad_mod_results2 %>% filter(is.na(warning)))
+          bad_mod_results2 %>% filter(is.na(warning))) 
 
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
@@ -323,7 +323,10 @@ pins::pin(metric_model_table, board = "github")
 
 Get study level slope estimates
 ```{r}
-get_study_slopes <- function(metric, model){
+get_study_slopes <- function(metric, model, model_id){
+  
+  filter_name <- ifelse(model_id == "base", "study_id", model_id)
+  
   year_scaled_coef <- tidy(model) %>%
     filter(term == "year_scaled") 
   
@@ -334,9 +337,10 @@ get_study_slopes <- function(metric, model){
     pull(var)
   
   study_ests <- broom.mixed::tidy(model, effects="ran_vals") %>%
-    filter(group == "study_id", term == "year_scaled") %>% 
+    filter(group == filter_name, term == "year_scaled") %>% 
     select(-c(effect, group, term)) %>%
-    rename(study_id = level, cond.std.error = std.error, cond.estimate = estimate) %>%
+    #rename({{ model_id }} := level, cond.std.error = std.error, cond.estimate = estimate) %>%
+    rename(cond.std.error = std.error, cond.estimate = estimate) %>%
     mutate(estimate = cond.estimate + year_scaled_est,
       cond.var = cond.std.error*cond.std.error, 
            var = cond.var + year_scaled_var,
@@ -347,13 +351,20 @@ get_study_slopes <- function(metric, model){
              lwr.ci < 0 & upr.ci > 0 ~ TRUE,
              TRUE ~ FALSE
            ),
-           metric = metric)
+      metric = metric,
+      model_id = model_id)
 }
 
-study_slopes <- pmap_dfr(select(metric_model_table,  metric, model), get_study_slopes)
+model_df <- metric_model_table %>%
+  select(metric, model, model_id) %>%
+  group_by(metric, model_id) %>% 
+  slice_head()
 
-slopes_wide <- study_slopes %>%
-  select(study_id, metric, estimate) %>%
+study_slopes <- pmap_dfr(model_df, get_study_slopes)
+
+study_slopes_wide <- study_slopes %>%
+  filter(model_id == "base") %>%
+  select(study_id = level, metric, estimate) %>%
   pivot_wider(names_from = "metric", values_from = "estimate")
 ```
 
