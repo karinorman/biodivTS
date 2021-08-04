@@ -348,8 +348,8 @@ get_study_slopes <- function(metric, model, model_id){
            upr.ci = estimate + (2*std.error),
            lwr.ci = estimate - (2*std.error),
            sig = case_when(
-             lwr.ci < 0 & upr.ci > 0 ~ TRUE,
-             TRUE ~ FALSE
+             lwr.ci < 0 & upr.ci > 0 ~ FALSE,
+             TRUE ~ TRUE
            ),
       metric = metric,
       model_id = model_id)
@@ -360,11 +360,14 @@ model_df <- metric_model_table %>%
   group_by(metric, model_id) %>% 
   slice_head()
 
-study_slopes <- pmap_dfr(model_df, get_study_slopes)
+re_slopes <- pmap_dfr(model_df, get_study_slopes)
+
+study_slopes <- re_slopes %>% 
+  filter(model_id == "base") %>%
+  rename(study_id = level)
 
 study_slopes_wide <- study_slopes %>%
-  filter(model_id == "base") %>%
-  select(study_id = level, metric, estimate) %>%
+  select(study_id, metric, estimate) %>%
   pivot_wider(names_from = "metric", values_from = "estimate")
 ```
 
@@ -378,29 +381,46 @@ study_slopes %>%
   summarise(n_study_id = n_distinct(study_id)) %>%
   mutate(percent = n_study_id/53) 
 
-#And how many were significant for all but Jaccard?
+#And which studies were they?
 study_slopes %>% 
-  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "S")) %>% 
-  group_by(study_id) %>% filter(sum(sig) == 4) %>% pull(study_id) %>% 
-  n_distinct()
+  filter(sig == TRUE) %>% 
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
+  select(study_id, metric) %>%
+  distinct()
 
-#Breakdown of relationship between functional richness and species richness
-s_sig <- study_slopes %>% filter(metric == "S", sig == TRUE) %>% pull(study_id) %>% unique()
-s_sig_not_fric <- study_slopes %>% 
-  filter(study_id %in% s_sig, metric == "FRic", sig == FALSE) %>% 
-  pull(study_id) %>%
-  unique()
-
-both_sig <- study_slopes %>% 
-  filter(study_id %in% s_sig, metric == "FRic", sig == TRUE) %>%
-  pull(study_id)
-
-both_pos
-fric_pos
-s_pos_fric_neg <- study_slopes %>%
-  filter(study_id %in% both_sig) %>% 
+#Which were significant for multiple metrics?
+study_slopes %>% 
+  filter(sig == TRUE) %>% 
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
   group_by(study_id) %>%
-  filter(sum(sign(estimate)) == 0) 
+  filter(n() > 1) %>%
+  select(study_id, metric)
+```
+
+```{r}
+# #And how many were significant for all but Jaccard?
+# study_slopes %>% 
+#   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "S")) %>% 
+#   group_by(study_id) %>% filter(sum(sig) == 4) %>% pull(study_id) %>% 
+#   n_distinct()
+# 
+# #Breakdown of relationship between functional richness and species richness
+# s_sig <- study_slopes %>% filter(metric == "S", sig == TRUE) %>% pull(study_id) %>% unique()
+# s_sig_not_fric <- study_slopes %>% 
+#   filter(study_id %in% s_sig, metric == "FRic", sig == FALSE) %>% 
+#   pull(study_id) %>%
+#   unique()
+# 
+# both_sig <- study_slopes %>% 
+#   filter(study_id %in% s_sig, metric == "FRic", sig == TRUE) %>%
+#   pull(study_id)
+# 
+# both_pos
+# fric_pos
+# s_pos_fric_neg <- study_slopes %>%
+#   filter(study_id %in% both_sig) %>% 
+#   group_by(study_id) %>%
+#   filter(sum(sign(estimate)) == 0) 
 
 ```
 
