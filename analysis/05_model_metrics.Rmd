@@ -362,15 +362,16 @@ model_df <- metric_model_table %>%
 
 #get study level slopes for base, and levels for categorical random effect in non-base models
 re_slopes <- pmap_dfr(model_df, get_study_slopes)
+pins::pin(re_slopes, board = "github")
 
 #get only study-level slopes for the base models
 study_slopes <- re_slopes %>% 
   filter(model_id == "base") %>%
   rename(study_id = level)
 
-study_slopes_wide <- study_slopes %>%
-  select(study_id, metric, estimate) %>%
-  pivot_wider(names_from = "metric", values_from = "estimate")
+# study_slopes_wide <- study_slopes %>%
+#   select(study_id, metric, estimate) %>%
+#   pivot_wider(names_from = "metric", values_from = "estimate")
 ```
 
 Summaries of study slopes
@@ -462,6 +463,7 @@ startyear_slope <- study_slope_data %>%
 
 #All model estimates in one dataframe
 slope_models <- bind_rows(duration_slope, startyear_slope)
+pins::pin(slope_models, board = "github")
 
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
