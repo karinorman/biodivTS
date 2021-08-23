@@ -91,7 +91,7 @@ study_map <- map_data("world") %>%
   theme(legend.title  = element_blank()) +
   guides(color = guide_legend(override.aes= list(alpha = 0.8)))
 
-ggsave(here::here("figures/study_map.jpeg"))
+ggsave(here::here("figures/study_map.jpeg"), bg = "white")
 ```
 
 ```{r}
@@ -110,7 +110,7 @@ duration_hist <- study_data %>%
 
 plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1))
 
-ggsave2(here::here("figures/study_map_hist.jpeg"))
+ggsave2(here::here("figures/study_map_hist.jpeg"), bg = "white")
 ```
 
 Metric plots with trend lines
@@ -166,7 +166,7 @@ model_coef <- metric_model_table %>%
   select(-model) %>% 
   unnest(cols = c(coef))
 
-group_colors <- c("Global" = my_pal[1], "Polar/Temperate" = my_pal[5], "Temperate/Tropical" = my_pal[3], "Tropical" = my_pal[4], "Temperate" = my_pal[2], "Overall Mean" = "#000000")
+group_colors <- c("Global" = my_pal[1], "Polar/Temperate" = my_pal[6], "Temperate/Tropical" = my_pal[3], "Tropical" = my_pal[4], "Temperate" = my_pal[2], "Overall Mean" = "#000000")
 
 plot_map <- tibble(metric_name = c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", "SES_FEve"), 
            ylabel = c("log(S)", "Jaccard", "Functional Richness SES", "Functional Divergence SES", "Functional Evenness SES"),
@@ -195,6 +195,6 @@ legend <- get_legend(leg_plot)
 #plot_join + draw_grob(legend,  2/3.3, -0.3, .3/3.3, 1, scale = 0.6)
 plot_join + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
 
-ggsave2(here::here("figures", "3met_long.jpeg"))
+ggsave2(here::here("figures", "3met_long.jpeg"), bg = "white")
 ```
 
