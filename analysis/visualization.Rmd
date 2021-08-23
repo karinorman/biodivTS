@@ -20,37 +20,43 @@ library(dplyr)
 library(ggthemes)
 library(mapproj)
 library(stringr)
+library(cowplot)
 ```
 
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
-country_data <- pins::pin_get("country-data-bind", board = "github") %>%
-  mutate(country = str_remove(country, "Commonwealth of The "),
-         country = str_remove(country, "Kingdom of "),
-         country = str_remove(country, "Republic of "),
-         country = str_remove(country, "Kingdom of "),
-         country = str_remove(country, "Federative Republic of "),
-         country = str_remove(country, "Federative "),) %>%
-  mutate(country = case_when(
-    country == "United States" ~ "USA",
-    country == "Russian Federation" ~ "Russia",
-    country == "United Great Britain and Northern Ireland" ~ "UK",
-    country == "Czechia" ~ "Czech Republic",
-    TRUE ~ country
-  )) %>% 
-  count(country, code)
-
-mapdata <- map_data("world") %>%
-  left_join(country_data, by = c("region" = "country"))
-
-mapdata %>%
-  ggplot(aes(long, lat)) +
-  geom_polygon(mapping = aes(group = group, fill = n)) +
-  ggthemes::theme_map() +
-  #scale_fill_continuous(color = "#32A251")
-  scale_fill_gradient(low = "white", high = "#39737c")
+# country_data <- pins::pin_get("country-data-bind", board = "github") %>%
+#   mutate(country = str_remove(country, "Commonwealth of The "),
+#          country = str_remove(country, "Kingdom of "),
+#          country = str_remove(country, "Republic of "),
+#          country = str_remove(country, "Kingdom of "),
+#          country = str_remove(country, "Federative Republic of "),
+#          country = str_remove(country, "Federative "),) %>%
+#   mutate(country = case_when(
+#     country == "United States" ~ "USA",
+#     country == "Russian Federation" ~ "Russia",
+#     country == "United Great Britain and Northern Ireland" ~ "UK",
+#     country == "Czechia" ~ "Czech Republic",
+#     TRUE ~ country
+#   )) %>% 
+#   count(country, code)
+# 
+# mapdata <- map_data("world") %>%
+#   left_join(country_data, by = c("region" = "country"))
+# 
+# mapdata %>%
+#   ggplot(aes(long, lat)) +
+#   geom_polygon(mapping = aes(group = group, fill = n)) +
+#   ggthemes::theme_map() +
+#   #scale_fill_continuous(color = "#32A251")
+#   scale_fill_gradient(low = "white", high = "#39737c")
 
 #ggsave("study_map.jpeg")
+```
+
+Define color palette
+```{r}
+my_pal <- c("#d9be3b", "#77976e", "#086788", "#d9be3b", "#99adbf", "#cc8214", "#bfac88")
 ```
 
 ```{r}
@@ -72,9 +78,17 @@ study_map <- map_data("world") %>%
   ggplot(aes(long, lat, group = group)) +
   geom_polygon(fill = "white", colour = "grey") + 
   coord_map(xlim=c(-180,180), ylim=c(-57, 90), projection = "mercator") +
-  geom_point(data = study_data, aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.3, inherit.aes = FALSE) +
+  geom_point(data = study_data,
+             aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.4, inherit.aes = FALSE) +
+  #plot the US amphibian point on top so we can see it
+  geom_point(data = study_data %>% 
+               #filter(taxa %in% c("Amphibians")), 
+               filter(taxa %in% c("Amphibians"), rarefyID_y > 0),
+             aes(rarefyID_x, rarefyID_y ), color = "#d9be3b", alpha = 0.8, inherit.aes = FALSE) +
   ggthemes::theme_map() +
-  theme(legend.title  = element_blank())
+  scale_color_manual(values = my_pal) +
+  theme(legend.title  = element_blank()) +
+  guides(color = guide_legend(override.aes= list(alpha = 0.8)))
 
 ggsave(here::here("figures/study_map.jpeg"))
 ```
@@ -90,7 +104,8 @@ duration_hist <- study_data %>%
   theme(strip.background = element_blank(), 
         strip.text = element_blank(),
         legend.position = "none", 
-        axis.title = element_text(size=8))
+        axis.title = element_text(size=8)) +
+  scale_fill_manual(values = my_pal)
 
 plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1))
 
