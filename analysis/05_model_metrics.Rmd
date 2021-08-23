@@ -13,7 +13,6 @@ library(tidyverse)
 library(lme4)
 library(broom.mixed)
 library(lmerTest)
-library(cowplot)
 ```
 #### Read in data, get final dataset for models
 Get data and put it in long form 
@@ -584,91 +583,4 @@ slopes_wide %>%
     geom_vline(xintercept = 0) + 
   ylab("Metric Slope") +
   xlab("Functional Richness Slope")
-```
-
-```{r}
-library(cowplot)
-library(RColorBrewer)
-
-plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, color_list){
-
-  if(is.na(xlabel)) xlabel <- NULL
-  
-  data <- data %>%
-    filter(metric == metric_name, !is.na(value), !is.infinite(value))
-
-  model_coef <- model_coef %>%
-    filter(metric == metric_name) %>%
-    select(term, estimate)
-  
-  intercept <- model_coef %>% filter(term == "(Intercept)") %>% pull(estimate)
-  slope <- model_coef %>% filter(term == "year_scaled") %>% pull(estimate)
-  
-  pred <- data %>%
-    select(year_scaled) %>%
-    distinct() %>%
-    mutate(pred = intercept + year_scaled * slope)
-
-  trend_plot <- data %>%
-    left_join(pred, by = "year_scaled") %>%
-    #left_join(metadata %>% select(study_id, climate)) %>%
-    ggplot(aes(x = year, y = !!sym(yval))) +
-    # geom_smooth(aes(color = climate, group = rarefyID), method = "glm", se = FALSE) +
-    # geom_point(aes(color = climate, group = rarefyID)) +
-    geom_point(aes(group = rarefyID) ,color = "grey", size = 0.25) +
-    geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
-    #geom_smooth(color = "black", method = "glm", se = FALSE) +
-    geom_line(mapping = aes(y = pred)) +
-    theme_classic() +
-    theme(axis.title = element_text(size=7), legend.position = "none") +
-    ylab(ylabel) +
-    xlab(xlabel) +
-    labs(color = "Climate") +
-    scale_x_continuous(breaks = scales::pretty_breaks(n = 6)) +
-    scale_colour_manual(values = color_list, drop = FALSE)
-    
-    #scale_color_manual(values = c("#32a251", 
-               # "#ff7f0f", "#39737c", "#b85a0d", "#ffd94a"))
-  
-  ggsave(paste0(here::here("figures"), "/",metric_name, "_trend.png"), trend_plot)
-  return(trend_plot)
-}
-
-model_coef <- metric_model_table %>%
-  select(metric, model) %>%
-   mutate(coef = map(model, tidy)) %>% 
-  select(-model) %>% 
-  unnest(cols = c(coef))
-
-pal <- brewer.pal(n = 5, name = "Dark2")
-group_colors <- c("Global" = pal[1], "Polar/Temperate" = pal[2], "Temperate/Tropical" = pal[3], "Tropical" = pal[4], "Temperate" = pal[5], "Overall Mean" = "#000000")
-
-plot_map <- tibble(metric_name = c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", "SES_FEve"), 
-           ylabel = c("log(S)", "Jaccard", "Functional Richness SES", "Functional Divergence SES", "Functional Evenness SES"),
-           #ylabel = c("log(S)", "Jaccard", "FRic SES", "FDiv SES", "FEve SES"),
-           yval = c("logvalue", "value", "value", "value", "value"),
-           xlabel = c(NA, NA, NA, "year", "year"))
-m_plots <- pmap(plot_map, plot_metric, data = model_data, model_coef = model_coef, color_list = group_colors)
-
-plot_join <- plot_grid(plotlist=m_plots, labels = "AUTO", nrow = 3, align = 'vh',
-                       hjust = -1, axis = "l", scale = 0.9)
-
-leg_plot <- model_data %>%
-  bind_rows(data.frame(climate = c("Overall Mean", "Overall Mean"), year = c(2019, 2020), value = c(1, 1))) %>%
-  ggplot(aes(x = year, y = value)) +
-  geom_point(color = "grey", size = 0.50) +
-  geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
-  theme_classic() +
-  theme(axis.title = element_text(size=7)) +
-  scale_colour_manual(values = group_colors, drop = FALSE)
-
-# extract the legend from one of the plots
-legend <- get_legend(leg_plot)
-
-# add the legend to the row we made earlier. Give it one-third of 
-# the width of one plot (via rel_widths).
-#plot_join + draw_grob(legend,  2/3.3, -0.3, .3/3.3, 1, scale = 0.6)
-plot_join + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
-
-ggsave2(here::here("figures", "3met_long.jpeg"))
 ```
