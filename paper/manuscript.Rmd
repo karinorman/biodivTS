@@ -95,7 +95,8 @@ tibble(Taxa = c("Mammals", "Birds", "Amphibians"),
   mutate_all(linebreak, align = "l") %>% 
   knitr::kable(format = "latex", col.names = c("Taxa", "Number of \nTimeseries", "Number of \nSpecies", "Trait Source", "Traits"), escape = FALSE, 
                caption = "Summary of the data in the final trait database.") %>%
-   kable_styling(latex_options= c("scale_down", "hold_position")) #%>%
+  kable_classic() #%>% 
+  #kable_styling(latex_options= c("scale_down", "hold_position")) #%>%
    #kableExtra::column_spec(2, width = "5cm") #%>%
   # kableExtra::column_spec(4, width = "10cm")
 ```
@@ -130,7 +131,7 @@ Jaccard similarity was calculated relative to the first observed year for a time
 A negative trend in *J* would therefore indicate increasing turnover.
 
 Functional diversity metrics were calculated using the *dbFD* function from the *FD* R package.
-Here we report functional richness (*FRic*), functional evenness (*FEve*), and functional diveregence (*FDiv*) which together describe three complementary characteristics of the functional space [@mason2005].
+Here we report functional richness (*FRic*), functional evenness (*FEve*), and functional diveregence (*FDiv*) which together describe three complementary characteristics of the functional space [@mason2005, @hillebrand2009].
 *FRic* assesses the volume of the trait space occupied by species in the community, with higher values indicating communities with species of more extreme trait values.
 *FEve* describes how species are distributed across the trait space and how abundance is distributed across species.
 Higher values of *FEve* indicate more even spacing of species in the trait space and individuals across species.
@@ -138,7 +139,7 @@ Higher values of *FEve* indicate more even spacing of species in the trait space
 Higher values of *FDiv* therefore correspond to communities where many highly abundant species are on the edges of the trait space.
 <!-- use these metrics because they're common, not because of their results -->
 
-```{r metric-fi, fig.cap="Example distributions of species and abundance for a single trait axis for high and low values of our measured metrics.", echo=FALSE, strip.white=TRUE}
+```{r metric-fi, fig.cap="Example distributions of species and abundance for a single trait axis for high and low values of our measured metrics. Figure is modified from a similar illustration in Hillebrand & Matthiessen 2009.", echo=FALSE, strip.white=TRUE}
 knitr::include_graphics(here::here("figures/conceptual_fig.jpeg"))
 ```
 
@@ -162,23 +163,11 @@ Unless otherwise specified, functional diversity results are reported for standa
 
 #### *Analysis*
 
-*Overall Trends*
+We estimated general trends for each diversity metric using a Linear Mixed Effects model with a random slope and intercept for each timeseries nested within the study.
+To test for differences in trends by taxa, biome, and realm, each variable was modeled individually as random effects in models of the same structure.
+We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model with no additional covariates.
 
-We estimated overall trends for each diversity metric using a Linear Mixed Effects model with a random slope and intercept for each timeseries nested within the study.
-Differences in trends by taxa, biome, and realm were each modeled individually as covariates in models of the same structure.
-
-*Study-level Trends*
-
-We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model and assessed them in two ways.
-First, we looked at pairwise relationships between all metrics to assess what kinds of community shifts are commonly found together.
-We obtained correlations and bootstrapped p-values using *corr.test* and *corCI* functions in the *psych* R package (citation).
-Second, we assessed the relationship between all metrics simultaneously by performing a cluster analysis which grouped each study based on their similarities across all metrics.
-We used a hierarchical clustering algorithm through the function *hclust* from the R package *stats.* We included all standardized functional diversity metrics, species richness, and Jaccard similarity in the analysis.
-We report a qualitative interpretation of the groups from the cluster analysis.
-
-*Study-level Trends*
-
-We assessed the impact of study-level characteristics on slope estimates...
+We assessed the impact of timeseries duration and start year on study-level trends using General Linear Models with duration and start year as predictors.
 
 ```{r timeseries-plot, fig.cap="Plots of timeseries-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
 knitr::include_graphics(here::here("figures/3met_long.jpeg"))
@@ -186,23 +175,28 @@ knitr::include_graphics(here::here("figures/3met_long.jpeg"))
 
 ### Results
 
-<!-- Despite significant trends at the study level for the majority of studies,-->
-
 We found no significant overall trend in species richness or functional diversity metrics (Fig 2).
 There was also no temporal trend for studies broken down by taxa, biome or realm.
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
 Non-significant overall trends indicate that an equal number of studies experienced increasing and decreasing trends in those metrics.
 
-At the study level, the majority of studies (86%) experienced a significant temporal change in species richness and all functional diversity metrics.
-92% of studies experienced a significant trend for species richness, 88% for functional richness, 98% for functional divergence, 96% for functional evenness, and 30% for Jaccard similarity.
-Only 4 (cite studies) out of 53 studies experienced no significant trend in species richness and were also characterized by significantly decreasing functional evenness.
-There was only one significant pairwise correlation between the metrics, a positive relationship between Functional Divergence and Functional Evenness, indicating that communities experiencing an increase in Divergence frequently experience an increase in Evenness.
+At the study level, only 7 of 54 studies experienced a significant trend for a metric other than Jaccard similarity.
+4 studies had a significant trend in species diversity, one positive and three negative.
+Two studies experienced a significant decrease in functional evenness, and one study experienced a significant decrease in both functional richness and functional divergence.
 
-Cluster analysis grouped all but a few studies into a cluster characterized by non-significant or very small significant slopes for all metrics.
-We identified four other clusters containing six studies (list studies) that were characterized by outlier trends in at least one of the metrics and near-zero trends in the rest.
-The first contained two studies with the most strongly decreasing evenness.
-The second, two studies with the most strongly increasing functional divergence and increasing functional richness.
-The third contained one study with strongly decreasing functional divergence and richness, and the fourth strongly decreasing species richness with increasing functional richness.
+```{r echo = FALSE}
+library(tidyverse)
+
+data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "37"), FRic = c("0", "1"), FEve = c("0", "2"), FDiv = c("0", "1")) %>%
+  column_to_rownames("sign") %>%
+  kable(caption = "Number of studies that experienced a signficiant trend in each calculated metric.")
+```
+
+Trends for multiple metrics were significantly related to the the sampling characteristics of indivdual studies.
+
+<!-- the majority of studies (86%) experienced a significant temporal change in species richness and all functional diversity metrics. 92% of studies experienced a significant trend for species richness, 88% for functional richness, 98% for functional divergence, 96% for functional evenness, and 30% for Jaccard similarity. Only 4 (cite studies) out of 53 studies experienced no significant trend in species richness and were also characterized by significantly decreasing functional evenness. There was only one significant pairwise correlation between the metrics, a positive relationship between Functional Divergence and Functional Evenness, indicating that communities experiencing an increase in Divergence frequently experience an increase in Evenness. -->
+
+<!-- Cluster analysis grouped all but a few studies into a cluster characterized by non-significant or very small significant slopes for all metrics. We identified four other clusters containing six studies (list studies) that were characterized by outlier trends in at least one of the metrics and near-zero trends in the rest. The first contained two studies with the most strongly decreasing evenness. The second, two studies with the most strongly increasing functional divergence and increasing functional richness. The third contained one study with strongly decreasing functional divergence and richness, and the fourth strongly decreasing species richness with increasing functional richness. -->
 
 ### Discussion
 
@@ -210,14 +204,17 @@ The third contained one study with strongly decreasing functional divergence and
 
 <!-- Surprisingly, we did not detect an overall trend in any of the functional diversity metrics. Similar to species richness, communities are experiencing a wide range of functional shifts that balance each other out. While our dataset likely under-samples areas with most direct human impact, anthropogenic change is hypothesized to impact even the most remote systems. Conservatively, our findings therefore indicate that in unperturbed mammal, bird, and amphibian communities there is no evidence of systemic functional richness loss or functional change. A lack of trend for data broken down by realm, biome, and taxonomic group gives further evidence that directional functional change is absent from all systems observed in our dataset. -->
 
-Our study represents the largest broad-scale multi-taxa assessment of functional change through time to date, giving a first look at overall trends in functional diversity and the range of changes happening in mammal, bird, and amphibian communities.
+Our study represents the largest broad-scale multi-taxa assessment of functional change through time to date, giving a first look at aggregate and local trends in functional diversity in mammal, bird, and amphibian communities.
 Surprisingly, we did not detect an overall trend in any of the calculated functional diversity metrics.
-While nearly all of the studies included in our data experienced a significant increase or decrease in at least one of the metrics, trends were observed in equal numbers resulting in an overall trend that was not significantly different from zero.
 As with previous species-based syntheses, we also found no overall trend in species diversity accompanied by increasing turnover through time [@dornelas2018], indicating that non-significant trends in functional metrics may be consistent with similar well-documented species derived trends.
 We found no evidence of systemic functional richness loss or functional change.
 A lack of trend for data broken down by realm, biome, and taxonomic group gives further evidence that directional functional change is absent from all systems observed in our dataset.
 
+Communities demonstrated almost universal maintenance of functional composition.
+While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three experienced a significant shift in any functional dimension.
+
 Individual studies in our dataset demonstrate the variety of species and functional shifts that can happen concurrently in a community.
+
 With only one significant pairwise relationship between study-level functional divergence slopes and functional evenness slopes, all other possible combinations of species and functional change were observed in at least one study.
 Notably, there is no relationship between species richness change and change in functional richness, meaning that communities experiencing species losses do not necessarily experience accompanying functional richness, and in some cases may even experience an increase.
 <!-- need to put a disclaimer about what "increasing" means here - it's increased richness relative to the expectation for a community of that size --> These communities gain species that expand the boundaries of the trait space while losing interior species.
