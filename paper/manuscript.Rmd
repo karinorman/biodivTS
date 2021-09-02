@@ -221,7 +221,7 @@ And presuming that the original structure was good for function, maintaining it 
 
 This study represents the best available data and biodiversity synthesis approaches.
 Why then do we find no change in functional diversity despite extensive predictions to the contrary from both **theory** <!-- need more theory in the intro? --> and and many local studies?
-First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017] (other sampling citation!), and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest functional shifts [hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017] (other sampling citation!), and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest functional shifts [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 \<!-
 - You'd imagine the pattern would still be visible even with North American birds...
