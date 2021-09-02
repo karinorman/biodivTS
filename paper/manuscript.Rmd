@@ -131,7 +131,7 @@ Higher values of *FEve* indicate more even spacing of species in the trait space
 Higher values of *FDiv* therefore correspond to communities where many highly abundant species are on the edges of the trait space.
 <!-- use these metrics because they're common, not because of their results -->
 
-```{r metric-fi, fig.cap="Example distributions of species and abundance for a single trait axis for high and low values of our measured metrics. Figure is modified from a similar illustration in Hillebrand & Matthiessen 2009.", echo=FALSE, strip.white=TRUE}
+```{r metric-fi, fig.cap="Example distributions of species and abundance for a single trait axis for high and low values of our measured metrics. Figure is modified from a similar illustration in Hillebrand \\& Matthiessen 2009.", echo=FALSE, strip.white=TRUE}
 knitr::include_graphics(here::here("figures/conceptual_fig.jpeg"))
 ```
 
@@ -179,7 +179,10 @@ data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "3
   kable(caption = "Number of studies that experienced a signficiant trend in each calculated metric.")
 ```
 
-Trends for multiple metrics were significantly related to the the sampling characteristics of indivdual studies.
+Study-level slopes for multiple metrics were significantly related to the duration and start year of studies.
+Slopes for species richness were significantly more negative with later start date and more positive shorter duration studies.
+Jaccard similarity and functional evenness both had significantly more negative slopes with more recent start year, whereas functional divergence was significantly more positive.
+Slopes for functional evenness were also significantly more positive for longer duration studies.
 
 <!-- the majority of studies (86%) experienced a significant temporal change in species richness and all functional diversity metrics. 92% of studies experienced a significant trend for species richness, 88% for functional richness, 98% for functional divergence, 96% for functional evenness, and 30% for Jaccard similarity. Only 4 (cite studies) out of 53 studies experienced no significant trend in species richness and were also characterized by significantly decreasing functional evenness. There was only one significant pairwise correlation between the metrics, a positive relationship between Functional Divergence and Functional Evenness, indicating that communities experiencing an increase in Divergence frequently experience an increase in Evenness. -->
 
@@ -210,50 +213,32 @@ But we may also be measuring the wrong dimensions of the trait space or the wron
 Can't really say BEF needs to measure function directly because these communities aren't losing species or functional diversity - turnover is either within regular bounds or if not (if more turnover than normal) it's still maintaining community structure.
 And presuming that the original structure was good for function, maintaining it is also good for function!
 
-**What are we going to say about the disturbance/environmental change backgrounds of these communities??**
-
-While we did not directly assess the impact of potential disturbance or environmental change in the included communities
-
-While there are clear impacts on functional makeup in scenarios of disturbance (what other scenarios do we see??)
-
--   some of these studies expereience a disturbance/treatment!
-
--   even for those that didn't it is remarkable that these metrics were conserved so universally!
-
-    The overall trend of increasing turnover is consistent with work indicating higher than expected background rates of turnover in contemporary communities [@gotelli2017; @magurran2018].
-
-[@osullivan2021]
-
-<!-- Link turnover paragraph to background turnover rate, maintenence of species diversity (i.e. turnover is happening! what does that mean for speices div? maintained. for functional diversity? maintained.) -->
+*Implications for Future Work*
 
 <!-- Here's the prediction of the field, here is the data of the field, given that the data doesn't match the prediction it's on the field to resolve these issues. -->
 
-*Implications for Future Work*
+<!-- Despite widespread concern about the loss of functional diversity, our analysis does not indicate significant change in functional composition is the rule for communities. Why -->
 
-Despite widespread concern about the loss of functional diversity, our analysis does not indicate significant change in functional composition is the rule for communities.
-Why
+This study represents the best available data and biodiversity synthesis approaches.
+Why then do we find no change in functional diversity despite extensive predictions to the contrary from both **theory** <!-- need more theory in the intro? --> and and many local studies?
+First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017] (other sampling citation!), and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest functional shifts [hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
-This study represents the best available biodiversity and trait data paired with best practices in biodiversity synthesis.
-Why then do we find no change despite extensive predictions to the contrary from both **theory** <!-- need more theory in the intro? --> and and many local studies?
-First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017] (other sampling citation!), and the subset of data in this study exhibits a strong Northern Hemisphere bias.
-We may simply not have data from those areas experiencing the greatest functional shifts.
-We do however emphasize that even disturbed sites can maintain structure (citation), and therefore the inclusion of these sites would not necessarily change the result.
+\<!-
+- You'd imagine the pattern would still be visible even with North American birds...
 
-You'd imagine the pattern would still be visible even with North American birds...
+To further explore the issue we look for example at the North American Breeding Birdy Survey, included in this study and assessed in many other publications.
+--\>
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected along side monitoring data, especially for the longest running efforts.
 Further investment in individual level trait data for long-term monitoring will be critical for assessing finer scale shifts that likely occur more commonly in communities and potentially preceded bigger changes.
+Likewise, available trait data may not capture the traits experiencing the greatest change.
 
-Third, while we use here the most common metrics for describing functional diversity there are a number of possible metrics for assessing a functional space, with new ones frequently proposed.
-There may be a significant shift in a characteristic of the functional space that was poorly captured by our chosen metrics.
-<!-- Further exploration of complementarity of traits... -->
-
-Notably, the metrics we calculated do not capture shifts in the location of the functional space.
+Third, while we use here the most common metrics for describing functional diversity they do not measure some potentially important aspects of the functional space.
+Most notably, the metrics we calculated do not capture shifts in the location of the functional space.
 For example two communities could have very similar metric values but no overlap in their trait spaces.
-This is especially critical in the context of biodiversity change, as a species could be lost and replaced by a species with very different functional attributes, but the replacement would go undetected if the new species expanded the trait space by the same degree and had similar population attributes.
-This may be particularly relevant for communties that exist in a rapidly changing envrionment (both abiotic and biotic), as communities may maintain some characteristcs of their functional composition while shifting to track the new conditions.
-Metrics developed to assess shifts and overlaps in trait spaces are now being developed (citation), and further exploration of time series using those approaches may disentangle maintained characteristics from occupied trait space.
+This is especially relevant in the context of biodiversity change as lost species could be replaced by a species with very different functional attributes, but the replacement would go undetected if the new species expanded the trait space by the same degree and had similar abundance.This may be particularly relevant for communities tracking shifting environmental conditions, as communities may maintain some characteristics of their functional composition while shifting to track the new conditions.
+Metrics developed to assess shifts and overlaps in trait spaces are now being developed (citation), and further exploration of time series using those approaches may disentangle trait space characteristics from the location of the occupied space.
 
 -   one opening sentence that links back to the null result
 
