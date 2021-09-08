@@ -115,7 +115,7 @@ The earliest sample was in 1923 and the most recent was in 2016.
 Only four studies (consisting of 11 timeseries) came from Amphibian studies due to the limited availability of amphibian timeseries and low species richness values for assemblages (Table 1).
 For a full breakdown of studies and their characteristics, see the supplement.
 
-```{r taxa-map, fig.cap="Map of timeseries locations with points color corresponding to taxa.", echo=FALSE}
+```{r taxa-map, fig.cap="A) Map of timeseries locations with points colored by taxa, and B) histograms of timeseries duration broken down by taxa.", echo=FALSE}
 knitr::include_graphics(here::here("figures/study_map_hist.jpeg"))
 ```
 
