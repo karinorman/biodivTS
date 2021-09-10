@@ -194,11 +194,16 @@ As with previous species-based syntheses, we also found no overall trend in spec
 We found no evidence of systemic functional richness loss or functional change.
 A lack of trend for data broken down by realm, biome, and taxonomic group gives further evidence that directional functional change is absent from all systems observed in our dataset.
 
+This striking result could be a product of two possible processes which we discuss futher here.
+First, systemic maintenance of functional structure across communities, or second, a failure of existing data and methods to detect a true underlying change.
+
+*Potential Ecological Implications*
+
 Communities demonstrated almost universal maintenance of functional composition.
 While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three experienced a significant shift in any functional dimension.
 This suggests certain characteristics of the functional space are conserved even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (FRic) and the distribution of species and individuals within that space (FEve and FDiv).
 On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space.
-<!-- While we did not explicitly assess how turnover rates compare to background turnover, --> Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also happens on annual time scales [@barnosky2004; @jackson2015].
+<!-- While we did not explicitly assess how turnover rates compare to background turnover, --> Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015].
 
 Our work challenges assumptions that functional loss is the default state of all or even many communities.
 While we do not directly assess the disturbance histories of included communities, trends were consistent even for the longest running and most heavily impacted studies.
@@ -206,7 +211,7 @@ The North American Breeding Survey for example is made up exclusively of roadsid
 No more robust dataset exists to capture North American avian community change, yet we detected no general shifts in functional structure across the dataset.
 Further, none of the 5 included studies that experienced a manual manipulation (e.g. burning, grazing exclosure, etc) experienced any significant functional trends.
 
-*Implications for Future Work*
+*Potential Methodological Limitations*
 
 This study represents the best available data and biodiversity synthesis approaches.
 Why then do we find no change in functional diversity despite extensive predictions to the contrary from both theory and local studies?
@@ -217,12 +222,21 @@ We do however emphasize that even disturbed communities maintain functional stru
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected along side monitoring data, especially for the longest running efforts.
-Further investment in individual level trait data for long-term monitoring will be critical for assessing finer scale shifts that likely occur more commonly in communities and potentially preceded bigger changes.
+Species-level traits may be obscuring more subtle shifts in the trait space happening within species.
 Likewise, available trait data may not capture the traits experiencing the greatest change.
 
 Third, while we use here the most common metrics for describing functional diversity they do not measure some potentially important aspects of the functional space.
 Most notably, the metrics we calculated do not capture shifts in the location of the functional space.
 For example two communities could have very similar metric values but no overlap in their trait spaces.
-This is especially relevant in the context of biodiversity change as lost species could be replaced by a species with very different functional attributes, but the replacement would go undetected if the new species expanded the trait space by the same degree and had similar abundance.
+This is especially relevant in the context of biodiversity change as a species loss could be replaced by a species with very different functional attributes, but the replacement would go undetected if the new species expanded the trait space by the same degree and had similar abundance.
 This scenario may be common in communities tracking changing environmental conditions.
 Approaches for assessing shifts and overlaps in functional space are still relatively new [@barros2016; @blonder2018; @mammola2019] a could shed critical insight into functional composition changes of this nature.
+
+*Future Work*
+
+Ecology is now in a pickle because both of these options are totally plausible.
+Where do we go from here?
+We need more data, but not data that continues to replicate existing biases (i.e. not more body masses from north american species).
+Targeted collection of even species-traits we may think are especially impacted by environemental change and have particular relevance for function.
+Geographic biases, esp long term monitoring.
+Simulation/modeling work to tease apart scenarios where we can reliable identify regulation in individual data sets, identify regulation vs dis regulation.
