@@ -237,29 +237,4 @@ Our results illustrates a well known but increasingly pervasive problem in synth
 We present here the conclusion best supported by available data with a number of caveats and suggestions for next steps forward.
 
 The most pressing need is for intentional and targeted data collection efforts.
-We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological process [@zhu2017] (MORE CITATION), however synthesis is constrained to the traits in a few taxa-specific databases. Prioritization of additional traits linked to environmental change drivers (response traits) or ecosystem function (effect traits) in particular would provide a powerful link to existing frameworks [@lavorel2002] .
-
-A more diverse set of traits would facillitate work linking macroecological analysis with theory of community change and ecosystem function. For example, identification of traits impacted by environmental change drivers (response traits) or which have the greatest impact on function (effect traits) [@lavorel2002].
-In addition to potentially better capturing change in communities, this framework would provide a much needed link between biogeographic patterns and theory.
-
-Our results give both a first look at the current state of functional change in communities and illustrate critical next steps for distinguishing true ecological patterns from artefacts.
-The clearest need is Understanding would be greatly improved by intentional and targeted data collection.
-We join others in emphasizing a call for increased monitoring in under sampled areas, particularly the global south, along with investment in collection of individual-level trait data.
-<!-- this is not a unique call, all of ecology would be benefited, we also recognize that this is a huge systemic problem that will require x, y, z investment --> While this clearly represents a long term investment in the future of ecology, there are also a number of things that can be done now.
-
-In the short term, broad-scale functional studies could benefit greatly from expansion of species-level trait values to allow for more intentional selection of relevant traits.
-A more diverse set of traits would allow ... especially those hypothesized to be particularly impacted by environmental change drivers (response traits) or which have the greatest impact on function (effect traits) [@lavorel2002].
-In addition to potentially better capturing change in communities, this framework would provide a much needed link between biogeographic patterns and theory.
-
--   better geographic sampling
-
--   better trait sampling - both intraspecific traits (in the field) and new trait axes (not necessarily in the field)
-
--   we may need more theory to inform which traits are most relevant for environmental change and ecological function
-
-Ecology is now in a pickle because both of these options are totally plausible.
-Where do we go from here?
-We need more data, but not data that continues to replicate existing biases (i.e. not more body masses from north american species).
-Targeted collection of even species-traits we may think are especially impacted by environmental change and have particular relevance for function.
-Geographic biases, esp long term monitoring.
-Simulation/modeling work to tease apart scenarios where we can reliable identify regulation in individual data sets, identify regulation vs dis regulation.
+We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological process [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases. Prioritization of additional traits linked to environmental change drivers (response traits) or ecosystem function (effect traits) in particular would provide a powerful link to existing frameworks for understanding functional change [@lavorel2002].
