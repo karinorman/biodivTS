@@ -1,5 +1,5 @@
 ---
-title: "Evidence of widspread maintenence of functional composition in vertebrate communities"
+title: "Evidence of widespread maintenance of functional composition in vertebrate communities"
 author: 
   - name: "Kari E A Norman"
     affiliation: ucb
@@ -190,14 +190,15 @@ Slopes for functional evenness were also significantly more positive for longer 
 
 Our study represents the largest broad-scale multi-taxa assessment of functional change through time to date, giving a first look at aggregate and local trends in functional diversity in mammal, bird, and amphibian communities.
 Surprisingly, we did not detect an overall trend in any of the calculated functional diversity metrics.
-As with previous species-based syntheses, we also found no overall trend in species diversity accompanied by increasing turnover through time [@dornelas2018], indicating that non-significant trends in functional metrics may be consistent with similar well-documented species derived trends.
+As with previous species-based syntheses, we also found no overall trend in species richness accompanied by increasing turnover through time [@dornelas2018], indicating that non-significant trends in functional metrics may be consistent with similar well-documented species derived trends.
 We found no evidence of systemic functional richness loss or functional change.
 A lack of trend for data broken down by realm, biome, and taxonomic group gives further evidence that directional functional change is absent from all systems observed in our dataset.
 
-This striking result could be a product of two possible processes which we discuss futher here.
-First, systemic maintenance of functional structure across communities, or second, a failure of existing data and methods to detect a true underlying change.
+This striking result could be a product of two possible processes, one ecological and one methodological.
+Null trends appear to give strong evidence of systemic maintenance of functional structure due to common ecological processes, however multiple limitations of current approaches in synthesis weaken the conclusions possible from our data due to potential statistical artefacts.
+We discuss both options further here.
 
-*Potential Ecological Implications*
+*Evidence of Ecological Processes*
 
 Communities demonstrated almost universal maintenance of functional composition.
 While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three experienced a significant shift in any functional dimension.
@@ -205,7 +206,7 @@ This suggests certain characteristics of the functional space are conserved even
 On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space.
 <!-- While we did not explicitly assess how turnover rates compare to background turnover, --> Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015].
 
-Our work challenges assumptions that functional loss is the default state of all or even many communities.
+These results challenge assumptions that functional loss is the default state of all or even many communities.
 While we do not directly assess the disturbance histories of included communities, trends were consistent even for the longest running and most heavily impacted studies.
 The North American Breeding Survey for example is made up exclusively of roadside surveys and is therefore in relatively close proximity to human impact [@pardieck2020] . It is considered an authoritative dataset on the state of bird populations on the continent and underpins policy decisions about bird conservation [@rosenberg2019; @sauer2017].
 No more robust dataset exists to capture North American avian community change, yet we detected no general shifts in functional structure across the dataset.
@@ -213,30 +214,52 @@ Further, none of the 5 included studies that experienced a manual manipulation (
 
 *Potential Methodological Limitations*
 
-This study represents the best available data and biodiversity synthesis approaches.
-Why then do we find no change in functional diversity despite extensive predictions to the contrary from both theory and local studies?
+Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
+However, a number of gaps in best practices may be obscuring a true underlying trend.
 
-First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
-We may simply not have data from those areas experiencing the greatest functional shifts [@hughes2021].
-We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+First, the Biotime database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
-The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected along side monitoring data, especially for the longest running efforts.
+The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected alongside monitoring data, especially for the longest running efforts.
 Species-level traits may be obscuring more subtle shifts in the trait space happening within species.
 Likewise, available trait data may not capture the traits experiencing the greatest change.
 
 Third, while we use here the most common metrics for describing functional diversity they do not measure some potentially important aspects of the functional space.
 Most notably, the metrics we calculated do not capture shifts in the location of the functional space.
-For example two communities could have very similar metric values but no overlap in their trait spaces.
+For example, two communities could have very similar metric values but no overlap in their trait spaces.
 This is especially relevant in the context of biodiversity change as a species loss could be replaced by a species with very different functional attributes, but the replacement would go undetected if the new species expanded the trait space by the same degree and had similar abundance.
 This scenario may be common in communities tracking changing environmental conditions.
 Approaches for assessing shifts and overlaps in functional space are still relatively new [@barros2016; @blonder2018; @mammola2019] a could shed critical insight into functional composition changes of this nature.
 
 *Future Work*
 
+Our results illustrates a well known but increasingly pervasive problem in synthesis-based ecology of distinguishing true ecological patterns from methodological artifacts.
+We present here the conclusion best supported by available data with a number of caveats and suggestions for next steps forward.
+
+The most pressing need is for intentional and targeted data collection efforts.
+We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological process [@zhu2017] (MORE CITATION), however synthesis is constrained to the traits in a few taxa-specific databases. Prioritization of additional traits linked to environmental change drivers (response traits) or ecosystem function (effect traits) in particular would provide a powerful link to existing frameworks [@lavorel2002] .
+
+A more diverse set of traits would facillitate work linking macroecological analysis with theory of community change and ecosystem function. For example, identification of traits impacted by environmental change drivers (response traits) or which have the greatest impact on function (effect traits) [@lavorel2002].
+In addition to potentially better capturing change in communities, this framework would provide a much needed link between biogeographic patterns and theory.
+
+Our results give both a first look at the current state of functional change in communities and illustrate critical next steps for distinguishing true ecological patterns from artefacts.
+The clearest need is Understanding would be greatly improved by intentional and targeted data collection.
+We join others in emphasizing a call for increased monitoring in under sampled areas, particularly the global south, along with investment in collection of individual-level trait data.
+<!-- this is not a unique call, all of ecology would be benefited, we also recognize that this is a huge systemic problem that will require x, y, z investment --> While this clearly represents a long term investment in the future of ecology, there are also a number of things that can be done now.
+
+In the short term, broad-scale functional studies could benefit greatly from expansion of species-level trait values to allow for more intentional selection of relevant traits.
+A more diverse set of traits would allow ... especially those hypothesized to be particularly impacted by environmental change drivers (response traits) or which have the greatest impact on function (effect traits) [@lavorel2002].
+In addition to potentially better capturing change in communities, this framework would provide a much needed link between biogeographic patterns and theory.
+
+-   better geographic sampling
+
+-   better trait sampling - both intraspecific traits (in the field) and new trait axes (not necessarily in the field)
+
+-   we may need more theory to inform which traits are most relevant for environmental change and ecological function
+
 Ecology is now in a pickle because both of these options are totally plausible.
 Where do we go from here?
 We need more data, but not data that continues to replicate existing biases (i.e. not more body masses from north american species).
-Targeted collection of even species-traits we may think are especially impacted by environemental change and have particular relevance for function.
+Targeted collection of even species-traits we may think are especially impacted by environmental change and have particular relevance for function.
 Geographic biases, esp long term monitoring.
 Simulation/modeling work to tease apart scenarios where we can reliable identify regulation in individual data sets, identify regulation vs dis regulation.
