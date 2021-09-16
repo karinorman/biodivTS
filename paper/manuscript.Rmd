@@ -22,7 +22,7 @@ header-includes:
    - \usepackage{lineno}
    - \linenumbers
 output: #word_document
-  rticles::elsevier_article:
+  rticles::pnas_article:
   includes:
    in_header: preamble.tex
 editor_options: 
