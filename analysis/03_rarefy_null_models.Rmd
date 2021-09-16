@@ -20,34 +20,18 @@ Get dataframe of filenames and corresponding rarefyID's
 path <- here::here("data", "rarefied_samples")
 files <- list.files(path) %>%
   paste0(path, "/", .)
-
-# samples <- purrr::map_dfr(files, function(x) {load(x)
-#   return(rare_comm_save)
-# 	}) %>% distinct()
 ```
 
-Function to get all rarefied samples for an ID
-```{r}
-# get_rarefy_samps <- function(id, path = here::here("data", "rarefied_samples")){
-#   print(id)
-#   samp_data <- list.files(path = path, pattern = paste0( "*.", id, ".*")) %>% 
-#     paste0(path, "/", .) %>%
-#      purrr::map_dfr(., function(x) {load(x)
-#        return(rare_comm_save)
-#        }) 
-#   return(samp_data)
-# }
-```
 Get species pools for each timeseries
 ```{r}
-bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github")
+bt_traitfiltered <- pins::pin_get("bt-traitfiltered", board = "github")
 trait_ref <- pins::pin_get("trait-ref", board = "github")
 
-species_pools <- bt_grid_filtered %>%
+species_pools <- bt_traitfiltered %>%
   select(rarefyid, species) %>% 
   distinct()
 
-rm(bt_grid_filtered)
+rm(bt_traitfiltered)
 ```
 
 Simulation functions

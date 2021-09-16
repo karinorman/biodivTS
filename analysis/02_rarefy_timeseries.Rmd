@@ -28,7 +28,7 @@ Load data
 pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
 
 ##	Get trait filtered data, rename colums to jive with the rest of the script
-bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+bt_traitfiltered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
   rename_with(toupper) %>%
   rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,
          rarefyID = RAREFYID, cell = CELL, Abundance = ABUNDANCE, Biomass = BIOMASS)
@@ -369,10 +369,10 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 Get rarefied diversity metrics
 ```{r}
 ## Separate true abundance (count) data from presence and biomass/cover data
-bt_grid_abund <- bt_grid_filtered %>%
+bt_grid_abund <- bt_traitfiltered %>%
   filter(ABUNDANCE_TYPE %in% c("Count", "Density", "MeanCount"))
 
-bt_grid_pres <- bt_grid_filtered %>%
+bt_grid_pres <- bt_traitfiltered %>%
   filter(ABUNDANCE_TYPE == "Presence/Absence")
 
 ## Get rarefied resample for each type of measurement (all data)
