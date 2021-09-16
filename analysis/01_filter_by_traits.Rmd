@@ -1,5 +1,5 @@
 ---
-title: "Check Coverage"
+title: "Merge biotime timeseries with trait data"
 author: "Kari Norman"
 date: "5/20/2019"
 output: html_document
@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Description
+This script merges trait data and biotime timeseries data, then filters out timeseries that don't have high enough trait coverage. 
 
 ```{r}
 library(tidyverse)
@@ -28,9 +31,7 @@ biotime_data <- biotime_data %>%
   mutate(obsID = row_number())
 ```
 
-#Checking Coverage of ID's and trait data -> biotime
-
-check if all bird & mammal biotime data w/id's has an elton match. There are 18 species without a match.
+check if all bird & mammal biotime data w/id's has an elton match. There are 13 species without a match.
 ```{r}
 no_trait <- biotime_data %>%
   filter(taxa %in% c("Birds", "Mammals")) %>%
@@ -42,32 +43,22 @@ no_trait <- biotime_data %>%
 dim(no_trait)
 ```
 
-and 25268 species without an ID, some of which are species codes
-```{r}
-biotime_data %>%
-  #filter(taxa == "Birds") %>%
-  select(id, sourceName, taxa) %>%
-  filter(is.na(id)) %>%
-  distinct() %>%
-  dim()
-```
-
-Are there any studies for which we have trait data for all species?
+Function for joining timeseries data with functional trait data. 
 ```{r}
 merge_data <- function(trait_data){
   biotime_data %>%
-    select(-scientificName) %>%
-    rename(biotimeName = sourceName) %>%
+    select(-scientificName) %>% #remove scientific name from biotime data
+    rename(biotimeName = sourceName) %>% #give original biotime name a better column name
   left_join(trait_data %>% rename(traitName = sourceName), by = "id",
-            na_matches = "never") %>%
+            na_matches = "never") %>% # join to trait data
    drop_na(scientificName)
 }
 ```
 
-Get data w/traits for all studies that have >85% trait coverage
+Get data w/traits for all studies that have >75% trait coverage
 
 `id` is `NA` if there was no `id` match
-`biotimeName` or `traitName` is `NA` if that ID is the result of an average of multliple species matches
+`biotimeName` or `traitName` is `NA` if that ID is the result of an average of multiple species matches
 `scientificName` is `NA` when there was no trait data for a given ID
 ```{r}
 #set coverage threshold for analysis dataset
@@ -75,8 +66,10 @@ percent <- 0.75
 
 traits <- list(elton_bird, elton_mamm, amphibio)
 
+#map across list of trait sources to merge timeseries with each one
 trait_merge <- map_dfr(traits, merge_data) 
 
+#combine observations w/trait data back with observations with no trait data
 comp_biotime_traits <- trait_merge %>%
   bind_rows(biotime_data %>% 
               filter(!obsID %in% trait_merge$obsID) %>%
@@ -87,6 +80,7 @@ comp_biotime_traits <- trait_merge %>%
 #always check that one species didn't match to multiple datasets, below should return and empty dataframe
 #comp_biotime_traits %>% group_by(record_id) %>% filter(n() > 1) %>% dim()
 
+#get a percentage of trait coverage for each study
 coverage <- comp_biotime_traits %>%
   select(study_id, id, biotimeName, traitName) %>%
   distinct() %>%
@@ -94,17 +88,18 @@ coverage <- comp_biotime_traits %>%
   summarise(perc = sum(!is.na(traitName))/n()) %>%
   arrange(desc(perc))
 
+#studies to include, since they meet the coverage requirement 
 inc_coverage <- coverage %>% filter(perc > percent)
 
 biotime_traits <- comp_biotime_traits %>%
   #get studies with appropriate coverage and drop observations that we don't have trait data for, and unlabeled non-id'd species
   filter(study_id %in% inc_coverage$study_id, !is.na(scientificName)) %>% 
   group_by(rarefyid, year) %>%
-  filter(n_distinct(id) > 4) %>%
+  filter(n_distinct(id) > 4) %>% #more than four species for each observation
   ungroup()
 ```
 
-Get biotime data filtered by trait coverage
+Get final columns 
 ```{r}
 bt_cols <- colnames(biotime_data)[!colnames(biotime_data) %in% 
                                          c("sourceName", "obsID", "scientificName")]
@@ -113,7 +108,7 @@ biotime_traits <- biotime_traits %>%
   rename(species = id)
 ```
 
-Split timeseries that have more than one class of species (split up birds and mammals)
+Some timeseries have observations from more than one class of species (e.g. birds and mammals), here we split them into two individual timeseries.
 ```{r}
 #get the class of each species
 tax_info <- taxadb::filter_id(unique(biotime_traits$species), "itis")
@@ -139,13 +134,14 @@ mix_split <- biotime_traits %>%
   group_by(rarefyid, year) %>% 
   filter(n_distinct(species) > 4)
 
-#update that studies that needed to be split with new rarefyid breakdowns
+#update the studies that needed to be split with new rarefyid breakdowns
 bt_traitfiltered <- biotime_traits %>%
   filter(!study_id %in% mix_study) %>%
   bind_rows(mix_split) %>%
   select(-class)
 ```
 
+Final merged data set to save
 ```{r}
 #save locally and in cache
 usethis::use_data(bt_traitfiltered)
