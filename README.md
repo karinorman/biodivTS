@@ -1,7 +1,7 @@
 # Functional Change through Time
 This repository contains the code necessary to reproduce analyses and figures associated with the manuscript "Final Title here!".
 
-It is archived on Zenodo at: 
+It is archived on Zenodo at: https://doi.org/10.5281/zenodo.5514335
 
 ## Data
 
