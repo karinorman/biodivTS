@@ -7,6 +7,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This script calculates n null samples for each rarefied samples, calculates the metrics for those null samples, and outputs a table of the null model statistics.
+
 ```{r}
 library(tidyverse)
 library(FD)
