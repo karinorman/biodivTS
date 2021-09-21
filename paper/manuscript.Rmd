@@ -139,7 +139,7 @@ All available trait data for each study were included in functional diversity ca
 All continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
 The number of trait axes was limited to the maximum number of traits that fulfills the criteria $s >= s^t$, where $s$ is the number of species and *t* is the number of traits.
 This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility.
-Metrics incorporated weighting based on species abundance where available.
+Metrics incorporated weighting based on species abundance where available, three studies had data on presence only.
 
 #### Null Models
 
