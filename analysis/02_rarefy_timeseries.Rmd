@@ -1,13 +1,15 @@
-##======================================================================
-##	23 Feb 2017: code modified to run on iDiv eve cluster
-##	returns all rarefied metrics for 1 resamples; to be combined and means
-##	calculated in separate script
-##======================================================================
-# Primary Code Authors: Shane Blowes and Sarah Supp
-# Email: sablowes@gmail.com, sarah@weecology.org
-##======================================================================
+---
+title: "Rarefy Timeseries"
+output: html_document
+---
 
-##	load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This script calculates diversity metrics for rarefied timeseries samples. It is a modified version of a script originally written by Shane Blowes and Sarah Supp found here: https://github.com/sChange-workshop/BioGeo-BioDiv-Change/blob/master/R/02_rarefy_griddedData_clusterVersion.R
+
+```{r}
 library(dplyr)
 library(purrr)
 library(tibble)
@@ -19,20 +21,23 @@ library(doParallel)
 library(foreach)
 library(FD)
 devtools::load_all()
+```
 
-##==========================================
+Load data
+```{r}
 pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
 
-##	Get the gridded data locally
-bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+##	Get trait filtered data, rename colums to jive with the rest of the script
+bt_traitfiltered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
   rename_with(toupper) %>%
   rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,
          rarefyID = RAREFYID, cell = CELL, Abundance = ABUNDANCE, Biomass = BIOMASS)
 
 trait_ref <- pins::pin_get("trait-ref", board = "github")
+```
 
-#=================================FUNCTION TO RAREFY DATA============================
-
+Function to rarefy data
+```{r}
 rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resamples=100,
                              parallel, core_num, ...){
 
@@ -359,29 +364,38 @@ rarefy_diversity <- function(grid, type=c("count", "presence", "biomass"), resam
 
   }	# rarefaction loop
 } # END function
+```
 
-##================================== Calculate mean rarefied diversity for each data type=======================================
+Get rarefied diversity metrics
+```{r}
 ## Separate true abundance (count) data from presence and biomass/cover data
-bt_grid_abund <- bt_grid_filtered %>%
+bt_grid_abund <- bt_traitfiltered %>%
   filter(ABUNDANCE_TYPE %in% c("Count", "Density", "MeanCount"))
 
-bt_grid_pres <- bt_grid_filtered %>%
+bt_grid_pres <- bt_traitfiltered %>%
   filter(ABUNDANCE_TYPE == "Presence/Absence")
 
 ## Get rarefied resample for each type of measurement (all data)
 rarefy_abund <- rarefy_diversity(grid=bt_grid_abund, trait_data = trait_ref, type="count", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 44)
 rarefy_pres <- rarefy_diversity(grid=bt_grid_pres, trait_data = trait_ref, type="presence", trait_axes = "min", parallel = TRUE, resamples=200, core_num = 20)
+```
 
+Functions to calculate functional diversity metrics for the samples
+```{r}
+#helper function to load file
 loadRData <- function(file_name){
   load(file_name)
   get(ls()[ls() != "file_name"])
 }
 
+#function to calculate functional diversity metrics for a single sample community
 calc_FD_mets <- function(file_path, traits){
+  #load community sample
   rare_comm_save <- loadRData(file_path)
 
   years <- rare_comm_save$YEAR
 
+  #get species matrix
   species_mat <- rare_comm_save %>%
     column_to_rownames("YEAR") %>%
     dplyr::select(-c(rarefyID, cell, type, rarefy_resamp))
@@ -393,14 +407,16 @@ calc_FD_mets <- function(file_path, traits){
   get_FD_safe <- possibly(get_FD, otherwise = data_frame())
   betapart_safe <- possibly(functional.beta.pair, otherwise = data.frame())
 
-  # calculated functional diversity
+  # calculate functional diversity for different data types
   if(unique(rare_comm_save$type) == "count"){
     FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
-                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
+                           data_id = unique(rare_comm_save$rarefyID), 
+                           samp_id = unique(rare_comm_save$rarefy_resamp),
                            w.abun = TRUE, m = "min", corr = "cailliez")
   } else{
     FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
-                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
+                           data_id = unique(rare_comm_save$rarefyID), 
+                           samp_id = unique(rare_comm_save$rarefy_resamp),
                            w.abun = FALSE, m = "min", corr = "cailliez")
   }
 
@@ -474,6 +490,7 @@ calc_FD_mets <- function(file_path, traits){
     }
   }else{ biochange_metrics <- tibble() }
 
+  #save out dataframe of rarefied metrics
   path <- here::here("data", "rarefied_metrics", "fd")
   dir.create(path)
   save(biochange_metrics, file=paste0(path, "/", unique(rare_comm_save$type),
@@ -482,38 +499,12 @@ calc_FD_mets <- function(file_path, traits){
 
 }
 
-get_FD_errors <- function(file_path, traits){
-  rare_comm_save <- loadRData(file_path)
-
-  years <- rare_comm_save$YEAR
-
-  species_mat <- rare_comm_save %>%
-    column_to_rownames("YEAR") %>%
-    dplyr::select(-c(rarefyID, cell, type, rarefy_resamp))
-
-  # get trait matrix for the species in the sample
-  traits <- get_traitMat(colnames(species_mat), trait_data = traits)
-
-  # create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
-  get_FD_safe <- safely(get_FD, otherwise = data_frame())
-
-  # calculated functional diversity
-  if(unique(rare_comm_save$type) == "count"){
-    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
-                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
-                           w.abun = TRUE, m = "min", corr = "cailliez")
-  } else{
-    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
-                           data_id = unique(rare_comm_save$rarefyID), samp_id = unique(rare_comm_save$rarefy_resamp),
-                           w.abun = FALSE, m = "min", corr = "cailliez")
-  }
-  return(FD_mets)
-}
-
+#get list of rarefaction sample files
 path <- here::here("data", "rarefied_samples")
 files <- dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
+#parallelized mapping across files to calculate functional diversity metrics
 plan("multiprocess", workers = 30)
 furrr::future_map(files, calc_FD_mets, traits = trait_ref)
-
+```

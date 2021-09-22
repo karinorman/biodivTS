@@ -7,6 +7,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This script calculates n null samples for each rarefied samples, calculates the metrics for those null samples, and outputs a table of the null model statistics.
+
 ```{r}
 library(tidyverse)
 library(FD)
@@ -17,49 +19,39 @@ pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master"
 
 Get dataframe of filenames and corresponding rarefyID's
 ```{r}
+#get list of files
 path <- here::here("data", "rarefied_samples")
 files <- list.files(path) %>%
   paste0(path, "/", .)
-
-# samples <- purrr::map_dfr(files, function(x) {load(x)
-#   return(rare_comm_save)
-# 	}) %>% distinct()
 ```
 
-Function to get all rarefied samples for an ID
-```{r}
-# get_rarefy_samps <- function(id, path = here::here("data", "rarefied_samples")){
-#   print(id)
-#   samp_data <- list.files(path = path, pattern = paste0( "*.", id, ".*")) %>% 
-#     paste0(path, "/", .) %>%
-#      purrr::map_dfr(., function(x) {load(x)
-#        return(rare_comm_save)
-#        }) 
-#   return(samp_data)
-# }
-```
 Get species pools for each timeseries
 ```{r}
-bt_grid_filtered <- pins::pin_get("bt-traitfiltered", board = "github")
+bt_traitfiltered <- pins::pin_get("bt-traitfiltered", board = "github")
 trait_ref <- pins::pin_get("trait-ref", board = "github")
 
-species_pools <- bt_grid_filtered %>%
+#for each rarefyID, get complete list of species
+species_pools <- bt_traitfiltered %>%
   select(rarefyid, species) %>% 
   distinct()
 
-rm(bt_grid_filtered)
+rm(bt_traitfiltered)
 ```
 
 Simulation functions
 ```{r}
+
+#for each file, sample n times; each file is data for one community
 get_plot_sample <- function(file, n){
   #print(filter_id)
-  load(file)
+  load(file) #loads file called rare_comm_save
+  #put in matrix form
   comm <- rare_comm_save %>%
     pivot_longer(cols = starts_with("ITIS"), names_to = "species", values_to = "weight") %>%
     filter(weight != 0) %>%
     rename_with(tolower)
   
+  #get rarefyid and resample number 
   filter_rarefyid <- unique(comm$rarefyid) %>% unlist()
   samp_rarefy_resamp <- unique(comm$rarefy_resamp) %>% unlist()
   print(filter_rarefyid)
@@ -72,16 +64,15 @@ get_plot_sample <- function(file, n){
     write.csv(rare_comm_save, paste0(save_dir, "/", filter_rarefyid, "_samp", samp_rarefy_resamp, ".csv"))
     return()
   }
-  
-  # plot_data <- data %>% filter(rarefyID == filter_id) %>%
-  #   select(year, id, weight)
-  
+
+  #only species occuring at that rarefyid should be in the species pool
   species_pool <- species_pools %>%
     filter(rarefyid == filter_rarefyid) %>%
     pull(species) %>%
     na.omit() %>%
     unique() #get column of unique scientific names
   
+  #function to get sample species and abundances
   get_samp_species <- function(data){
     samp_species <- sample(species_pool, n_distinct(data$species))
     samp_abun <- sample(data$weight)
@@ -90,9 +81,11 @@ get_plot_sample <- function(file, n){
     return(df)
   }
   
+  #loop over the number of samples
   site_samples <- data.frame()
   for (j in 1:n){
     iter_samples <- data.frame()
+    #for each year get a sample species list
     for(i in unique(comm$year)){
       year_data <- comm %>% filter(year == i)
       iter_samples <- rbind(iter_samples, get_samp_species(year_data))
@@ -103,6 +96,7 @@ get_plot_sample <- function(file, n){
     mutate(rarefyid = filter_rarefyid, rarefy_resamp = samp_rarefy_resamp) %>%
     pivot_wider(names_from = samp_species, values_from = samp_abun)
   
+  #save out samples
   save_dir <- here::here("data", "null_samples")
   fs::dir_create(save_dir)
   write.csv(plot_samples, paste0(save_dir, "/", filter_rarefyid, "_samp", samp_rarefy_resamp, ".csv"))
@@ -113,11 +107,10 @@ get_plot_sample <- function(file, n){
 
 Get sample dataframe
 ```{r}
+#get null samples for each rarefied sample
 future::plan(multiprocess, workers = 30)
 sample_occurrence <- future_map(files, get_plot_sample, n = 500, 
-                                .options = furrr_options(seed = TRUE)) #%>%
-  # bind_rows() %>%
-  # replace(is.na(.), 0)
+                                .options = furrr_options(seed = TRUE)) 
 ```
 
 Figure out which samples didn't get null samples
@@ -144,6 +137,7 @@ sample_occurrence <- future_map(missing_files, get_plot_sample, n = 500,
   replace(is.na(.), 0)
 ```
 
+Calculated FD metrics for all the null samples
 ```{r}
 get_nullplot_FD <- function(file_path, traits, ...) {
   library(FD)
@@ -153,11 +147,12 @@ get_nullplot_FD <- function(file_path, traits, ...) {
   
   plot_samples %>% select(rarefyid, rarefy_resamp) %>% distinct() %>% print()
 
+  #get species matrix
   sample_species_mat <- plot_samples %>%
     select(starts_with("ITIS")) %>% #want only species x site info
     select(sort(tidyselect::peek_vars())) #sort columns to be in alphabetical order, required for dbFDI()
   
-  #print(head(sample_species_mat))
+  #get trait matrix
   trait_mat <- get_traitMat(colnames(sample_species_mat), trait_data = traits) 
   
   save_dir <- here::here("data", "fd_null_output")
@@ -165,6 +160,7 @@ get_nullplot_FD <- function(file_path, traits, ...) {
   
   get_FD_safe <- possibly(get_FD, otherwise = data_frame())
   
+  # check if data are counts or abundances, then calculated FD
   max_val <- max(unlist(map(sample_species_mat, max)))
   if(max_val > 1){
     FD_mets <- get_FD_safe(species_mat = sample_species_mat, trait_mat = trait_mat, year_list = plot_samples$year,
@@ -184,6 +180,7 @@ get_nullplot_FD <- function(file_path, traits, ...) {
   return(sample_fd)
 }
 
+#get list of null sample files
 null_files <-  dir(here::here("data", "null_samples"), "*.csv") %>%
   paste0(here::here("data", "null_samples"), "/", .)
 
@@ -219,10 +216,12 @@ null_FD <- future_map_dfr(missing_files, ~get_nullplot_FD_safe(.x, traits = trai
 
 Create Null table
 ```{r}
+#get list of null fd sample files
 path <- here::here("data", "fd_null_output")
 null_files <-  dir(path, "*.tsv") %>%
   paste0(path, "/", .)
 
+#function to read in null fd samples and get info to calculate stats
 process_nulls <- function(file_path, n){
   data <- read_tsv(file_path) %>%
     rename(richness = nbsp) %>%
@@ -252,6 +251,7 @@ process_nulls <- function(file_path, n){
 plan(multiprocess, workers = 120)
 null_table <- future_map_dfr(null_files, process_nulls, n = 500)
 
+#write out null table
 usethis::use_data(null_table)
 pins::pin(null_table, board = "github")
 ```

@@ -9,7 +9,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
-#library(moderndive)
 library(lme4)
 library(broom.mixed)
 library(lmerTest)
@@ -58,7 +57,8 @@ model_data <- metrics %>%
 
 pins::pin(model_data, board = "github")
 ```
-Add human footprint data
+
+Option to add human footprint data
 ```{r}
 # hfp_data <- pins::pin_get("hfp-data", board = "github")
 # 
@@ -117,7 +117,7 @@ metrics %>%
 
 ####Fit GLMs to overall patterns and data broken down by groups
 
-Convergence problems!! See here:
+Convergence problems! See here:
 https://joshua-nugent.github.io/allFit/
 https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html
 https://biologyforfun.wordpress.com/2018/04/09/help-i-have-convergence-warnings/
@@ -199,127 +199,6 @@ usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
 ```
 
-
-```{r}
-# SES_rand_slope <- model_data %>%
-#   filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_next")) %>%
-#   group_nest(metric) %>%
-#   mutate(#year_center = map(data, ~scale(.x$year)),
-#          model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
-#                                  data = .x)),
-#            # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
-#            #                       data = .x)),
-#            # test = map2(model, null_model, anova),
-#            # test_res = map(test, tidy),
-#            coef = map(model, tidy),
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-# 
-# #check that they all used the same number of observations
-# map(SES_rand_slope$model, nobs)
-# 
-# #these two metrics are cranky and want their own year scaling to converge
-# 
-# #Jaccard Base
-# jacc_base_mod <-  model_data %>%
-#   filter(metric == ("Jaccard_base")) %>%
-#   mutate(year_scaled = scale(year)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID), 
-#                                  data = .x)),
-#            coef = map(model, tidy),
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-# 
-# # S model
-# s_mod <- model_data %>%
-#   filter(metric %in%  c("S")) %>%
-#   #it wants its own scaling to converge for some reason
-#   mutate(year_scaled = scale(year)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), 
-#                                  data = .x, REML = TRUE)),
-#            coef = map(model, tidy)
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-# 
-# metric_model_table <- bind_rows(SES_rand_slope, s_mod, jacc_base_mod)
-# 
-# #save coefficients and models
-# usethis::use_data(metric_model_table)
-# pins::pin(metric_model_table, board = "github")
-# ```
-# Taxa model
-# ```{r}
-# taxa_rand_slope <- model_data %>%
-#   filter(metric %in%  c("SES_FRic", "SES_FEve", "SES_FDiv")) %>%
-#   group_nest(metric) %>%
-#   mutate(#year_center = map(data, ~scale(.x$year)),
-#          model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
-#                                  data = .x)),
-#            # null_model = map(data, ~lmer(value ~ (year_scaled|study_id/rarefyID), 
-#            #                       data = .x)),
-#            # test = map2(model, null_model, anova),
-#            # test_res = map(test, tidy),
-#            coef = map(model, tidy),
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef))
-# 
-# #Jaccard Base
-# jacc_taxa_base_mod <-  model_data %>%
-#   filter(metric == ("Jaccard_base")) %>%
-#   mutate(year_scaled = scale(year)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
-#                                  data = .x)),
-#            coef = map(model, tidy),
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-# 
-#  s_taxa_mod <- model_data %>%
-#   filter(metric %in%  c("S")) %>%
-#   #it wants its own scaling to converge for some reason
-#   mutate(year_scaled = scale(year)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
-#                                  data = .x, REML = TRUE)),
-#            coef = map(model, tidy)
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-# 
-# fric_taxa_mod <- model_data %>%
-#   filter(metric %in%  c("SES_FRic")) %>%
-#   #it wants its own scaling to converge for some reason
-#   mutate(year_scaled = scale(year)) %>%
-#   group_nest(metric) %>%
-#   mutate(model = map(data, ~lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa), 
-#                                  data = .x, REML = TRUE)),
-#            coef = map(model, tidy)
-#            ) %>% 
-#   select(metric, model, coef) %>%
-#   unnest(cols = c(coef)) %>%
-#   filter(term == "year_scaled") %>%
-#   select(-c(effect, group, term, statistic))
-# 
-# taxa_model_table <- bind_rows(taxa_rand_slope, jacc_taxa_base_mod, s_taxa_mod, fric_taxa_mod)
-```
-
 #### Process Model Output
 
 Get study level slope estimates
@@ -328,19 +207,22 @@ get_study_slopes <- function(metric, model, model_id){
   
   filter_name <- ifelse(model_id == "base", "study_id", model_id)
   
+  #get the statistics for the year variable
   year_scaled_coef <- tidy(model) %>%
     filter(term == "year_scaled") 
   
+  #get the year estimate
   year_scaled_est <- pull(year_scaled_coef, estimate) 
   
+  #get year variation
   year_scaled_var <- year_scaled_coef %>% 
     mutate(var = std.error*std.error) %>%
     pull(var)
   
+  #get study level conditional estimates and add to over all estimates
   study_ests <- broom.mixed::tidy(model, effects="ran_vals") %>%
     filter(group == filter_name, term == "year_scaled") %>% 
     select(-c(effect, group, term)) %>%
-    #rename({{ model_id }} := level, cond.std.error = std.error, cond.estimate = estimate) %>%
     rename(cond.std.error = std.error, cond.estimate = estimate) %>%
     mutate(estimate = cond.estimate + year_scaled_est,
       cond.var = cond.std.error*cond.std.error, 
@@ -399,33 +281,6 @@ study_slopes %>%
   group_by(study_id) %>%
   filter(n() > 1) %>%
   select(study_id, metric)
-```
-
-```{r}
-# #And how many were significant for all but Jaccard?
-# study_slopes %>% 
-#   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "S")) %>% 
-#   group_by(study_id) %>% filter(sum(sig) == 4) %>% pull(study_id) %>% 
-#   n_distinct()
-# 
-# #Breakdown of relationship between functional richness and species richness
-# s_sig <- study_slopes %>% filter(metric == "S", sig == TRUE) %>% pull(study_id) %>% unique()
-# s_sig_not_fric <- study_slopes %>% 
-#   filter(study_id %in% s_sig, metric == "FRic", sig == FALSE) %>% 
-#   pull(study_id) %>%
-#   unique()
-# 
-# both_sig <- study_slopes %>% 
-#   filter(study_id %in% s_sig, metric == "FRic", sig == TRUE) %>%
-#   pull(study_id)
-# 
-# both_pos
-# fric_pos
-# s_pos_fric_neg <- study_slopes %>%
-#   filter(study_id %in% both_sig) %>% 
-#   group_by(study_id) %>%
-#   filter(sum(sign(estimate)) == 0) 
-
 ```
 
 #### Analizing slopes
