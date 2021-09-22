@@ -58,6 +58,15 @@ model_data <- metrics %>%
 pins::pin(model_data, board = "github")
 ```
 
+Write out file with all necessary metadata for the supplement.
+```{r}
+meta %>% 
+  filter(study_id %in% model_data$study_id) %>% 
+  select(-c(link_id, date_study_added, sample_desc_name)) %>% 
+  write_csv(here::here("paper", "study_metadata.csv"))
+```
+
+
 Option to add human footprint data
 ```{r}
 # hfp_data <- pins::pin_get("hfp-data", board = "github")
@@ -138,9 +147,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
     qlmer(formula = formula, data = ., ...)
   
   tidy(fit$result) %>%
-   mutate(metric = metric_name, model = list(fit$result), 
-          model_id = model_id, formula = formula, 
-          warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+   mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
 }
 
 #get_model(data = model_data, metric_name = "SES_FRic", "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)", model_id = "base")
