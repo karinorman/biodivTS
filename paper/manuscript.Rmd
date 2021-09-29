@@ -79,7 +79,7 @@ However, to date there has been no cross-taxa assessment of temporal functional 
 Here we perform the first multi-taxa, multi-system assessment of functional diversity change through time.
 We focus on mammal, bird, and amphibian species as a significant subset of the world's biodiversity heavily impacted by anthropogenic change.
 While examining trends in plants, invertebrates, and other vertebrate species are of equal interest, trait data for those taxa raise additional challenges such as limited and biased species coverage [@fitzjohn2014], a lack of accepted species-level means, and differences in the types of traits collected.
-In order to ensure comparability across taxa in trait type and data quality we therefore we focus on Anamalia here.
+In order to ensure comparability across taxa in trait type and data quality we therefore we focus on these taxa.
 
 We assess thousands of mammal, bird, and amphibian functional diversity timeseries to determine whether or not there is a general trend of functional change.
 We distinguish between three possible scenarios of functional change: 1) significant loss of functional diversity with accompanying shifts in other functional metrics, 2) no functional diversity loss, but significant shifts in other functional metrics, 3) maintenance of functional diversity and composition.
@@ -229,28 +229,21 @@ On average, species additions have similar functional characteristics as lost sp
 
 These results challenge assumptions that functional loss is the default state of all or even many communities.
 While we do not directly assess the disturbance histories of included communities, trends were consistent even for the longest running and most heavily impacted studies.
-The North American Breeding Survey for example is made up exclusively of roadside surveys and is therefore in relatively close proximity to human impact [@pardieck2020] .
-It is considered an authoritative dataset on the state of bird populations on the continent and underpins policy decisions about bird conservation [@rosenberg2019; @sauer2017].
+The North American Breeding Survey for example is made up exclusively of roadside surveys and is therefore in relatively close proximity to human impact [@pardieck2020]. It is considered an authoritative dataset on the state of bird populations on the continent and underpins policy decisions about bird conservation [@rosenberg2019; @sauer2017].
 No more robust dataset exists to capture North American avian community change, yet we detected no general shifts in functional structure across the dataset.
 Further, none of the 5 included studies that experienced a manual manipulation (e.g. burning, grazing exclosure, etc) experienced any significant functional trends.
 
-Local maintenance of functional structure has important implications for biodiversity and ecosystem function (BEF).
-BEF work links ecosystem function to changes in species and functional diversity, however very few observed communities experienced changes along either of those characteristics.
-Do we then not need to worry about loss of function in most bird, mammal and amphibian communities?
-Always the option that we didn't measure traits related to function, though in this case I think we did.
-We did not however measure fucntional redundancy, which could be important for maintaining multifunctionality [@bagousse-pinguet2019] .
-Also may not be sensitive enough to detect significant decreases in abundance for the most dominant species, which may also be important
+What does local maintenance of functional structure mean for the function of these communities?
+The vast majority of experimental and observational work links function to changes in functional or species diversity.
+By those criteria, very few observed communities in our dataset are in a state of concern for declining functionality.
+However, we did not we did not directly measure some aspects of community structure important for ecosystem multifunctionality [e.g. dispersion, rarity, abundance of dominant species; @bagousse-pinguet2021].
+While our metrics indirectly incorporate dimensions of the functional space related to those characteristics, they are likely not sensitive enough to infer deterioration (or improvement) in those those aspects of structure.
 
--   Traits are not grounded in theory, might be measuring the wrong ones
+<!-- has important implications for biodiversity and ecosystem function (BEF). BEF work links ecosystem function to changes in species and functional diversity, however very few observed communities experienced changes along either of those characteristics. Do we then not need to worry about loss of function in most bird, mammal and amphibian communities? While -->
 
--   
+<!-- Always the option that we didn't measure traits related to function, though in this case I think we did. We did not however measure fucntional redundancy, which could be important for maintaining multifunctionality [@bagousse-pinguet2019] . Also may not be sensitive enough to detect significant decreases in abundance for the most dominant species, which may also be important-->
 
-Even if there were unobserved communities experiencing huge shifts,
-
-meet the criteria for biodiversity loss as defined in BEF work (loss of species or loss of functional diversity) and the communities that lost species maintained functional diversity.
-Need to measure the right traits, but also decide what kind of shifts are important for functional change.
-But this is also good news!
-Most communities appear to be just fine from a function standpoint following best practices.
+<!-- meet the criteria for biodiversity loss as defined in BEF work (loss of species or loss of functional diversity) and the communities that lost species maintained functional diversity. Need to measure the right traits, but also decide what kind of shifts are important for functional change. But this is also good news! Most communities appear to be just fine from a function standpoint following best practices. -->
 
 No significant differences between taxa.
 Indicates that we could've looked at any taonomic subset of the data and gotten the same result.
