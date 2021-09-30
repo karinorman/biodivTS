@@ -238,37 +238,24 @@ The vast majority of experimental and observational work links function to chang
 By those criteria, very few observed communities in our dataset are in a state of concern for declining functionality.
 However, we did not we did not directly measure some aspects of community structure important for ecosystem multifunctionality [e.g. dispersion, rarity, abundance of dominant species; @bagousse-pinguet2021].
 While our metrics indirectly incorporate dimensions of the functional space related to those characteristics, they are likely not sensitive enough to infer deterioration (or improvement) in those those aspects of structure.
+<!-- more citations please -->
 
-<!-- has important implications for biodiversity and ecosystem function (BEF). BEF work links ecosystem function to changes in species and functional diversity, however very few observed communities experienced changes along either of those characteristics. Do we then not need to worry about loss of function in most bird, mammal and amphibian communities? While -->
+<!-- any work looking at function in communities that are stable along these axes? -->
 
-<!-- Always the option that we didn't measure traits related to function, though in this case I think we did. We did not however measure fucntional redundancy, which could be important for maintaining multifunctionality [@bagousse-pinguet2019] . Also may not be sensitive enough to detect significant decreases in abundance for the most dominant species, which may also be important-->
-
-<!-- meet the criteria for biodiversity loss as defined in BEF work (loss of species or loss of functional diversity) and the communities that lost species maintained functional diversity. Need to measure the right traits, but also decide what kind of shifts are important for functional change. But this is also good news! Most communities appear to be just fine from a function standpoint following best practices. -->
+While we did not directly measure changes in rare species, our results also contradict likely scenarios of loss predicted due to rare species extinction.
+Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020]. Assuming local extirpation is a precursor to global extinction, communities losing functionally rare species should exhibit strong functional shifts as lost species cannot be replaced by functionally similar species [@leitão2016] .
+Instead, these communities appear to only have turnover of species with functionally redundant species in the species pool.
 
 No significant differences between taxa.
 Indicates that we could've looked at any taonomic subset of the data and gotten the same result.
 But what does that mean for taxa we left out?
 We can only make educated guesses based on what we know of the ecology of taxa that were left out - taxa specific papers?
 
-any differences in some of the taxonomic groups even if not significant?
-
-do we expect different results for different taxa?
-
-<!-- how does this reconcile with the large body of studies showing that extinctions primarily affect functionally rare species? It seems inconsistent with their findings -->
-
-Maintenance of functional composition contradicts likely scenarios of loss predicted due to rare species extinction.
-Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020].
-Assuming local extirpation is a precursor to global extinction, communities losing functionally rare species should exhibit strong functional shifts as lost species cannot be replaced by functionally similar species [@leitão2016] .
-Instead, these communities appear to only have turnover of species with functionally redundant species in the species pool.
-<!-- good news for ecosystem function! -->
-
 #### Potential Methodological Limitations
 
 Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
 However, a number of gaps in best practices may be obscuring a true underlying trend.
-First, the BioTIME database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
-We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021].
-We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+First, the BioTIME database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected alongside monitoring data, especially for the longest running efforts.
@@ -287,11 +274,7 @@ Approaches for assessing shifts and overlaps in functional space are still relat
 Our results illustrate a well known but increasingly pervasive problem in synthesis-based ecology of distinguishing true ecological patterns from methodological artifacts.
 We present here the conclusion best supported by available data with a number of caveats and suggestions for next steps forward.
 The most pressing need is for intentional and targeted data collection efforts.
-We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017].
-Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases.
-One relatively low-cost high-reward data investment is collation of additional species-level trait means.
-Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases.
-Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
+We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases. Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
 
 We also need theory that links ecological process to the kinds of changes actually happening in communities.
 Do the shifts we see matter?
