@@ -90,7 +90,9 @@ Based on expectation due to human impacts, we expect to find a significant funct
 #### Data
 
 We obtained mammal, bird, and amphibian time series from the BioTIME database, a global repository of high quality assemblage time series.
-All studies included in the database follow consistent sampling protocols and represent full assemblages rather than populations of single species [@dornelas2018]. Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale. Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @dornelas2018] for details on how sample extents were defined), with the area of each cell set to one standard deviation away from the mean of the single extent locations.
+All studies included in the database follow consistent sampling protocols and represent full assemblages rather than populations of single species [@dornelas2018].
+Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale.
+Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @dornelas2018] for details on how sample extents were defined), with the area of each cell set to one standard deviation away from the mean of the single extent locations.
 All samples from a study within a single cell were considered to be a single time series, and species abundances were combined for all samples.
 
 ```{r echo = FALSE, results = "asis"}
@@ -154,7 +156,12 @@ Metrics incorporated weighting based on species abundance where available, three
 
 #### Null Models
 
-To assess functional change independent of species richness we calculating the standardized effect size (SES) for each metric from null estimates [@swenson2012]. Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community. Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species. Species pools included all species observed for a time series. This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction for that time series. We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
+To assess functional change independent of species richness we calculating the standardized effect size (SES) for each metric from null estimates [@swenson2012].
+Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
+Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
+Species pools included all species observed for a time series.
+This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction for that time series.
+We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
 We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
 Unless otherwise specified, functional diversity results are reported for standardized values for the remainder of the paper.
 
@@ -230,28 +237,30 @@ No more robust dataset exists to capture North American avian community change, 
 Further, none of the 5 included studies that experienced a manual manipulation (e.g. burning, grazing exclosure, etc) experienced any significant functional trends.
 
 We observed no significant trends within taxa No significant differences between taxa.
-Indicates that we could've looked at any taonomic subset of the data and gotten the same result.
+Indicates that we could've looked at any taxonomic subset of the data and gotten the same result.
 But what does that mean for taxa we left out?
 We can only make educated guesses based on what we know of the ecology of taxa that were left out - taxa specific papers?
 
 What does local maintenance of functional structure mean for the function of these communities?
-The vast majority of experimental and observational work links function to changes in functional or species diversity.
-By those criteria, very few observed communities in our dataset are in a state of concern for declining functionality.
-However, we did not we did not directly measure some aspects of community structure important for ecosystem multifunctionality [e.g. dispersion, rarity, abundance of dominant species; @bagousse-pinguet2021].
-While our metrics indirectly incorporate dimensions of the functional space related to those characteristics, they are likely not sensitive enough to infer deterioration (or improvement) in those those aspects of structure.
+The vast majority of experimental and observational work links declines in function to declines in functional or species diversity [@brose2016; @cadotte2011; @duffy2007] . By those criteria, very few observed communities in our dataset are in a state of concern for loss of functionality. However, we did not we did not directly measure some aspects of community structure important for ecosystem multifunctionality [e.g. dispersion, rarity, abundance of dominant species; @bagousse-pinguet2021].
+While our metrics indirectly incorporate dimensions of the functional space related to those community characteristics, they are likely not sensitive enough to infer deterioration (or improvement).
 <!-- more citations please -->
+
+-   experiments vs broad scale observational studies - do we look at FD in both?
 
 <!-- any work looking at function in communities that are stable along these axes? -->
 
 While we did not directly measure changes in rare species, our results also contradict likely scenarios of loss predicted due to rare species extinction.
-Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020]. Assuming local extirpation is a precursor to global extinction, communities losing functionally rare species should exhibit strong functional shifts as lost species cannot be replaced by functionally similar species [@leitão2016] .
-Instead, these communities appear to only have turnover of species with functionally redundant species in the species pool.
+Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020]. Locally, communities losing functionally rare species should exhibit strong functional shifts as lost species cannot be replaced by functionally similar species [@leitão2016] .
+Instead, we observed patterns consistent with species replacement by functionally redundant species from the species pool.
 
 #### Potential Methodological Limitations
 
 Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
 However, a number of gaps in best practices may be obscuring a true underlying trend.
-First, the BioTIME database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+First, the BioTIME database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
+We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021].
+We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected alongside monitoring data, especially for the longest running efforts.
@@ -270,7 +279,11 @@ Approaches for assessing shifts and overlaps in functional space are still relat
 Our results illustrate a well known but increasingly pervasive problem in synthesis-based ecology of distinguishing true ecological patterns from methodological limitations.
 We present here the conclusion best supported by available data with a number of caveats and suggestions for next steps forward.
 The most pressing need is for intentional and targeted data collection efforts.
-We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases. Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
+We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017].
+Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases.
+One relatively low-cost high-reward data investment is collation of additional species-level trait means.
+Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases.
+Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
 
 We also need theory that links ecological process to the kinds of changes actually happening in communities.
 Do the shifts we see matter?
