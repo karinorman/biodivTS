@@ -3,7 +3,7 @@ title: "Collate Rarefied Samples and Null Models"
 output: html_document
 ---
 
-This script reads in all the rarefication sample files, gets the median value for each rarefyID and year, and then merges with null model statistics.
+This script reads in all the rarefacation sample files, gets the median value for each rarefyID and year, and then merges with null model statistics.
 
 ```{r}
 library(dplyr)
