@@ -155,7 +155,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
 
 Create dataframe of models to fit
 ```{r}
-raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base"), 
+raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
                          realm = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
@@ -205,7 +205,6 @@ metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)),
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
 ```
-
 #### Process Model Output
 
 Get study level slope estimates
