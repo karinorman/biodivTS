@@ -179,13 +179,15 @@ Raw
 
 ### Results
 
-We found no significant overall trend in species richness or observed or null-corrected functional diversity metrics (Fig 2).
+We found no significant overall trend in species richness or functional diversity metrics (observed or standardized) (Fig 2).
 There was also no temporal trend in those metrics within taxa, biome or realm factor levels.
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
-Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0.
+Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0.
 
-At the study level, 4 studies experienced a significance trend and only 10 of 54 studies for uncorrected metrics and 4 of 54 studies for corrected metrics experienced a significant trend for a metric other than Jaccard similarity (Table 2).
-Trends for all but one study were inconsistent between corrected and uncorrected metrics, with significance for one or the other.
+At the study level, 4 studies experienced a significance trend in species richness and only 10 of 54 studies for observed metrics and 3 of 54 studies for standardized metrics experienced a significant trend for a metric other than Jaccard similarity (Table 2).
+Most significant trends for observed functional metrics are in functional diversity and disappeared after standardization, indicating that richness increases were likely due to changes in the number of species.
+<!-- Trends for all but one study were inconsistent between corrected and uncorrected metrics, with significance for one or the other. --> Hypothesis testing for study-level trends is likely affected by multiple testing issues and some trends identified as significant are therefore potentially erroneous.
+Rather than interpreting changes in specific studies, we present these results as a general picture of the small number of studies experiencing a trend and highlight that even those studies are likely an overestimate of the number of significant trends.
 
 ```{r echo = FALSE}
 library(tidyverse)
@@ -199,6 +201,7 @@ Study-level slopes for multiple metrics were significantly related to the durati
 Slopes for species richness were significantly more negative with later start date and more positive shorter duration studies.
 Jaccard similarity and functional evenness both had significantly more negative slopes with more recent start year, whereas functional divergence was significantly more positive.
 Slopes for functional evenness were also significantly more positive for longer duration studies.
+Results were consistent between standardized and observed metrics with exception of functional evenness, which was negatively related to duration for observed data and positively related for standardized data.
 See supplement for estimates and p-values for all models.
 
 ### Discussion
@@ -216,10 +219,8 @@ We discuss both options further here.
 #### Evidence of Ecological Processes
 
 Communities demonstrated almost universal maintenance of functional composition.
-While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three experienced a significant shift in any functional dimension.
-This suggests certain characteristics of the functional space are maintained even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (FRic) and the distribution of species and individuals within that space (FEve and FDiv).
-On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space.
-<!-- Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015]. -->
+While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three (for standardized metrics) experienced a significant shift in any functional dimension.
+<!-- General consistency between observed and standardized metrics underlines that changes in species richness were not a major factor determining functional composition changes.--> This suggests certain characteristics of the functional space are maintained even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (FRic) and the distribution of species and individuals within that space (FEve and FDiv). On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space. <!-- Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015]. -->
 
 These results challenge assumptions that functional loss is the default state of all or even many communities.
 While we do not directly assess the disturbance histories of included communities, trends were consistent even for the longest running and most heavily impacted studies.
@@ -253,9 +254,9 @@ Instead, we observed patterns consistent with species replacement by functionall
 
 Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
 However, a number of gaps in best practices may be obscuring a true underlying trend.
-First, the BioTIME database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
-We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021].
-We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+First, the BioTIME database, while the most comprehensive data source of time series available, is limited in temporal and geographic scope.
+Most time series span only a few years (Figure 1) and may not provide the statistical power necessary to detect trends.
+The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected alongside monitoring data, especially for the longest running efforts.
