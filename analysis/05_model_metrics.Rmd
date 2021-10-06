@@ -143,7 +143,9 @@ get_model <- function(metric_name, formula, model_id, data, ...){
   
   fit <- data %>%
     filter(metric == metric_name) %>%
-    mutate(year_scaled = scale(year)) %>%
+    mutate(year_scaled = scale(year),
+           duration_scaled = scale(duration, scale = FALSE),
+           startyear_scaled = scale(startyear, scale = FALSE)) %>%
     qlmer(formula = formula, data = ., ...)
   
   tidy(fit$result) %>%
@@ -205,6 +207,43 @@ metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)),
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
 ```
+
+Models with interactions
+```{r}
+int_raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
+                         base_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+                         realm_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+                         climate_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)",
+                         base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+                         realm_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+                         climate_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+  pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
+               names_to = "model_id", values_to = "formula")
+
+# int_log_value_mods <- tibble(metric_name = c("S"), 
+#                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+#                          taxa = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+#                          realm = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+#                          climate = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+
+# mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
+#   select(metric_name, formula, model_id)
+
+#Fit models with base settings
+int_mod_results <- pmap_dfr(int_raw_value_mods, get_model, data = model_data)
+
+#get the models that had convergence warnings
+bad_models <- int_mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(int_raw_value_mods, by = c("metric" = "metric_name", "model_id")) 
+```
+
+
 #### Process Model Output
 
 Get study level slope estimates
