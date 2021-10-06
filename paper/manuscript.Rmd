@@ -156,24 +156,16 @@ Metrics incorporated weighting based on species abundance where available, three
 
 #### Null Models
 
-To assess functional change independent of species richness we calculating the standardized effect size (SES) for each metric from null estimates [@swenson2012].
-Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
-Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
-Species pools included all species observed for a time series.
-This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction for that time series.
-We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
+To assess functional change independent of species richness we calculating the standardized effect size (SES) for each metric from null estimates [@swenson2012]. Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community. Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species. Species pools included all species observed for a time series. This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction for that time series. We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
 We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
-Unless otherwise specified, functional diversity results are reported for standardized values for the remainder of the paper.
-
 <!-- description of edge case where community = species pool -->
 
 #### Analysis
 
 We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
-To test for trends within taxa, biome, and realm, groups we also fit models with random slope and intercept effects for each one of these factors.
+To test for trends within taxa, biome, and realm we also fit models with random slope and intercept effects for each one of these factors.
 We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model with no additional covariates.
-BLUP's provide an estimate for the conditional mean and variance of each level of a random effect.
-from which we calculated 95% confidence intervals to determine significance of study-level slopes.
+BLUP's provide an estimate for the conditional mean and variance of each level of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
 We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
 All models were executed using the *lme4* package in R and p-values were calculated using the *lmerTest* package [@bates2015; @rcoreteam2021].
 
@@ -187,19 +179,20 @@ Raw
 
 ### Results
 
-We found no significant overall trend in species richness or functional diversity metrics (Fig 2).
-There was also no temporal trend in those metrics within taxa, biome or realm groups.
+We found no significant overall trend in species richness or functional diversity metrics (observed or standardized) (Fig 2).
+There was also no temporal trend in those metrics within taxa, biome or realm factor levels.
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
-Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0.
+Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0.
 
-At the study level, only 7 of 54 studies experienced a significant trend for a metric other than Jaccard similarity.
-4 studies had a significant trend in species diversity, one positive and three negative.
-Two studies experienced a significant decrease in functional evenness, and one study experienced a significant decrease in both functional richness and functional divergence (Table 2).
+At the study level, 4 studies experienced a significance trend in species richness and only 10 of 54 studies for observed metrics and 3 of 54 studies for standardized metrics experienced a significant trend for a metric other than Jaccard similarity (Table 2).
+Most significant trends for observed functional metrics are in functional diversity and disappeared after standardization, indicating that richness increases were likely due to changes in the number of species.
+<!-- Trends for all but one study were inconsistent between corrected and uncorrected metrics, with significance for one or the other. --> Hypothesis testing for study-level trends is likely affected by multiple testing issues and some trends identified as significant are therefore potentially erroneous.
+Rather than interpreting changes in specific studies, we present these results as a general picture of the small number of studies experiencing a trend and highlight that even those studies are likely an overestimate of the number of significant trends.
 
 ```{r echo = FALSE}
 library(tidyverse)
 
-data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "37"), FRic = c("0", "1"), FEve = c("0", "2"), FDiv = c("0", "1")) %>%
+data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "37"), FRic = c("2", "6"), FEve = c("1", "0"), FDiv = c("0", "1"), `SES FRic` = c("0", "1"), `SES FEve` = c("0", "2"), `SES FDiv` = c("0", "1")) %>%
   column_to_rownames("sign") %>%
   kable(caption = "Number of studies that experienced a signficiant trend in each calculated metric out of 53 total studies.")
 ```
@@ -208,6 +201,7 @@ Study-level slopes for multiple metrics were significantly related to the durati
 Slopes for species richness were significantly more negative with later start date and more positive shorter duration studies.
 Jaccard similarity and functional evenness both had significantly more negative slopes with more recent start year, whereas functional divergence was significantly more positive.
 Slopes for functional evenness were also significantly more positive for longer duration studies.
+Results were consistent between standardized and observed metrics with exception of functional evenness, which was negatively related to duration for observed data and positively related for standardized data.
 See supplement for estimates and p-values for all models.
 
 ### Discussion
@@ -216,19 +210,17 @@ Our study represents the largest broad-scale multi-taxa assessment of functional
 Surprisingly, we did not detect an overall trend in any of the calculated functional diversity metrics.
 As with previous species-based syntheses, we also found no overall trend in species richness accompanied by increasing turnover through time [@dornelas2018], indicating that non-significant trends in functional metrics may be consistent with similar well-documented species derived trends.
 We found no evidence of systemic functional richness loss or functional change.
-A lack of trend for data broken down by realm, biome, and taxonomic group gives further evidence that directional functional change is absent from all systems observed in our dataset.
+A lack of trend within realm, biome, or taxonomic group gives further evidence that directional functional change is absent from all systems observed in our dataset.
 
 This striking result could be a product of two possible processes, one ecological and one methodological.
-Null trends appear to give strong evidence of systemic maintenance of functional structure due to common ecological processes, however multiple limitations of current approaches in synthesis could potentially be obscuring a true underlying trend.
+Null trends appear to give strong evidence of systemic maintenance of functional structure due to common ecological processes, however multiple limitations of current approaches in synthesis could potentially be obscuring a true underlying global trend.
 We discuss both options further here.
 
 #### Evidence of Ecological Processes
 
 Communities demonstrated almost universal maintenance of functional composition.
-While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three experienced a significant shift in any functional dimension.
-This suggests certain characteristics of the functional space are maintained even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (FRic) and the distribution of species and individuals within that space (FEve and FDiv).
-On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space.
-<!-- Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015]. -->
+While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three (for standardized metrics) experienced a significant shift in any functional dimension.
+<!-- General consistency between observed and standardized metrics underlines that changes in species richness were not a major factor determining functional composition changes.--> This suggests certain characteristics of the functional space are maintained even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (FRic) and the distribution of species and individuals within that space (FEve and FDiv). On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space. <!-- Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015]. -->
 
 These results challenge assumptions that functional loss is the default state of all or even many communities.
 While we do not directly assess the disturbance histories of included communities, trends were consistent even for the longest running and most heavily impacted studies.
@@ -242,7 +234,10 @@ But what does that mean for taxa we left out?
 We can only make educated guesses based on what we know of the ecology of taxa that were left out - taxa specific papers?
 
 What does local maintenance of functional structure mean for the function of these communities?
-The vast majority of experimental and observational work links declines in function to declines in functional or species diversity [@brose2016; @cadotte2011; @duffy2007] . By those criteria, very few observed communities in our dataset are in a state of concern for loss of functionality. However, we did not we did not directly measure some aspects of community structure important for ecosystem multifunctionality [e.g. dispersion, rarity, abundance of dominant species; @bagousse-pinguet2021].
+The vast majority of experimental and observational work links declines in function to declines in functional or species diversity [@brose2016; @cadotte2011; @duffy2007] .
+By those criteria, very few observed communities in our dataset are in a state of concern for loss of functionality.
+However, we did not we did not directly measure some aspects of community structure important for ecosystem multifunctionality [e.g.
+dispersion, rarity, abundance of dominant species; @bagousse-pinguet2021].
 While our metrics indirectly incorporate dimensions of the functional space related to those community characteristics, they are likely not sensitive enough to infer deterioration (or improvement).
 <!-- more citations please -->
 
@@ -251,16 +246,17 @@ While our metrics indirectly incorporate dimensions of the functional space rela
 <!-- any work looking at function in communities that are stable along these axes? -->
 
 While we did not directly measure changes in rare species, our results also contradict likely scenarios of loss predicted due to rare species extinction.
-Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020]. Locally, communities losing functionally rare species should exhibit strong functional shifts as lost species cannot be replaced by functionally similar species [@leitão2016] .
+Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020].
+Locally, communities losing functionally rare species should exhibit strong functional shifts as lost species cannot be replaced by functionally similar species [@leitão2016] .
 Instead, we observed patterns consistent with species replacement by functionally redundant species from the species pool.
 
 #### Potential Methodological Limitations
 
 Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
 However, a number of gaps in best practices may be obscuring a true underlying trend.
-First, the BioTIME database is not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
-We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021].
-We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+First, the BioTIME database, while the most comprehensive data source of time series available, is limited in temporal and geographic scope.
+Most time series span only a few years (Figure 1) and may not provide the statistical power necessary to detect trends.
+The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected alongside monitoring data, especially for the longest running efforts.
