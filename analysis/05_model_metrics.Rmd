@@ -155,18 +155,32 @@ get_model <- function(metric_name, formula, model_id, data, ...){
 
 Create dataframe of models to fit
 ```{r}
+# raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
+#                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
+#                          taxa = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+#                          realm = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+#                          climate = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+# 
+# log_value_mods <- tibble(metric_name = c("S"), 
+#                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+#                          taxa = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
+#                          realm = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
+#                          climate = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+
 raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
-                         taxa = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-                         realm = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-                         climate = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+                         taxa = "value ~ year_scaled + as.factor(taxa) + (year_scaled|study_id/rarefyID)",
+                         realm = "value ~ year_scaled + as.factor(realm) + (year_scaled|study_id/rarefyID)",
+                         climate = "value ~ year_scaled + as.factor(climate) + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
 log_value_mods <- tibble(metric_name = c("S"), 
                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
-                         taxa = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-                         realm = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-                         climate = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+                         taxa = "logvalue ~ year_scaled + as.factor(taxa) + (year_scaled|study_id/rarefyID)",
+                         realm = "logvalue ~ year_scaled + as.factor(realm) + (year_scaled|study_id/rarefyID)",
+                         climate = "logvalue ~ year_scaled + as.factor(climate) + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
 mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
