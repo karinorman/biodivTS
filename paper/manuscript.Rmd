@@ -51,10 +51,7 @@ options(scipen=999)
 ### Introduction
 
 Ecological communities are experiencing unprecedented change as a result of anthropogenic pressures such as climate change, land use change, and invasive species.
-Impacts of these pressures are well documented at a global scale by an accelerating global extinction rate [@barnosky2011], and fundamental changes in some of the most well-studied systems [e.g.
-coral bleaching; @sully2019].
-At the local scale however, species diversity tells a different story.
-Recent syntheses of local trends in biodiversity over time have found no net change in local species diversity despite ongoing turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017] and evidence of a significant shifts in community composition underlying consistent species richness [@brose2016; @gotelli2017].
+Impacts of these pressures are well documented at a global scale by an accelerating global extinction rate [@barnosky2011], and fundamental changes in some of the most well-studied systems [e.g. coral bleaching; @sully2019]. At the local scale however, species diversity tells a different story. Recent syntheses of local trends in biodiversity over time have found no net change in local species diversity despite ongoing turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017] and evidence of a significant shifts in community composition underlying consistent species richness [@brose2016; @gotelli2017; @li2020].
 While communities are clearly changing, our most common species-based approaches do not fully capture the nature of that change.
 
 Functional diversity offers a potentially powerful alternative for detecting and describing community change by providing a mechanistic link between species' response to environmental change (response traits) and the processes they perform (effect traits) [@lavorel2002; @mcgill2006; @suding2008].
@@ -116,7 +113,7 @@ We gathered trait data from the Elton Trait Database [mammals and birds, @wilman
 These databases include species-level means for traits that best define species' function in the community including body size, diet, and behavioral characteristics.
 For the full list of traits included in the analysis for each taxon see Table 1.
 
-In order to ensure taxonomic consistency across datasets, BioTIME species were paired with trait data based on their species identifier from the Integrated Taxonomic Information System database (retrieved 09-15-2020 from the on-line database, <https://doi.org/10.5066/F7KH0KBK>), obtained through the taxadb R package [@norman2020; @rcoreteam2021].
+In order to ensure taxonomic consistency across datasets, BioTIME species were paired with trait data based on their species identifier from the Integrated Taxonomic Information System database (retrieved 09-15-2020 from the on-line database, <https://doi.org/10.5066/F7KH0KBK>), obtained through the *taxadb* R package [@norman2020; @rcoreteam2021].
 If more than one species in the assemblage data resolved to the same identifier, observations were considered the same species.
 For trait data, traits for all species of the same identifier were averaged.
 Only studies with at least 75% trait coverage were included and observations for species with no trait data were excluded.
@@ -157,14 +154,9 @@ Metrics incorporated weighting based on species abundance where available, three
 
 #### Null Models
 
-To assess functional change independent of species richness we calculating the standardized effect size (SES) for each metric from null estimates [@swenson2012].
-Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
-Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
-Species pools included all species observed for a time series.
-This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction for that time series.
-We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
+To assess functional change independent of species richness we calculating the standardized effect size (SES) for each metric from null estimates [@swenson2012]. Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community. Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species. Species pools included all species observed for a time series. This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction for that time series. We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
 We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
-<!-- description of edge case where community = species pool -->
+SES estimates can be interpreted as how much of the functional characteristic (richness, evenness, divergence) was observed beyond what was expected by chance for a community of that species richness.
 
 #### Analysis
 
@@ -193,9 +185,23 @@ Non-significant overall trends indicate that although some studies experience in
 ```{r echo=FALSE}
 read_csv(here::here("figures/man_model_table.csv")) %>%
   select(metric, everything()) %>%
-  mutate(metric = ifelse(metric == "Jaccard_base", "Jaccard", metric)) %>%
+  mutate(metric = ifelse(metric == "Jaccard_base", "Jaccard", metric),
+         group = case_when(
+           group == "rarefyID:study_id" ~ "timeseries:study",
+           group == "study_id" ~ "study",
+           TRUE ~ group),
+         term = case_when(
+           term == "(Intercept)" ~ "Intercept",
+           term == "year_scaled" ~ "Year",
+           term == "sd__(Intercept)" ~ "Intercept sd",
+           term == "cor__(Intercept).year_scaled" ~ "Intercept Year corr",
+           term == "sd__year_scaled" ~ "Year sd",
+           term == "sd__Observation" ~ "Observation sd",
+           TRUE ~ term
+         )) %>%
   arrange(metric) %>%
   kable(format = "latex", caption = "Model estimates and statistics for general trend models for species richness (S) and standardized metrics. Additional model estimates can be found in the supplement.") %>%
+  collapse_rows(columns = 1, valign = "middle") %>%
   kable_classic() %>% 
   kable_styling(latex_options= c("scale_down", "hold_position"))
 ```
@@ -283,8 +289,6 @@ We present here the conclusion best supported by available data with a number of
 The most pressing need is for intentional and targeted data collection efforts.
 We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases. Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
 
-We also need theory that links ecological process to the kinds of changes actually happening in communities.
-Do the shifts we see matter?
-Are there shifts we didn't even measure that are critical for function and resilience?
+<!-- We also need theory that links ecological process to the kinds of changes actually happening in communities. Do the shifts we see matter? Are there shifts we didn't even measure that are critical for function and resilience? -->
 
 ### References
