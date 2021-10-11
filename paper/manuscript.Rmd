@@ -170,7 +170,7 @@ To test for trends within taxa, biome, and realm we also fit models with random 
 We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model with no additional covariates.
 BLUP's provide an estimate for the conditional mean and variance of each level of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
 We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
-All models were executed using the *lme4* package in R and p-values were calculated using the *lmerTest* package [@bates2015; @rcoreteam2021].
+All models were executed using the *lme4* package in R and p-values were calculated using the *lmerTest* package with a significance level of p \< 0.05 [@bates2015; @rcoreteam2021].
 
 ```{r timeseries-plot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
 knitr::include_graphics(here::here("figures/3met_long.jpeg"))
