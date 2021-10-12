@@ -126,6 +126,7 @@ To account for this inconsistency in sampling effort we used sample-based rarefa
 Our final dataset included 2,443 time series from 53 studies in 21 countries and 15 biomes and 13 different traits (Fig 1).
 The earliest sample was in 1923 and the most recent was in 2016.
 Only four studies (consisting of 11 time series) came from Amphibian studies due to the limited availability of amphibian time series and low species richness values for assemblages (Table 1).
+Amphibians are of particular concern due to impacts of habitat loss and pollution [@gibbons2000], so we include the data we have while acknowledging that general inference for Amphibians as a taxa is not possible with the timeseries available.
 For a full breakdown of studies and their characteristics, see the supplement.
 
 ```{r taxa-map, fig.cap="A) Map of time series locations with points colored by taxa, and B) histograms of time series duration broken down by taxa.", echo=FALSE}
