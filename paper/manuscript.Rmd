@@ -66,7 +66,11 @@ Indeed, almost all hypothesized mechanisms underpinning the relationship between
 Determining functional trends therefore gives a more complete picture of potential trends in critical ecosystem processes.
 
 It is critical to establish whether or not functional loss is the general rule for communities.
-While functional loss is frequently cited as one of the most pressing concerns of the anthropocene [@cardinale2012; @dirzo2014; @young2016], it is not necessarily inevitable even in scenarios of species loss [@daz2001]. Forecasts of functional loss range from negligible [@gallagher2013] to dire [@petchey2002; @pimiento2020]. And while some observed trends show significant functional loss [@flynn2009] others document no loss even in some of the most heavily impacted communities [@edwards2013; @matuoka2020]. On paleoecological time scales functional composition shows mixed responses to environmental change and extinction events [@jackson2015; @dornelas2018], with significant impacts of species extinctions on functional diversity in some taxa and not others [@pimiento2017]. Some losses of functional diversity are indisputable on both paleocological and contemporary timescales such as continued trophic downgrading due to loss of large-bodied mammals, but implications of those losses for local diversity patterns are less clear [@estes2011; @smith2018] .
+While functional loss is frequently cited as one of the most pressing concerns of the anthropocene [@cardinale2012; @dirzo2014; @young2016], it is not necessarily inevitable even in scenarios of species loss [@daz2001].
+Forecasts of functional loss range from negligible [@gallagher2013] to dire [@petchey2002; @pimiento2020].
+And while some observed trends show significant functional loss [@flynn2009] others document no loss even in some of the most heavily impacted communities [@edwards2013; @matuoka2020].
+On paleoecological time scales functional composition shows mixed responses to environmental change and extinction events [@jackson2015; @dornelas2018], with significant impacts of species extinctions on functional diversity in some taxa and not others [@pimiento2017].
+Some losses of functional diversity are indisputable on both paleocological and contemporary timescales such as continued trophic downgrading due to loss of large-bodied mammals, but implications of those losses for local diversity patterns are less clear [@estes2011; @smith2018] .
 
 Assessments of broad-scale temporal change in functional diversity have previously been limited by a lack of functional trait data.
 The majority of work has therefore focused largely on system-specific studies with traits collected *in situ*.
@@ -75,7 +79,9 @@ However, to date there has been no cross-taxa assessment of temporal functional 
 
 Here we perform the first multi-taxa, multi-system assessment of functional diversity change through time.
 We focus on mammal, bird, and amphibian species as a significant subset of the world's biodiversity heavily impacted by anthropogenic change.
-While examining trends in plants, invertebrates, and other vertebrate species are of equal interest, trait data for those taxa raise additional challenges such as limited and biased species coverage [@fitzjohn2014], a lack of accepted species-level means, and differences in the types of traits collected. In order to ensure comparability across taxa in trait type and data quality we therefore focus on these taxa. Traits were intentionally selected to be representative of a species' Eltonian niche, thereby summarizing the functional role they play in the community [@wilman2014].
+While examining trends in plants, invertebrates, and other vertebrate species are of equal interest, trait data for those taxa raise additional challenges such as limited and biased species coverage [@fitzjohn2014], a lack of accepted species-level means, and differences in the types of traits collected.
+In order to ensure comparability across taxa in trait type and data quality we therefore focus on these taxa.
+Traits were intentionally selected to be representative of a species' Eltonian niche, thereby summarizing the functional role they play in the community [@wilman2014].
 
 We assess thousands of mammal, bird, and amphibian functional diversity time series to determine whether or not there is a general trend of functional change.
 We distinguish between three possible scenarios of functional change: 1) significant loss of functional diversity with accompanying shifts in other functional metrics, 2) no functional diversity loss, but significant shifts in other functional metrics, 3) maintenance of functional diversity and composition.
@@ -146,7 +152,9 @@ FDiv measures the degree to which species and their abundances maximize differen
 Higher values of FDiv therefore correspond to communities where many highly abundant species are on the edges of the trait space.
 
 All available trait data for each study were included in functional diversity calculations with the exception of traits that were the same value for all observed species in the study.
-All continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010]. The number of trait axes was limited to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits. This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility [@blonder2018].
+All continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
+The number of trait axes was limited to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
+This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility [@blonder2018].
 Metrics incorporated weighting based on species abundance where available (three studies were presence only).
 
 #### Null Models
@@ -277,7 +285,9 @@ Here we approach the question of functional change using the best available data
 However, a number of gaps in best practices may be obscuring a true underlying trend.
 First, the BioTIME database, while the most comprehensive data source of time series available, is limited in temporal and geographic scope.
 Most time series span only a few years (Figure 1) and may not provide the statistical power necessary to detect trends.
-The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias. We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021]. We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
+The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
+We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021].
+We do however emphasize that even disturbed communities maintain functional structure [@edwards2013; @matuoka2020], and the inclusion of more heavily impacted sites would not necessarily change the result.
 
 Second, despite using the most comprehensive trait databases for these taxa, we were still limited to species-level means of the traits deemed important by database creators.
 The importance of intraspecific variation is well documented [@desroches2018; @violle2012], however individual-level traits are rarely collected alongside monitoring data, especially for the longest running efforts.
@@ -296,12 +306,6 @@ Approaches for assessing shifts and overlaps in functional space are still relat
 Our results illustrate a well known but increasingly pervasive problem in synthesis-based ecology of distinguishing true ecological patterns from methodological limitations.
 We present here the conclusion best supported by available data with a number of caveats and suggestions for next steps forward.
 The most pressing need is for intentional and targeted data collection efforts.
-We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017].
-Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases.
-One relatively low-cost high-reward data investment is collation of additional species-level trait means.
-Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases.
-Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
-
-<!-- We also need theory that links ecological process to the kinds of changes actually happening in communities. Do the shifts we see matter? Are there shifts we didn't even measure that are critical for function and resilience? -->
+We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases. Traits would be especially beneficial if they explicitly incorporate existing frameworks for linking traits to processes, including the now widely accepted response and effect framework [@lavorel2002].
 
 ### References
