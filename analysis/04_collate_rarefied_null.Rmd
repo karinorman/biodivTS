@@ -37,14 +37,38 @@ fd_metrics <- purrr::map_dfr(filelist, function(x) {
     return(biochange_metrics)
   }) %>% distinct()
 
+#read in CWM metrics
+path <- here::here("data", "rarefied_metrics", "cwm")
+filelist <-  dir(path, "*.rda") %>%
+  paste0(path, "/", .)
+
+cwm_metrics <- purrr::map_dfr(filelist, function(x) {
+  load(x)
+  rarefyID <- str_match(x,"_cell\\s*(.*?)\\s*_sample")[,2]
+  
+  if(dim(cwm_metrics)[1] == 0){
+    return(data.frame())
+  }else{
+    
+    cwm_metrics <- cwm_metrics$CWM %>%
+      rownames_to_column("YEAR") %>%
+      mutate(YEAR = as.integer(YEAR)) %>%
+      left_join(cwm_metrics %>% select(-CWM)) %>%
+      mutate(rarefyID = rarefyID)
+    
+    return(cwm_metrics)
+  }
+})
+
 ## get null models
 null_table <- pins::pin_get("null-table", board = "github")
 ```
 
 Merge rarefied species and fd metrics and null models
 ```{r}
-rarefied_metrics <- full_join(species_metrics, fd_metrics,
+rarefied_metrics <- full_join(species_metrics, fd_metrics %>% select(-CWM),
                               c("YEAR", "cell", "rarefy_resamp", "rarefyID")) %>%
+  full_join(cwm_metrics, c("YEAR", "cell", "rarefy_resamp", "rarefyID")) %>%
   filter(S != 1) %>% # remove samples that had one species as they result in strange metric values
   select(-qual.FRic)
 
@@ -54,8 +78,10 @@ new_meta <- rarefied_metrics %>%
 	distinct(rarefyID, SamplePool, SampleN, num_years, duration, startYear, endYear)
 
 ##	calculate the medians for all the metrics for studies that were rarefied
+## exclude categorical variables - they don't make sense as medians
 metric_cols <- ungroup(rarefied_metrics) %>%
-  select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, CWM, type)) %>%
+  select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, type,
+            diet_5cat, pelagicspecialist, diurnal, nocturnal, crepuscular, dir, lar)) %>%
   pivot_longer(-c(rarefyID, rarefied, YEAR, cell, rarefy_resamp), names_to = "metric") %>%
   left_join(null_table %>% select(-c(richness, se, lowerCI, upperCI)),
             by = c("YEAR" = "year", "rarefyID" = "rarefyid", "rarefy_resamp" = "rarefy_resamp", "metric" = "metric"))
