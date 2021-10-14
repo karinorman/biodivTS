@@ -226,7 +226,7 @@ Write out table of model estimates for manuscript
 ```{r}
 metric_model_table %>% 
   filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
-  select(-c(model, model_id, warning, formula)) %>% 
+  select(-c(model, model_id, warning, formula, statistic, df)) %>% 
   write_csv(here::here("figures", "man_model_table.csv"))
 ```
 
