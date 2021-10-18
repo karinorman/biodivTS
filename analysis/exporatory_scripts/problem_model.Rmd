@@ -17,76 +17,65 @@ Get data and put it in long form
 ```{r}
 pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 
-#get metadata
-meta <- pins::pin_get("meta", board = "github") %>%
-  select(study_id, realm, climate, habitat, protected_area, biome_map)
-
-meta <- pins::pin_get("bt-traitfiltered", board = "github") %>%
-  select(study_id, rarefyid, taxa) %>% distinct() %>%
-  left_join(meta)
-
-#get metric data
-metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
-  # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
-  rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
-  filter(!is.na(value)) %>%
-  mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
-  left_join(meta, c("rarefyID" = "rarefyid"))
-
-#find rarefyID's that have inf value for some metrics and exclude
-cont_inf <- metrics %>% filter(is.infinite(value), !metric %in% c("qual.FRic",  "SES_qual.FRic")) %>% pull(rarefyID) 
-
-#get rarefyID's that don't have enough null samples
-missing_null <- bind_rows(metrics %>% 
-  filter(n_missing_nulls == 1, commplete_null_samps == FALSE),
-  metrics %>% filter(n_missing_nulls > 100)) %>%
-  pull(rarefyID) %>%
-  unique()
-
-model_data <- metrics %>% 
-  filter(!rarefyID %in% cont_inf, !rarefyID %in% missing_null) %>%
-  group_by(metric) %>%
-  mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
-  mutate(year_scaled = scale(year), 
-         scale_center = attributes(year_scaled)$`scaled:center`, 
-         scale = attributes(year_scaled)$`scaled:scale`) %>%
-  ungroup()
+model_data <- pins::pin_get("model-data", board = "github")
 ```
 
 ####Data exploration
 
 Visualize distributions of response
 ```{r}
-model_data %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_base")) %>%
-  ggplot() +
-  geom_histogram(aes(x = logvalue),
-                 bins = 60) +
-  facet_wrap(~metric, scales = "free") +
-  labs(title = "Distribution of Log values")
-
-model_data %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_base")) %>%
-  ggplot() +
-  geom_histogram(aes(x = value),
-                 bins = 60) +
-  facet_wrap(~metric, scales = "free") +
-  labs(title = "Distribution of raw values")
+# model_data %>%
+#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_base")) %>%
+#   ggplot() +
+#   geom_histogram(aes(x = logvalue),
+#                  bins = 60) +
+#   facet_wrap(~metric, scales = "free") +
+#   labs(title = "Distribution of Log values")
+# 
+# model_data %>%
+#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_base")) %>%
+#   ggplot() +
+#   geom_histogram(aes(x = value),
+#                  bins = 60) +
+#   facet_wrap(~metric, scales = "free") +
+#   labs(title = "Distribution of raw values")
 ```
 
 Fit a single model to play around with 
 ```{r}
 test_data <- model_data %>% 
   filter(metric == "FRic") %>%
-  mutate(study_id = as.factor(study_id))
+  mutate(year_scaled = scale(year),
+           duration_scaled = scale(duration, scale = FALSE),
+           startyear_scaled = scale(startyear, scale = FALSE),
+         taxa = as.factor(taxa))
+```
 
+Different options for getting between group samples, fixed effects (test differences between intercept):
+```{r}
+library(emmeans)
+
+#fixed effects contrasts
+fit_fixed <- lmer(formula = "value ~ year_scaled*taxa + (year_scaled|study_id/rarefyID)", data = test_data)
+m_emm <-  emmeans(fit_fixed,  mode = "satterth", lmerTest.limit = 20105, pairwise ~ taxa | year_scaled)
+
+fit_cont <- as_tibble(m_emm$contrasts)
+fit_trends <- emtrends(fit_fixed, ~ taxa, var="year_scaled",  mode = "satterth", lmerTest.limit = 20105) %>% as_tibble()
+
+interactions::interact_plot(fit_fixed, pred = year_scaled, modx = taxa, plot.points = TRUE)
+```
+
+As a random effect:
+```{r}
+fit_rand <- lmer(formula = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)", data = test_data)
+```
+
+
+
+
+```{r}
 #lognormal
-ln_fit <- lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), data = test_data,
-               control = lmerControl(optCtrl = list(maxit = 1e9,
-                                                    maxfun = 1e9,
-                                                    xtol_abs = 1e-11,
-                                                    ftol_abs = 1e-11,
-                                                    maxeval = 1e9)))
+ln_fit <- lmer(logvalue ~ year_scaled + (year_scaled|study_id/rarefyID), data = test_data)
 
 gamma_fit <- glmer(value ~ year_center + (year_center|study_id/rarefyID), data = test_data, family = Gamma)
 
