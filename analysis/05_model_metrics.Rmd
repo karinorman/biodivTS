@@ -154,17 +154,18 @@ get_model <- function(metric_name, formula, model_id, data, ...){
     fit <- qlmer(formula = formula, data = fit_data, ...)
     
   if(!model_id %in% c("base", "base_dur", "base_srt")){
-    level_slopes <- get_fixed_slopes(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) %>%
+    slopes <- get_fixed_slopes(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) 
+    
+    group_slopes <- as_tibble(slopes$emtrends) %>%
       mutate(effect = "group_slope", group = model_id) %>%
       rename(std.error = SE, estimate = year_scaled.trend, term = model_id)
     
-    int_contrasts <- get_int_contrasts(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) %>%
-      mutate(group = model_id, effect = "contrast") %>%
-      rename(std.error = SE, statistic = t.ratio, term = contrast) %>%
-      select(-year_scaled)
+    slope_constrasts <- as_tibble(slopes$contrasts) %>%
+      mutate(effect = "contrast", group = model_id) %>%
+      rename(std.error = SE, term = contrast, statistic = t.ratio)
     
     df <- tidy(fit$result) %>% 
-      bind_rows(level_slopes, int_contrasts) %>%
+      bind_rows(group_slopes, slope_constrasts) %>%
       mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
   }else{
   tidy(fit$result) %>%
@@ -172,16 +173,9 @@ get_model <- function(metric_name, formula, model_id, data, ...){
   }
 }
 
-get_int_contrasts <- function(metric, model, model_id, model_data){
-  formula <- paste("pairwise ~", model_id, "| year_scaled")
-  emm <- emmeans(model,  mode = "satterth", lmerTest.limit = 20105, specs = as.formula(formula), data = model_data)
-  
-  return(as_tibble(emm$contrasts))
-}
-
 get_fixed_slopes <- function(metric, model, model_id, model_data){
-  formula <- paste("~", model_id)
-  fit_trends <- emtrends(model, specs = as.formula(formula), var="year_scaled",  mode = "satterth", lmerTest.limit = 20105, data = model_data) %>% as_tibble()
+  formula <- paste("pairwise", "~", model_id)
+  fit_trends <- emtrends(model, specs = as.formula(formula), var="year_scaled",  mode = "satterth", lmerTest.limit = 20105, data = model_data)
   
   return(fit_trends)
 }
