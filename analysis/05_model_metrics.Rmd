@@ -12,6 +12,7 @@ library(tidyverse)
 library(lme4)
 library(broom.mixed)
 library(lmerTest)
+library(emmeans)
 ```
 #### Read in data, get final dataset for models
 Get data and put it in long form 
@@ -218,7 +219,12 @@ bad_models <- mod_results %>%
 bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
 
 metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
-          bad_mod_results %>% filter(is.na(warning))) 
+          bad_mod_results %>% filter(is.na(warning))) %>%
+  mutate(significant = case_when(
+    p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
+    !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
+    TRUE ~ NA
+  ))
 
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
@@ -294,6 +300,7 @@ get_study_slopes <- function(metric, model, model_id){
 }
 
 model_df <- metric_model_table %>%
+  filter(model_id == "base") %>%
   select(metric, model, model_id) %>%
   group_by(metric, model_id) %>% 
   slice_head()
