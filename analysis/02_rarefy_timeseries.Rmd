@@ -508,3 +508,76 @@ files <- dir(path, "*.rda") %>%
 plan("multiprocess", workers = 30)
 furrr::future_map(files, calc_FD_mets, traits = trait_ref)
 ```
+
+Get cwm's that were excluded
+Functions to calculate functional diversity metrics for the samples
+```{r}
+#helper function to load file
+loadRData <- function(file_name){
+  load(file_name)
+  get(ls()[ls() != "file_name"])
+}
+
+#function to calculate functional diversity metrics for a single sample community
+calc_cwm_mets <- function(file_path, traits){
+  #library(biodivTS)
+  #load community sample
+  rare_comm_save <- loadRData(file_path)
+
+  years <- rare_comm_save$YEAR
+
+  #get species matrix
+  species_mat <- rare_comm_save %>%
+    tibble::column_to_rownames("YEAR") %>%
+    dplyr::select(-c(rarefyID, cell, type, rarefy_resamp))
+
+  # get trait matrix for the species in the sample
+  traits <- biodivTS::get_traitMat(colnames(species_mat), trait_data = traits)
+
+  # create FD function that returns an empty dataframe instead of erroring if FD can't be calculated
+  get_FD_safe <- possibly(biodivTS::get_FD, otherwise = data_frame())
+
+  # calculate functional diversity for different data types
+  if(unique(rare_comm_save$type) == "count"){
+    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
+                           data_id = unique(rare_comm_save$rarefyID), 
+                           samp_id = unique(rare_comm_save$rarefy_resamp),
+                           w.abun = TRUE, m = "min", corr = "cailliez",
+                           calc.FDiv = FALSE)
+  } else{
+    FD_mets <- get_FD_safe(species_mat = species_mat, trait_mat = traits, year_list = years,
+                           data_id = unique(rare_comm_save$rarefyID), 
+                           samp_id = unique(rare_comm_save$rarefy_resamp),
+                           w.abun = FALSE, m = "min", corr = "cailliez",
+                           calc.FDiv = FALSE)
+  }
+
+  #check if FD metrics could be calculated, otherwise return empty dataframe
+  if (is.null(dim(FD_mets))){
+    
+    # combine univariate and turnover metrics
+    cwm_metrics <- FD_mets$fd_met %>%
+      select(year, starts_with("CWM")) %>%
+      mutate(cell = unique(rare_comm_save$cell), rarefy_resamp = unique(rare_comm_save$rarefy_resamp)) %>%
+      rename(YEAR = year)
+    
+  }else{ cwm_metrics <- tibble() }
+  
+  #save out dataframe of rarefied metrics
+  path <- here::here("data", "rarefied_metrics", "cwm")
+  dir.create(path)
+  save(cwm_metrics, file=paste0(path, "/", unique(rare_comm_save$type),
+                                      "_cell", unique(rare_comm_save$rarefyID),
+                                      "_sample", unique(rare_comm_save$rarefy_resamp), ".rda"))
+
+}
+
+#get list of rarefaction sample files
+path <- here::here("data", "rarefied_samples")
+files <- dir(path, "*.rda") %>%
+  paste0(path, "/", .)
+
+#parallelized mapping across files to calculate functional diversity metrics
+future::plan("multiprocess", workers = 30)
+furrr::future_map(files, calc_cwm_mets, traits = trait_ref)
+```

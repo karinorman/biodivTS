@@ -12,6 +12,7 @@ library(tidyverse)
 library(lme4)
 library(broom.mixed)
 library(lmerTest)
+library(emmeans)
 ```
 #### Read in data, get final dataset for models
 Get data and put it in long form 
@@ -44,7 +45,8 @@ missing_null <- bind_rows(metrics %>%
 
 model_data <- metrics %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "Jaccard_next",
-                       "FRic", "FEve", "FDiv", "S"),
+                       "FRic", "FEve", "FDiv", "S",
+                       "bodymass_value"),
          !rarefyID %in% missing_null) %>%
   group_by(metric) %>%
   mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
@@ -141,48 +143,60 @@ get_model <- function(metric_name, formula, model_id, data, ...){
   print(c(metric_name, model_id))
   qlmer <- quietly(lmer)
   
-  fit <- data %>%
+  fit_data <- data %>%
     filter(metric == metric_name) %>%
     mutate(year_scaled = scale(year),
            duration_scaled = scale(duration, scale = FALSE),
-           startyear_scaled = scale(startyear, scale = FALSE)) %>%
-    qlmer(formula = formula, data = ., ...)
+           startyear_scaled = scale(startyear, scale = FALSE),
+           taxa = as.factor(taxa),
+           realm = as.factor(realm),
+           climate = as.factor(climate))
   
+    fit <- qlmer(formula = formula, data = fit_data, ...)
+    
+  if(!model_id %in% c("base", "base_dur", "base_srt")){
+    slopes <- get_fixed_slopes(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) 
+    
+    group_slopes <- as_tibble(slopes$emtrends) %>%
+      mutate(effect = "group_slope", group = model_id) %>%
+      rename(std.error = SE, estimate = year_scaled.trend, term = model_id)
+    
+    slope_constrasts <- as_tibble(slopes$contrasts) %>%
+      mutate(effect = "contrast", group = model_id) %>%
+      rename(std.error = SE, term = contrast, statistic = t.ratio)
+    
+    df <- tidy(fit$result) %>% 
+      bind_rows(group_slopes, slope_constrasts) %>%
+      mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+  }else{
   tidy(fit$result) %>%
    mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+  }
 }
 
+get_fixed_slopes <- function(metric, model, model_id, model_data){
+  formula <- paste("pairwise", "~", model_id)
+  fit_trends <- emtrends(model, specs = as.formula(formula), var="year_scaled",  mode = "satterth", lmerTest.limit = 20105, data = model_data)
+  
+  return(fit_trends)
+}
 #get_model(data = model_data, metric_name = "SES_FRic", "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)", model_id = "base")
 ```
 
 Create dataframe of models to fit
 ```{r}
-# raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
-#                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
-#                          taxa = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-#                          realm = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-#                          climate = "value ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
-#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
-# 
-# log_value_mods <- tibble(metric_name = c("S"), 
-#                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
-#                          taxa = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-#                          realm = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-#                          climate = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
-#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
-
 raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
-                         taxa = "value ~ year_scaled + as.factor(taxa) + (year_scaled|study_id/rarefyID)",
-                         realm = "value ~ year_scaled + as.factor(realm) + (year_scaled|study_id/rarefyID)",
-                         climate = "value ~ year_scaled + as.factor(climate) + (year_scaled|study_id/rarefyID)") %>%
+                         taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
 log_value_mods <- tibble(metric_name = c("S"), 
                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
-                         taxa = "logvalue ~ year_scaled + as.factor(taxa) + (year_scaled|study_id/rarefyID)",
-                         realm = "logvalue ~ year_scaled + as.factor(realm) + (year_scaled|study_id/rarefyID)",
-                         climate = "logvalue ~ year_scaled + as.factor(climate) + (year_scaled|study_id/rarefyID)") %>%
+                         taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
 mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
@@ -201,22 +215,16 @@ bad_models <- mod_results %>%
   distinct() %>%
   left_join(mods, by = c("metric" = "metric_name", "model_id")) 
 
-#Turn of REML for these models 
+#Turn off REML for these models, and they fit! 
 bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
 
-#One model still won't converge
-bad_models2 <- bad_mod_results %>%
-  select(metric, model_id, warning) %>% 
-  filter(!is.na(warning)) %>% 
-  distinct() %>%
-  left_join(mods, by = c("metric" = "metric_name", "model_id")) 
-
-#Fit with a different algorithm
-bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
-
 metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
-          bad_mod_results %>% filter(is.na(warning)),
-          bad_mod_results2 %>% filter(is.na(warning))) 
+          bad_mod_results %>% filter(is.na(warning))) %>%
+  mutate(significant = case_when(
+    p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
+    !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
+    TRUE ~ NA
+  ))
 
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
@@ -234,28 +242,22 @@ Models with interactions
 ```{r}
 int_raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
                          base_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-                         taxa_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-                         realm_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-                         climate_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)",
-                         base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-                         taxa_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-                         realm_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-                         climate_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
+                         base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
                names_to = "model_id", values_to = "formula")
 
-# int_log_value_mods <- tibble(metric_name = c("S"), 
-#                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
-#                          taxa = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|taxa)",
-#                          realm = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|realm)",
-#                          climate = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID) + (year_scaled|climate)") %>%
-#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+int_log_value_mods <- tibble(metric_name = c("S"),
+                         base_dur = "logvalue ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
+                         base_srt = "logvalue ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
+               names_to = "model_id", values_to = "formula")
+
 
 # mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
 #   select(metric_name, formula, model_id)
 
 #Fit models with base settings
-int_mod_results <- pmap_dfr(int_raw_value_mods, get_model, data = model_data)
+int_mod_results <- pmap_dfr(bind_rows(int_raw_value_mods, int_log_value_mods), get_model, data = model_data)
 
 #get the models that had convergence warnings
 bad_models <- int_mod_results %>%
@@ -306,6 +308,7 @@ get_study_slopes <- function(metric, model, model_id){
 }
 
 model_df <- metric_model_table %>%
+  filter(model_id == "base") %>%
   select(metric, model, model_id) %>%
   group_by(metric, model_id) %>% 
   slice_head()
@@ -390,121 +393,4 @@ pins::pin(slope_models, board = "github")
 
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
-```
-
-Pairwise correlation analysis
-```{r}
-library(psych)
-#slope_corr <- corr.test(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
-
-slope_corr_bootstrap <- corCi(slopes_wide %>% ungroup() %>% select(starts_with("SES"), "S", "Jaccard_base"))
-```
-
-Clustering 
-```{r}
-library(clValid)
-scale2 <- function(x, na.rm = FALSE) (x - mean(x, na.rm = na.rm)) / sd(x, na.rm)
-
-scale_slopes <- slopes_wide %>%  
-  drop_na() %>%
-  select(study_id, starts_with("SES"), S, Jaccard_base) %>%
-  column_to_rownames("study_id") %>%
-  mutate(across(.fns = scale2)) %>%
-  as.matrix()
-
-clmethods <- c("hierarchical","kmeans","pam")
-intern <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "internal")
-stab <- clValid(scale_slopes, nClust = 2:6, clMethods = clmethods, validation = "stability")
-
-summary(intern)
-optimalScores(stab)
-
-#get the hierarchical clustering object
-clust <- intern@clusterObjs$hierarchical
-cat5 <- cutree(clust, k = 5)
-cat3 <- cutree(clust, k = 3)
-
-
-slopes_clust <- slopes_wide %>% 
-  ungroup() %>%
-  left_join(as.data.frame(cat3) %>%
-  rownames_to_column("study_id")) %>%
-  left_join(as.data.frame(cat5) %>%
-  rownames_to_column("study_id"))
-```
-
-```{r}
-slopes_clust %>% 
-  gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S", "Jaccard_base") %>% {
-  ggplot(., aes(x = .xvalue, y = .yvalue, color = as.factor(cat5))) +
-      geom_point() + 
-      #geom_smooth(method = 'lm') +
-      facet_wrap(.xkey ~ .ykey, ncol = length(unique(.$.ykey)), scales = 'free', labeller = label_both) +
-      scale_color_brewer(type = 'qual')
-  }
-```
-
-####Figures
-
-Pairwise plots of study-level slopes
-```{r}
-#pairwise plots using GGally
-ggpairs(slopes_wide %>% 
-          select(-c("study_id", "FDiv", "FEve", "FRic")))
-
-#pairwise plots using GGPlot
-gatherpairs <- function(data, ..., 
-                        xkey = '.xkey', xvalue = '.xvalue',
-                        ykey = '.ykey', yvalue = '.yvalue',
-                        na.rm = FALSE, convert = FALSE, factor_key = FALSE) {
-  vars <- quos(...)
-  xkey <- enquo(xkey)
-  xvalue <- enquo(xvalue)
-  ykey <- enquo(ykey)
-  yvalue <- enquo(yvalue)
-
-  data %>% {
-    cbind(gather(., key = !!xkey, value = !!xvalue, !!!vars,
-                 na.rm = na.rm, convert = convert, factor_key = factor_key),
-          select(., !!!vars)) 
-  } %>% gather(., key = !!ykey, value = !!yvalue, !!!vars,
-               na.rm = na.rm, convert = convert, factor_key = factor_key)
-}
-
-slopes_wide %>% 
-  gatherpairs( "SES_FDiv", "SES_FEve", "SES_FRic", "S") %>% {
-  ggplot(., aes(x = .xvalue, y = .yvalue)) +
-      geom_point() + 
-      #geom_smooth(method = 'lm') +
-      facet_wrap(.xkey ~ .ykey, ncol = length(unique(.$.ykey)), scales = 'free', labeller = label_both) +
-      scale_color_brewer(type = 'qual')
-  }
-
-slopes_wide %>%
-  select(-c("FDiv", "FEve", "FRic")) %>%
-  pivot_longer(-one_of("study_id", "S"), names_to = "metric") %>%
-  ggplot(aes(x = S, y = value)) +
-  geom_point() +
-  facet_wrap(~metric) +
-  xlim(-1.3, 1.3) +
-  ylim(-0.6, 0.6) +
-    theme_classic() +
-    geom_hline(yintercept = 0) +
-    geom_vline(xintercept = 0) + 
-  ylab("Metric Slope") +
-  xlab("Richness Slope")
-
-slopes_wide %>%
-  select(-c("FDiv", "FEve", "FRic")) %>%
-  pivot_longer(-one_of("study_id", "SES_FRic"), names_to = "metric") %>%
-  ggplot(aes(x = SES_FRic, y = value)) +
-  geom_point() +
-  facet_wrap(~metric) +
-  xlim(-.25, .25) +
-  ylim(-0.6, 0.6) +
-    theme_classic() +
-    geom_hline(yintercept = 0) +
-    geom_vline(xintercept = 0) + 
-  ylab("Metric Slope") +
-  xlab("Functional Richness Slope")
 ```
