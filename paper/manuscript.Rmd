@@ -171,11 +171,12 @@ SES estimates can be interpreted as how much of the functional characteristic (r
 #### Analysis
 
 We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
-To test for trends within taxa, biome, and realm we also fit models with random slope and intercept effects for each one of these factors.
-We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model with no additional covariates.
+We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model.
 BLUP's provide an estimate for the conditional mean and variance of each level of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
+To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those covariates added as a predictor to the original model structure.
+We estimated within level slopes and calculated between level contrasts using the *emmeans* package [@lenth2021] .
 We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
-All models were executed using the *lme4* package in R and p-values were calculated using the *lmerTest* package with a significance level of p \< 0.05 [@bates2015; @rcoreteam2021].
+All models were executed using the *lme4* package in R and p-values were calculated using the *lmerTest* package with a significance level of p \< 0.05 [@bates2015; @kuznetsova2017; @rcoreteam2021].
 
 ```{r timeseries-plot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
 knitr::include_graphics(here::here("figures/3met_long.jpeg"))
@@ -188,9 +189,10 @@ Raw
 ### Results
 
 We found no significant overall trend in species richness or functional diversity metrics (observed or standardized) (Fig 2).
-There was also no temporal trend in those metrics within taxa, biome or realm factor levels.
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
 Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0 (Table 2).
+Trends for different taxa, biomes, or realms were also non-significant with the exception of a significantly increasing slope for functional evenness of global studies (characterized by having samples on multiple continents), and a significantly decreasing standardized functional richness slope for freshwater studies.
+Slopes for freshwater studies were also significantly smaller than slopes for terrestrial studies.
 
 ```{r echo=FALSE}
 read_csv(here::here("figures/man_model_table.csv")) %>%
