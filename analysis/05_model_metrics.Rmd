@@ -46,7 +46,7 @@ missing_null <- bind_rows(metrics %>%
 model_data <- metrics %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "Jaccard_next",
                        "FRic", "FEve", "FDiv", "S",
-                       "bodymass_value"),
+                       "CWM_bodymass_value"),
          !rarefyID %in% missing_null) %>%
   group_by(metric) %>%
   mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%

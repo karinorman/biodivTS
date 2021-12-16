@@ -68,7 +68,8 @@ Merge rarefied species and fd metrics and null models
 ```{r}
 rarefied_metrics <- full_join(species_metrics, fd_metrics %>% select(-CWM),
                               c("YEAR", "cell", "rarefy_resamp", "rarefyID")) %>%
-  full_join(cwm_metrics, c("YEAR", "cell", "rarefy_resamp", "rarefyID")) %>%
+  full_join(cwm_metrics %>% rename_with(~paste0("CWM_", .), -c("YEAR", "cell", "rarefy_resamp", "rarefyID")), 
+            c("YEAR", "cell", "rarefy_resamp", "rarefyID")) %>%
   filter(S != 1) %>% # remove samples that had one species as they result in strange metric values
   select(-qual.FRic)
 
@@ -81,8 +82,9 @@ new_meta <- rarefied_metrics %>%
 ## exclude categorical variables - they don't make sense as medians
 metric_cols <- ungroup(rarefied_metrics) %>%
   select(-c(SamplePool, SampleN, num_years, duration, startYear, endYear, type,
-            diet_5cat, pelagicspecialist, diurnal, nocturnal, crepuscular, dir, lar)) %>%
-  pivot_longer(-c(rarefyID, rarefied, YEAR, cell, rarefy_resamp), names_to = "metric") %>%
+            CWM_diet_5cat, CWM_pelagicspecialist, CWM_diurnal, CWM_nocturnal, 
+            CWM_crepuscular, CWM_dir, CWM_lar)) %>%
+  tidyr::pivot_longer(-c(rarefyID, rarefied, YEAR, cell, rarefy_resamp), names_to = "metric") %>%
   left_join(null_table %>% select(-c(richness, se, lowerCI, upperCI)),
             by = c("YEAR" = "year", "rarefyID" = "rarefyid", "rarefy_resamp" = "rarefy_resamp", "metric" = "metric"))
 
@@ -107,9 +109,9 @@ metric_cols <- metric_cols %>%
     TRUE ~ SES)) %>%
   select(-c(mean, sd)) %>%
   #the next three lines go back to wide format for both SES and unadjusted values, then to long format incorporating SES values
-  pivot_wider(names_from = "metric", values_from = c("value", "SES")) %>%
+  tidyr::pivot_wider(names_from = "metric", values_from = c("value", "SES")) %>%
   rename_at(vars(starts_with("value")), ~str_replace(., "value_", "")) %>%
-  pivot_longer(-c(rarefyID, rarefied, YEAR, cell, rarefy_resamp), names_to = "metric") %>%
+  tidyr::pivot_longer(-c(rarefyID, rarefied, YEAR, cell, rarefy_resamp), names_to = "metric") %>%
   filter(!is.na(value))
 
 
