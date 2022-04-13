@@ -45,8 +45,14 @@ missing_null <- bind_rows(metrics %>%
 
 model_data <- metrics %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "Jaccard_next",
-                       "FRic", "FEve", "FDiv", "S",
-                       "CWM_bodymass_value"),
+                       "FRic", "FEve", "FDiv", "S","CWM_bodymass_value","CWM_diet_inv", 
+                       "CWM_diet_scav", "CWM_diet_vfish", "CWM_diet_vunk", "CWM_forstrat_ground", 
+                       "CWM_forstrat_wataroundsurf", "CWM_forstrat_watbelowsurf", "CWM_diet_fruit", 
+                       "CWM_diet_planto", "CWM_diet_seed", "CWM_diet_vend", "CWM_forstrat_understory", 
+                       "CWM_diet_vect", "CWM_diet_nect", "CWM_forstrat_aerial", "CWM_forstrat_canopy", 
+                       "CWM_forstrat_midhigh", "CWM_age_at_maturity_max_y", "CWM_age_at_maturity_min_y", 
+                       "CWM_body_size_mm", "CWM_litter_size_max_n", "CWM_litter_size_min_n", 
+                       "CWM_longevity_max_y", "CWM_offspring_size_max_mm", "CWM_offspring_size_min_mm"),
          !rarefyID %in% missing_null) %>%
   group_by(metric) %>%
   mutate(study_id =  str_extract(rarefyID, "[^_]+")) %>%
@@ -152,25 +158,41 @@ get_model <- function(metric_name, formula, model_id, data, ...){
            realm = as.factor(realm),
            climate = as.factor(climate))
   
+  if(n_distinct(fit_data$rarefyID) < 2){
+    return(tibble())
+  }
+  
+  if(!model_id %in% c("base", "base_dur", "base_srt")){
+    if(fit_data %>% pull(model_id) %>% n_distinct() >1) {
+      
+      fit <- qlmer(formula = formula, data = fit_data, ...)
+      
+      slopes <- get_fixed_slopes(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) 
+      
+      group_slopes <- as_tibble(slopes$emtrends) %>%
+        mutate(effect = "group_slope", group = model_id) %>%
+        rename(std.error = SE, estimate = year_scaled.trend, term = model_id)
+      
+      slope_constrasts <- as_tibble(slopes$contrasts) %>%
+        mutate(effect = "contrast", group = model_id) %>%
+        rename(std.error = SE, term = contrast, statistic = t.ratio)
+      
+      df <- tidy(fit$result) %>% 
+        bind_rows(group_slopes, slope_constrasts) %>%
+        mutate(metric = metric_name, model = list(fit$result), model_id = model_id,
+               n_ts = n_distinct(fit_data$rarefyID),
+               warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+    }else{
+      return(tibble())
+    }
+  }else{
+    
     fit <- qlmer(formula = formula, data = fit_data, ...)
     
-  if(!model_id %in% c("base", "base_dur", "base_srt")){
-    slopes <- get_fixed_slopes(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) 
-    
-    group_slopes <- as_tibble(slopes$emtrends) %>%
-      mutate(effect = "group_slope", group = model_id) %>%
-      rename(std.error = SE, estimate = year_scaled.trend, term = model_id)
-    
-    slope_constrasts <- as_tibble(slopes$contrasts) %>%
-      mutate(effect = "contrast", group = model_id) %>%
-      rename(std.error = SE, term = contrast, statistic = t.ratio)
-    
-    df <- tidy(fit$result) %>% 
-      bind_rows(group_slopes, slope_constrasts) %>%
-      mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
-  }else{
-  tidy(fit$result) %>%
-   mutate(metric = metric_name, model = list(fit$result), model_id = model_id, warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
+    tidy(fit$result) %>%
+      mutate(metric = metric_name, model = list(fit$result), model_id = model_id, 
+             n_ts = n_distinct(fit_data$rarefyID),
+             warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
   }
 }
 
@@ -185,7 +207,8 @@ get_fixed_slopes <- function(metric, model, model_id, model_data){
 
 Create dataframe of models to fit
 ```{r}
-raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
+metric_names <- unique(model_data$metric)
+raw_value_mods <- tibble(metrimod_resultsc_name = metric_names[metric_names != "S"], 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
@@ -234,37 +257,37 @@ Write out table of model estimates for manuscript
 ```{r}
 metric_model_table %>% 
   filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
-  select(-c(model, model_id, warning, formula, statistic, df)) %>% 
+  select(-c(model, model_id, warning, statistic, df)) %>% 
   write_csv(here::here("figures", "man_model_table.csv"))
 ```
 
 Models with interactions
 ```{r}
-int_raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
-                         base_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-                         base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
-  pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
-               names_to = "model_id", values_to = "formula")
-
-int_log_value_mods <- tibble(metric_name = c("S"),
-                         base_dur = "logvalue ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-                         base_srt = "logvalue ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
-  pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
-               names_to = "model_id", values_to = "formula")
-
-
-# mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
-#   select(metric_name, formula, model_id)
-
-#Fit models with base settings
-int_mod_results <- pmap_dfr(bind_rows(int_raw_value_mods, int_log_value_mods), get_model, data = model_data)
-
-#get the models that had convergence warnings
-bad_models <- int_mod_results %>%
-  select(metric, model_id, warning) %>% 
-  filter(!is.na(warning)) %>% 
-  distinct() %>%
-  left_join(int_raw_value_mods, by = c("metric" = "metric_name", "model_id")) 
+# int_raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
+#                          base_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
+#                          base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
+#   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
+#                names_to = "model_id", values_to = "formula")
+# 
+# int_log_value_mods <- tibble(metric_name = c("S"),
+#                          base_dur = "logvalue ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
+#                          base_srt = "logvalue ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
+#   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
+#                names_to = "model_id", values_to = "formula")
+# 
+# 
+# # mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
+# #   select(metric_name, formula, model_id)
+# 
+# #Fit models with base settings
+# int_mod_results <- pmap_dfr(bind_rows(int_raw_value_mods, int_log_value_mods), get_model, data = model_data)
+# 
+# #get the models that had convergence warnings
+# bad_models <- int_mod_results %>%
+#   select(metric, model_id, warning) %>% 
+#   filter(!is.na(warning)) %>% 
+#   distinct() %>%
+#   left_join(int_raw_value_mods, by = c("metric" = "metric_name", "model_id")) 
 ```
 
 
