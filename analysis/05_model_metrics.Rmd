@@ -208,12 +208,14 @@ get_fixed_slopes <- function(metric, model, model_id, model_data){
 Create dataframe of models to fit
 ```{r}
 metric_names <- unique(model_data$metric)
-raw_value_mods <- tibble(metrimod_resultsc_name = metric_names[metric_names != "S"], 
+raw_value_mods <- tibble(metric_name = metric_names[metric_names != "S"], 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
                          climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
-  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula") %>%
+  #don't fit the CWM_litter_size_min_n and climate model, not enough data
+  filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate")
 
 log_value_mods <- tibble(metric_name = c("S"), 
                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
@@ -241,16 +243,46 @@ bad_models <- mod_results %>%
 #Turn off REML for these models, and they fit! 
 bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
 
+# metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
+#           bad_mod_results %>% filter(is.na(warning))) %>%
+#   mutate(significant = case_when(
+#     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
+#     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
+#     TRUE ~ NA
+#   ))
+
+#models that still won't converge
+bad_models2 <- bad_mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Fit with a different algorithm
+bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
+
 metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
-          bad_mod_results %>% filter(is.na(warning))) %>%
+          bad_mod_results %>% filter(is.na(warning)),
+          bad_mod_results2 %>% filter(is.na(warning))) %>%
   mutate(significant = case_when(
     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
     TRUE ~ NA
-  ))
+  )) %>%
+  select(-model)
 
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
+```
+
+Get list of models that couldn't be fit due to model limitations 
+```{r}
+#models that were fit
+uniq_metric_model <- metric_model_table %>% select(metric, model_id) %>% distinct()
+#models we attempted to fit
+uniq_mods <- mods %>% select(metric, model_id) %>% distinct()
+
+setdiff(uniq_mods, uniq_metric_model)
 ```
 
 Write out table of model estimates for manuscript
