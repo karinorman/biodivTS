@@ -315,11 +315,15 @@ Rather than assuming functional structure will be maintained in areas of concern
 Here we make a significant first step in establishing a general trend for functional diversity through time across a variety of taxa and systems.
 We present the conclusion best supported by available data and acknowledge that it is still too early to confidently distinguish between true ecological pattern and methodological limitations.
 The most pressing next step is for intentional and targeted data collection efforts.
-We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017]. Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases. One relatively low-cost high-reward data investment is collation of additional species-level trait means. Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases. Trait collection should explicitly consider existing frameworks for linking traits to processes [e.g. the response and effect framework @lavorel2002] to facilitate clear ecological interpretation of potential functional changes.
+We join others in the call for increased monitoring in under sampled areas and continued efforts to centralize existing data sources [@gonzalez2016; @hughes2021; @vellend2017].
+Data that fill geographic, taxonomic and trait gaps should be prioritized over further collection of data that replicate existing biases.
+One relatively low-cost high-reward data investment is collation of additional species-level trait means.
+Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases.
+Trait collection should explicitly consider existing frameworks for linking traits to processes [e.g. the response and effect framework @lavorel2002] to facilitate clear ecological interpretation of potential functional changes.
 
 ### Data Availability
 
-Code for the analyses in this chapter is archived on Zenodo at \<DOI:10.5281/zenodo.5514335\> [\@norman_karinormanbiodivts_2021].
+Code for the analyses in this chapter is archived on Zenodo at \<[DOI:10.5281/zenodo.5514335\\](DOI:10.5281/zenodo.5514335\){.uri}\> [\@norman_karinormanbiodivts_2021].
 Data products are on Github at <https://github.com/karinorman/biodivTS_data>.
 Original data sources are open access and available at their respective providers.
 
