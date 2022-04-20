@@ -280,9 +280,9 @@ Get list of models that couldn't be fit due to model limitations
 #models that were fit
 uniq_metric_model <- metric_model_table %>% select(metric, model_id) %>% distinct()
 #models we attempted to fit
-uniq_mods <- mods %>% select(metric, model_id) %>% distinct()
+uniq_mods <- mods %>% select(metric = metric_name, model_id) %>% distinct()
 
-setdiff(uniq_mods, uniq_metric_model)
+missing_mods <- setdiff(uniq_mods, uniq_metric_model)
 ```
 
 Write out table of model estimates for manuscript
