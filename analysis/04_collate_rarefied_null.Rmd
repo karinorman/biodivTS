@@ -38,11 +38,12 @@ fd_metrics <- purrr::map_dfr(filelist, function(x) {
   }) %>% distinct()
 
 #read in CWM metrics
-path <- here::here("data", "rarefied_metrics", "cwm")
+path <- here::here("data", "rarefied_metrics", "cwm_noscale")
 filelist <-  dir(path, "*.rda") %>%
   paste0(path, "/", .)
 
 cwm_metrics <- purrr::map_dfr(filelist, function(x) {
+  #browser()
   load(x)
   rarefyID <- str_match(x,"_cell\\s*(.*?)\\s*_sample")[,2]
   
@@ -50,11 +51,9 @@ cwm_metrics <- purrr::map_dfr(filelist, function(x) {
     return(data.frame())
   }else{
     
-    cwm_metrics <- cwm_metrics$CWM %>%
-      rownames_to_column("YEAR") %>%
-      mutate(YEAR = as.integer(YEAR)) %>%
-      left_join(cwm_metrics %>% select(-CWM)) %>%
-      mutate(rarefyID = rarefyID)
+    cwm_metrics <- cwm_metrics %>%
+      unnest(CWM) %>%
+      mutate(YEAR = as.integer(YEAR), rarefyID = rarefyID)
     
     return(cwm_metrics)
   }

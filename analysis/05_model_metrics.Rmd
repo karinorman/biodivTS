@@ -280,16 +280,18 @@ Get list of models that couldn't be fit due to model limitations
 #models that were fit
 uniq_metric_model <- metric_model_table %>% select(metric, model_id) %>% distinct()
 #models we attempted to fit
-uniq_mods <- mods %>% select(metric, model_id) %>% distinct()
+uniq_mods <- mods %>% select(metric = metric_name, model_id) %>% distinct()
 
-setdiff(uniq_mods, uniq_metric_model)
+#this is a list of models that weren't fit because there weren't enough timeseries OR they didn't converge
+#min_litter_size just won't converge
+missing_mods <- setdiff(uniq_mods, uniq_metric_model)
 ```
 
 Write out table of model estimates for manuscript
 ```{r}
 metric_model_table %>% 
   filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
-  select(-c(model, model_id, warning, statistic, df)) %>% 
+  select(-c(model_id, warning, statistic, df)) %>% 
   write_csv(here::here("figures", "man_model_table.csv"))
 ```
 
