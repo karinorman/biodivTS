@@ -145,13 +145,13 @@ Species-based metrics include species richness (*S*) and Jaccard similarity (*J*
 Jaccard similarity was calculated relative to the first observed year for a time series.
 A negative trend in *J* would therefore indicate increasing turnover.
 
-Functional diversity metrics were calculated using the *dbFD* function from the *FD* R package [@laliberté2010].
-Here we report functional richness (FRic), functional evenness (FEve), and functional divergence (FDiv) which together describe three complementary characteristics of the functional space [@mason2005; @hillebrand2009].
-FRic assesses the volume of the trait space occupied by species in the community, with higher values indicating communities with species of more extreme trait values.
-FEve describes how species are distributed across the trait space and how abundance is distributed across species.
-Higher values of FEve indicate more even spacing of species in the trait space and individuals across species.
-FDiv measures the degree to which species and their abundances maximize differences in the functional space.
-Higher values of FDiv therefore correspond to communities where many highly abundant species are on the edges of the trait space.
+Functional diversity metrics were calculated using the *dbFD* function from the *FD* R package [@laliberté2010]. Here we report functional richness (*FRic*), functional evenness (*FEve*), and functional divergence (*FDiv*) which together describe three complementary characteristics of the functional space [@mason2005; @hillebrand2009].
+*FRic* assesses the volume of the trait space occupied by species in the community, with higher values indicating communities with species of more extreme trait values.
+*FEve* describes how species are distributed across the trait space and how abundance is distributed across species.
+Higher values of *FEve* indicate more even spacing of species in the trait space and individuals across species.
+*FDiv* measures the degree to which species and their abundances maximize differences in the functional space.
+Higher values of *FDiv* therefore correspond to communities where many highly abundant species are on the edges of the trait space.
+We also calculated the community-weighted mean (*CWM*) of all included traits to examine shifts in individual trait distributions.
 
 All available trait data for each study were included in functional diversity calculations with the exception of traits that were the same value for all observed species in the study.
 All continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
@@ -161,7 +161,7 @@ Metrics incorporated weighting based on species abundance where available (three
 
 #### Null Models
 
-To assess functional change independent of species richness we calculated the standardized effect size (SES) for each metric from null estimates [@swenson2012].
+To assess functional change independent of species richness we calculated the standardized effect size (SES) for each of the three summary functional diversity metrics (*FRic*, *FEve*, *FDiv*) from null estimates [@swenson2012].
 Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
 Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
 Species pools included all species observed for a time series.
@@ -173,7 +173,13 @@ SES estimates can be interpreted as how much of the functional characteristic (r
 #### Analysis
 
 We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
-We obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model.
+For clarity in assessing the large number of *CWM*'s, we report only these general trends for each trait *CWM*.
+All timeseries with data for a given trait were included in the model.
+Trends could not be estimated for the *CWM'*s of three traits due to limited data: maximum age at maturity, minimum age of maturity, and minimum litter size.
+We fit 24 individual *CWM* models.
+<!-- something here about models be segregated by taxa already, since most traits weren't for all taxa -->
+
+For all other species and functional diversity metrics (*S*, *J*, *FRic*, *FEve*, *FDiv)* we obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model.
 BLUP's provide an estimate for the conditional mean and variance of each level of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
 To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those covariates added as a predictor to the original model structure.
 We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [@lenth2021].
@@ -186,11 +192,12 @@ knitr::include_graphics(here::here("figures/3met_long.jpeg"))
 
 ### Results
 
-We found no significant overall trend in species richness or functional diversity metrics (observed or standardized) (Fig 2).
+We found no significant overall trend in species richness or summary functional diversity metrics (observed or standardized) (Fig 2).
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
 Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0 (Table 2).
 Trends for different taxa, biomes, or realms were also non-significant with the exception of a significantly increasing slope for functional evenness of global studies (characterized by having samples on multiple continents), and a significantly decreasing standardized functional richness slope for freshwater studies.
-However, with only two global studies and two freshwater studies these results are a characterization of the limited data rather than overall trends.
+However, with only two global studies and two freshwater studies these results are likely a characterization of the limited data rather than overall trends.
+We found similar results for the *CWM* models, with a significant trend for only one trait, percentage of aerial foraging utilization, which showed a significant positive trend.
 
 ```{r echo=FALSE}
 read_csv(here::here("figures/man_model_table.csv")) %>%
@@ -213,7 +220,7 @@ read_csv(here::here("figures/man_model_table.csv")) %>%
   mutate(across(c(estimate, std.error, p.value), round, 2), 
          p.value = ifelse(p.value == 0, "<0.001", p.value)) %>%
   arrange(metric) %>%
-  kable(format = "latex", caption = "Model estimates and statistics for general trend models for species richness (S) and standardized metrics. Additional model estimates can be found in the supplement.") %>%
+  kable(format = "latex", caption = "Model estimates and statistics for general trend models for species richness (S) and standardized summary metrics. Additional model estimates, including CWM models, can be found in the supplement.") %>%
   collapse_rows(columns = 1, valign = "middle") %>%
   kable_classic() %>% 
   kable_styling(latex_options= c("scale_down", "hold_position"))
@@ -246,6 +253,7 @@ Surprisingly, we did not detect an overall trend in any of the calculated functi
 As with previous species-based syntheses, we also found no overall trend in species richness accompanied by increasing turnover through time [@dornelas2018], indicating that non-significant trends in functional metrics may be consistent with similar well-documented species derived trends.
 We found no evidence of systemic functional richness loss or functional change.
 A lack of trend for almost all realms, biomes, and taxonomic groups gives further evidence that directional functional change is absent from all systems observed in our dataset.
+Additionally, results from *CWM* models show that there were very few general shifts in functional trait values across communities.
 
 This striking result could be a product of two possible processes, one ecological and one methodological.
 Null trends appear to give strong evidence of systemic maintenance of functional structure due to common ecological processes, however multiple limitations of current approaches in synthesis could potentially be obscuring a true underlying global trend.
@@ -255,9 +263,8 @@ We discuss both options further here.
 
 Communities demonstrated almost universal maintenance of functional composition.
 While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three (for standardized metrics) experienced a significant shift in any functional dimension.
-<!-- General consistency between observed and standardized metrics underlines that changes in species richness were not a major factor determining functional composition changes.--> This suggests certain characteristics of the functional space are maintained even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (FRic) and the distribution of species and individuals within that space (FEve and FDiv).
+This suggests certain characteristics of the functional space are maintained even in the face of significant change in species identity, specifically the size of the functional space occupied by the community (*FRic*), the distribution of species and individuals within that space (*FEve* and *FDiv*), and the mean of individual trait distributions (*CWM*).
 On average, species additions have similar functional characteristics as lost species and therefore maintain the structure of the functional space.
-<!-- Our results give strong evidence that maintenance of functional structure is not just a phenomena of paleoecological time scales but also annual time scales [@barnosky2004; @jackson2015]. -->
 
 These results challenge assumptions that functional loss is the default state of all or even many communities.
 While we do not directly assess the disturbance histories of included communities, trends were consistent even for the longest running and most heavily impacted studies.
@@ -265,9 +272,14 @@ The North American Breeding Survey for example is considered an authoritative da
 No more robust dataset exists to capture North American avian community change, yet we detected no general shifts in functional structure across the dataset.
 Further, none of the 5 included studies that experienced a manual manipulation (e.g. burning, grazing exclosure, etc) experienced any significant functional trends.
 
-While we did not directly measure changes in rare species, our results also contradict likely scenarios of loss predicted due to rare species extinction.
-Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020].
-Locally, communities losing functionally rare species should exhibit strong functional shifts as lost species can eventually no longer be replaced by functionally similar species [@leitão2016].
+Results are also seemingly inconsistent with predictions for trait shifts under global change.
+For example, mean body size is predicted to decrease as a result of climate change impacts and megafaunal loss [@sheridan2011], a phenomena which has already been well documented empirically and expirimentally in multiple taxa [@caruso2014; @forster2012; @huss2019; @tseng2018].
+We found no evidence of a trend in the community-weighted mean of body size.
+Still, species-level trait means can only capture distribution shifts due to complete species losses.
+Intraspecific changes may still be occurring in these communities, particularly if species are being impacted by environmental changes but have not yet been fully extirpated from a community.
+
+While we did not directly measure changes in rare species, our results further contradict likely scenarios of loss predicted due to rare species extinction.
+Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020]. Locally, communities losing functionally rare species should exhibit strong functional shifts as lost species can eventually no longer be replaced by functionally similar species [@leitão2016].
 Observed patterns were instead consistent with species replacement by functionally redundant species from the species pool.
 Still, for many timeseries we likely did not have a large enough time window to capture community and species pool impoverishment due to extinction.
 
@@ -298,11 +310,11 @@ Species-level traits may be obscuring more subtle shifts in the trait space happ
 Likewise, available trait data may not capture the traits experiencing the greatest change.
 
 Third, while we use here the most common metrics for describing functional diversity they do not measure some potentially important aspects of the functional space.
-Most notably, the metrics we calculated do not capture shifts in the location of the functional space.
+Most notably, the summary metrics we calculated do not capture shifts in the location of the functional space as a whole.
 For example, two communities could have very similar metric values but no overlap in their trait spaces.
 This is especially relevant in the context of biodiversity change as a species loss could be replaced by a species with very different functional attributes, but the replacement would go undetected if the new species expanded the trait space by the same degree and had similar abundance.
 This scenario may be common in communities tracking changing environmental conditions.
-Approaches for assessing shifts and overlaps in functional space are still relatively new [@barros2016; @blonder2018; @mammola2019] but could shed critical insight into functional composition changes of this nature.
+While trait *CWM's* capture axis shifts, approaches for assessing multidimensional shifts in functional space are still relatively new [@barros2016; @blonder2018; @mammola2019] but could shed critical insight into functional composition changes of this nature.
 
 #### Policy Implications
 
@@ -323,9 +335,7 @@ Trait collection should explicitly consider existing frameworks for linking trai
 
 ### Data Availability
 
-Code for the analyses in this chapter is archived on Zenodo at \<[DOI:10.5281/zenodo.5514335\\](DOI:10.5281/zenodo.5514335\){.uri}\> [\@norman_karinormanbiodivts_2021].
-Data products are on Github at <https://github.com/karinorman/biodivTS_data>.
-Original data sources are open access and available at their respective providers.
+Code for the analyses in this chapter is archived on Zenodo at \<[[DOI:10.5281/zenodo.5514335\\\\](DOI:10.5281/zenodo.5514335\){.uri}]([DOI:10.5281/zenodo.5514335\\](DOI:10.5281/zenodo.5514335)%7B.uri%7D){.uri}\> [\@norman_karinormanbiodivts_2021]. Data products are on Github at <https://github.com/karinorman/biodivTS_data>. Original data sources are open access and available at their respective providers.
 
 ### Acknowledgments
 
