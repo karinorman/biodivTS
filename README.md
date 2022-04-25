@@ -1,5 +1,5 @@
 # Functional Change through Time
-This repository contains the code necessary to reproduce analyses and figures associated with the manuscript "Final Title here!".
+This repository contains the code necessary to reproduce analyses and figures associated with the manuscript "Examining the evidence of widespread maintenance of functional composition in vertebrate communities".
 
 It is archived on Zenodo at: https://doi.org/10.5281/zenodo.5514335
 
