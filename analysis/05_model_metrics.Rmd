@@ -74,25 +74,6 @@ meta %>%
   write_csv(here::here("paper", "study_metadata.csv"))
 ```
 
-
-Option to add human footprint data
-```{r}
-# hfp_data <- pins::pin_get("hfp-data", board = "github")
-# 
-# model_data_hfp <- model_data %>% 
-#   #dplyr::select(rarefyID, year) %>% 
-#   #distinct() %>%
-#   mutate(hfp_year = case_when(
-#     year < 2001 ~ 1993,
-#     TRUE ~ 2009
-#   ), 
-#   hfp_rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
-#   hfp_rarefyID = str_replace_all(hfp_rarefyID, pattern = "_mamm", "")) %>%
-#   left_join(hfp_data %>% dplyr::select(-STUDY_ID) %>% mutate(year = as.numeric(year)), by = c("hfp_year" = "year", "hfp_rarefyID" = "rarefyID")) %>%
-#   dplyr::select(-hfp_year)
-
-```
-
 ####Data exploration
 
 Visualize number of years for each timeseries
@@ -294,36 +275,6 @@ metric_model_table %>%
   select(-c(model_id, warning, statistic, df)) %>% 
   write_csv(here::here("figures", "man_model_table.csv"))
 ```
-
-Models with interactions
-```{r}
-# int_raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
-#                          base_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-#                          base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
-#   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
-#                names_to = "model_id", values_to = "formula")
-# 
-# int_log_value_mods <- tibble(metric_name = c("S"),
-#                          base_dur = "logvalue ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-#                          base_srt = "logvalue ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
-#   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
-#                names_to = "model_id", values_to = "formula")
-# 
-# 
-# # mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
-# #   select(metric_name, formula, model_id)
-# 
-# #Fit models with base settings
-# int_mod_results <- pmap_dfr(bind_rows(int_raw_value_mods, int_log_value_mods), get_model, data = model_data)
-# 
-# #get the models that had convergence warnings
-# bad_models <- int_mod_results %>%
-#   select(metric, model_id, warning) %>% 
-#   filter(!is.na(warning)) %>% 
-#   distinct() %>%
-#   left_join(int_raw_value_mods, by = c("metric" = "metric_name", "model_id")) 
-```
-
 
 #### Process Model Output
 
