@@ -60,7 +60,7 @@ cwm_metrics <- purrr::map_dfr(filelist, function(x) {
 })
 
 ## get null models
-null_table <- pins::pin_get("null-table", board = "github")
+load(here::here("data/null_table.rda"))
 ```
 
 Merge rarefied species and fd metrics and null models
@@ -125,8 +125,5 @@ rarefied_metrics <- inner_join(new_meta, rarefied_medians, by='rarefyID') %>%
 
 ##	save
 usethis::use_data(rarefied_metrics)
-
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
-pins::pin(rarefied_metrics, board = "github")
 ```
 

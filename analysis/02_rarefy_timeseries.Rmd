@@ -25,15 +25,15 @@ devtools::load_all()
 
 Load data
 ```{r}
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
+load(here::here("data/bt_traitfiltered.rda"))
 
-##	Get trait filtered data, rename colums to jive with the rest of the script
-bt_traitfiltered <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+##	Get trait filtered data, rename columns to jive with the rest of the script
+bt_traitfiltered <- bt_traitfiltered
   rename_with(toupper) %>%
   rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,
          rarefyID = RAREFYID, cell = CELL, Abundance = ABUNDANCE, Biomass = BIOMASS)
 
-trait_ref <- pins::pin_get("trait-ref", board = "github")
+load(here::here("data/trait_ref.rda"))
 ```
 
 Function to rarefy data

@@ -17,19 +17,22 @@ library(emmeans)
 #### Read in data, get final dataset for models
 Get data and put it in long form 
 ```{r}
-pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
+#get data
+load(here::here("data/meta.rda"))
+load(here::here("data/bt_traitfiltered.rda"))
+load(here::here("data/rarefied_metrics.rda"))
 
-#get metadata
-meta <- pins::pin_get("meta", board = "github") %>%
+meta <- meta %>%
   select(study_id, realm, climate, habitat, protected_area, biome_map)
 
-meta <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+meta <- bt_traitfiltered %>% 
   select(study_id, rarefyid, taxa) %>% distinct() %>%
   left_join(meta)
 
+rm(bt_traitfiltered) 
+
 #get metric data
-metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
-  # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
+metrics <- rarefied_metrics %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
   mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
   left_join(meta, c("rarefyID" = "rarefyid"))
@@ -63,7 +66,7 @@ model_data <- metrics %>%
   #this study has many low species richness observations, so FD metrics weren't calculated, just drop it
   filter(study_id != 348)
 
-pins::pin(model_data, board = "github")
+usethis::use_data(model_data)
 ```
 
 Write out file with all necessary metadata for the supplement.
@@ -249,7 +252,6 @@ model_table <- bind_rows(mod_results %>% filter(is.na(warning)),
 metric_model_table <- model_table %>% select(-model)
 
 usethis::use_data(metric_model_table)
-pins::pin(metric_model_table, board = "github")
 ```
 
 Get list of models that couldn't be fit due to model limitations 
@@ -326,7 +328,6 @@ model_df <- model_table %>%
 
 #get study level slopes for base, and levels for categorical random effect in non-base models
 re_slopes <- pmap_dfr(model_df, get_study_slopes)
-pins::pin(re_slopes, board = "github")
 
 #get only study-level slopes for the base models
 study_slopes <- re_slopes %>% 
@@ -400,7 +401,6 @@ startyear_slope <- study_slope_data %>%
 
 #All model estimates in one dataframe
 # slope_models <- bind_rows(duration_slope, startyear_slope)
-# pins::pin(slope_models, board = "github")
 
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
