@@ -30,7 +30,12 @@ output:
 editor_options: 
   markdown: 
     wrap: sentence
-    
+keywords:
+  - biodiversity change
+  - functional traits
+  - global change
+  - timeseries
+  
 nocite: |
   @bakker1990, @berezovikovn.n.2004, @enemar2004, @gido2019, @hogstad1993, @holmes1986, @jahncke2006, @krivenkov.g.1991, @melnikovy.i.2000, @monitoringsite1000projectbiodiversitycenterministryofenvironmentofjapan2013, @monitoringsite1000projectbiodiversitycenterministryofenvironmentofjapan2014, @monitori2014, @pardieck2020, @preston1960, @svensson2006, @svensson2010, @thorn2016changes, @thorn2016response, @usfs, @vermontcenterforecostudies2015, @vickery1984, @waide2017, @williamson1983, @woehlerericj., @zakharovv.d.1998, @meditss2011, @animald, @baltics, @piropno, @rossaferes1997, @scott, @silva, @ernest2009, @friggens2008, @jalilova.b.2014, @kartzinel2014, @kaufman2019, @krefting1974, @lightfoot, @malyshevy.s.2011, @meyer2008, @nedosekinv.y.2015, @prins1990, @rocha2017, @sheftelb.i., @stapp2014, @monitori2014, @bahamas, @popacet
 ---
@@ -50,7 +55,11 @@ options(knitr.kable.NA = '')
 options(scipen=999)
 ```
 
-### Introduction
+## Significance Statement {.unnumbered}
+
+The globe is in the midst of a biodiversity crisis due to anthropogenic impacts. It is critical to understand how ecological communities are changing in response xxx. Previous broad-scale assessments of biodiversity change through time have focused on metrics of species identity rather than the role species play in the community. Functional trait data offer a powerful opportunity to directly assess changes in community functional composition alongside species-based patterns. Here, we pair vertebrate community timeseries with functional trait data to take a first look at temporal trends in functional composition. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects 
+
+# Introduction
 
 Ecological communities are experiencing unprecedented change as a result of anthropogenic pressures such as climate change, land use change, and invasive species.
 Impacts of these pressures are well documented at a global scale by an accelerating global extinction rate [@barnosky2011], and fundamental changes in some of the most well-studied systems [e.g. coral bleaching, @sully2019].
@@ -89,9 +98,9 @@ We assess thousands of mammal, bird, and amphibian functional diversity time ser
 We distinguish between three possible scenarios of functional change: 1) significant loss of functional diversity with accompanying shifts in other functional metrics, 2) no functional diversity loss, but significant shifts in other functional metrics, 3) maintenance of functional diversity and composition.
 Based on expectation due to human impacts, we expect to find a significant functional loss with further restructuring indicated by the additional metrics.
 
-### Material and Methods
+# Material and Methods
 
-#### Data
+## Data
 
 We obtained mammal, bird, and amphibian time series from the BioTIME database, a global repository of high quality assemblage time series.
 All studies included in the database follow consistent sampling protocols and represent full assemblages rather than populations of single species [@dornelas2018].
@@ -139,7 +148,7 @@ For a full breakdown of studies and their characteristics, see the supplement.
 knitr::include_graphics(here::here("figures/study_map_hist.jpeg"))
 ```
 
-#### Diversity Metrics
+## Diversity Metrics
 
 We calculated yearly metrics of functional and species diversity for each time series.
 Species-based metrics include species richness (*S*) and Jaccard similarity (*J*) as a measure of turnover.
@@ -162,7 +171,7 @@ The number of trait axes was limited to the maximum number of traits that fulfil
 This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility [@blonder2018].
 Metrics incorporated weighting based on species abundance where available (three studies were presence only).
 
-#### Null Models
+## Null Models
 
 To assess functional change independent of species richness we calculated the standardized effect size (SES) for each of the three summary functional diversity metrics (*FRic*, *FEve*, *FDiv*) from null estimates [@swenson2012].
 Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
@@ -173,7 +182,7 @@ We used these values to calculate SES using the following formula: $SES = [F_{ob
 We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
 SES estimates can be interpreted as how much of the functional characteristic (richness, evenness, divergence) was observed beyond what was expected by chance for a community of that species richness.
 
-#### Analysis
+## Analysis
 
 We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
 All timeseries with data for a given trait were included in the model.
@@ -192,7 +201,7 @@ All models were executed using the *lme4* package in R and p-values were calcula
 knitr::include_graphics(here::here("figures/3met_long.jpeg"))
 ```
 
-### Results
+# Results
 
 We found no significant overall trend in species richness or summary functional diversity metrics (observed or standardized) (Fig 2).
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
@@ -254,7 +263,7 @@ Slopes for functional evenness were also significantly more positive for longer 
 Results were consistent between standardized and observed metrics with exception of functional evenness, which was negatively related to duration for observed data and positively related for standardized data.
 See supplement for estimates and p-values for all models.
 
-### Discussion
+# Discussion
 
 Our study represents the largest broad-scale multi-taxa assessment of functional change through time to date, giving a first look at aggregate and local trends in functional diversity in mammal, bird, and amphibian communities.
 Surprisingly, we did not detect an overall trend in any of the chosen functional diversity metrics.
@@ -267,7 +276,7 @@ This striking result could be a product of two possible processes, one ecologica
 Null trends appear to give strong evidence of systematic maintenance of functional structure due to common ecological processes, however multiple limitations of current approaches in synthesis could potentially be obscuring a true underlying global trend.
 We discuss both options further here.
 
-#### Evidence of Ecological Processes
+## Evidence of Ecological Processes
 
 Communities demonstrated almost universal maintenance of functional composition.
 While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three (for standardized metrics) experienced a significant shift in any functional dimension.
@@ -300,9 +309,7 @@ Similarly, the dimensions of functional space most important for ecosystem funct
 Still, the fact that we observed so many communities maintaining structure across the most commonly used metrics for linking biodiversity and function calls into question how previous work translates to natural communities.
 Metrics need to be both closely linked to changes in ecosystem function and also experiencing shifts in natural communities to be meaningful.
 
-<!-- We observed no significant trends within taxa. Even Amphibians, considered highly sensitive to human impact, maintained functional structure through time.  Indicates that we could've looked at any taxonomic subset of the data and gotten the same result. But what does that mean for taxa we left out? We can only make educated guesses based on what we know of the ecology of taxa that were left out - taxa specific papers? -->
-
-#### Potential Methodological Limitations
+## Potential Methodological Limitations
 
 Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
 However, a number of gaps in best practices may be obscuring a true underlying trend.
@@ -324,13 +331,13 @@ This is especially relevant in the context of biodiversity change as a species l
 This scenario may be common in communities tracking changing environmental conditions.
 While trait *CWM's* capture axis shifts, approaches for assessing multidimensional shifts in functional space are still relatively new [@barros2016; @blonder2018; @mammola2019] but could shed critical insight into functional composition changes of this nature.
 
-#### Policy Implications
+## Policy Implications
 
 Our results should not be interpreted as an indication that the ongoing biodiversity crisis is less severe than previously described, or that there is no concern for functional change as a result of anthropogenic impact.
 These findings do not negate a substantial body of work linking functional degradation to direct human intervention in the form of land use change and intensification or habitat fragmentation [@flynn2009; @magioli2021; @tinoco2018], but rather illustrate trends for communities experiencing background levels of environmental change.
 Rather than assuming functional structure will be maintained in areas of concern, our work indicates that when measurements of functional diversity show significant shifts, it should be considered an indication of substantial community change and outside the normal expectation.
 
-#### Future Work
+## Future Work
 
 Here we make a significant first step in establishing a general trend for functional diversity through time across a variety of taxa and systems.
 We present the conclusion best supported by available data and acknowledge that it is still too early to confidently distinguish between true ecological pattern and methodological limitations.
@@ -341,16 +348,16 @@ One relatively low-cost high-reward data investment is collation of additional s
 Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases.
 Trait collection should explicitly consider existing frameworks for linking traits to processes [e.g. the response and effect framework @lavorel2002] to facilitate clear ecological interpretation of potential functional changes.
 
-### Data Availability
+# Data Availability
 
 Code for the analyses in this chapter is archived on Zenodo at \<[[DOI:10.5281/zenodo.5514335\\\\](DOI:10.5281/zenodo.5514335){.uri}](%5BDOI:10.5281/zenodo.5514335%5D(DOI:10.5281/zenodo.5514335)%7B.uri%7D){.uri}\> [\@norman_karinormanbiodivts_2021].
 Data products are on Github at <https://github.com/karinorman/biodivTS_data>.
 Original data sources are open access and available at their respective providers.
 
-### Acknowledgments
+# Acknowledgments
 
 We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits.
 We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database.
-Support for this work was provided by United States Department of Energy through the Computational Sciences Graduate Fellowship (DOE CSGF) under grant number DE-FG02-97ER25308 awarded to K.E.A.N..
+Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to K.E.A.N..
 
-### References
+# References
