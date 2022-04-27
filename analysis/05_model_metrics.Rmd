@@ -226,14 +226,6 @@ bad_models <- mod_results %>%
 #Turn off REML for these models, and they fit! 
 bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
 
-# metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
-#           bad_mod_results %>% filter(is.na(warning))) %>%
-#   mutate(significant = case_when(
-#     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
-#     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
-#     TRUE ~ NA
-#   ))
-
 #models that still won't converge
 bad_models2 <- bad_mod_results %>%
   select(metric, model_id, warning) %>% 
@@ -244,15 +236,17 @@ bad_models2 <- bad_mod_results %>%
 #Fit with a different algorithm
 bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
 
-metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
+model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
           bad_mod_results %>% filter(is.na(warning)),
           bad_mod_results2 %>% filter(is.na(warning))) %>%
   mutate(significant = case_when(
     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
     TRUE ~ NA
-  )) %>%
-  select(-model)
+  )) #%>%
+  #select(-model)
+
+metric_model_table <- model_table %>% select(-model)
 
 usethis::use_data(metric_model_table)
 pins::pin(metric_model_table, board = "github")
@@ -324,7 +318,7 @@ get_study_slopes <- function(metric, model, model_id){
       model_id = model_id)
 }
 
-model_df <- metric_model_table %>%
+model_df <- model_table %>%
   filter(model_id == "base") %>%
   select(metric, model, model_id) %>%
   group_by(metric, model_id) %>% 
@@ -371,7 +365,7 @@ study_slopes %>%
 ```
 
 #### Analizing slopes
-Is slope a function of timeseries characteristics?
+Is slope a function of time series characteristics?
 ```{r}
 library(multcomp)
 
@@ -405,8 +399,8 @@ startyear_slope <- study_slope_data %>%
   mutate(covariate = "startyear")
 
 #All model estimates in one dataframe
-slope_models <- bind_rows(duration_slope, startyear_slope)
-pins::pin(slope_models, board = "github")
+# slope_models <- bind_rows(duration_slope, startyear_slope)
+# pins::pin(slope_models, board = "github")
 
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
