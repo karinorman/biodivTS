@@ -351,8 +351,8 @@ knitr::include_graphics(here::here("figures/3met_long.jpeg"))
 
 # Data Availability
 
-Code for the analyses in this chapter is archived on Zenodo at \<[[DOI:10.5281/zenodo.5514335\\\\](DOI:10.5281/zenodo.5514335){.uri}](%5BDOI:10.5281/zenodo.5514335%5D(DOI:10.5281/zenodo.5514335)%7B.uri%7D){.uri}\> [\@norman_karinormanbiodivts_2021].
-Data products are on Github at <https://github.com/karinorman/biodivTS_data>.
+Code for the analyses in this chapter is archived on Zenodo at [10.5281/zenodo.5514334](https://doi.org/10.5281/zenodo.5514334).
+Data products are also archived on Zenodo at [10.5281/zenodo.6499442](https://doi.org/10.5281/zenodo.6499442).
 Original data sources are open access and available at their respective providers.
 
 # Acknowledgments
