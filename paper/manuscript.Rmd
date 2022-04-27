@@ -2,8 +2,8 @@
 title: Evaluating the evidence of widespread maintenance of functional composition in vertebrate communities
 authors: 
   - name: "Kari E. A. Norman"
-    affiliation: University of California, Berkeley
-    location: Berkeley, California
+    affiliation: Université de Montréal
+    location: Montréal, Quebec
     email: kari.norman@berkeley.edu
   - name: "Perry de Valpine"
     affiliation: University of California, Berkeley
@@ -19,6 +19,7 @@ abstract: |
 journal: "Ecology Letters"
 date: "`r Sys.Date()`"
 bibliography: refs.bib
+csl: pnas.csl
 layout: 3p
 header-includes:
    - \usepackage{lineno}
@@ -34,7 +35,7 @@ keywords:
   - biodiversity change
   - functional traits
   - global change
-  - timeseries
+  - time series
   
 nocite: |
   @bakker1990, @berezovikovn.n.2004, @enemar2004, @gido2019, @hogstad1993, @holmes1986, @jahncke2006, @krivenkov.g.1991, @melnikovy.i.2000, @monitoringsite1000projectbiodiversitycenterministryofenvironmentofjapan2013, @monitoringsite1000projectbiodiversitycenterministryofenvironmentofjapan2014, @monitori2014, @pardieck2020, @preston1960, @svensson2006, @svensson2010, @thorn2016changes, @thorn2016response, @usfs, @vermontcenterforecostudies2015, @vickery1984, @waide2017, @williamson1983, @woehlerericj., @zakharovv.d.1998, @meditss2011, @animald, @baltics, @piropno, @rossaferes1997, @scott, @silva, @ernest2009, @friggens2008, @jalilova.b.2014, @kartzinel2014, @kaufman2019, @krefting1974, @lightfoot, @malyshevy.s.2011, @meyer2008, @nedosekinv.y.2015, @prins1990, @rocha2017, @sheftelb.i., @stapp2014, @monitori2014, @bahamas, @popacet
@@ -57,7 +58,7 @@ options(scipen=999)
 
 ## Significance Statement {.unnumbered}
 
-It is critical to understand how ecological communities are responding to the ongoing biodiversity crisis. Previous broad-scale assessments of community change through time have focused on metrics of species identity, which do not account for differences between species. Functional trait approaches offer a powerful alternative to species-based approaches by directly assessing changes in the species characteristics that define their ecological role. Here, we pair vertebrate community timeseries with functional trait data to take a first look at temporal trends in functional composition across biomes, realms, and taxa. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects of functional structure. We also identified key methodological holes that may be obscuring a potential underlying trend. 
+It is critical to understand how ecological communities are responding to the ongoing biodiversity crisis. Previous broad-scale assessments of community change through time have focused on metrics of species identity, which do not account for differences between species. Functional trait approaches offer a powerful alternative to species-based approaches by directly assessing changes in the species characteristics that define their ecological role. Here, we pair vertebrate community time series with functional trait data to take a first look at temporal trends in functional composition across biomes, realms, and taxa. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects of functional structure. We also identified key methodological holes that may be obscuring a potential underlying trend. 
 
 # Introduction
 
@@ -98,119 +99,16 @@ We assess thousands of mammal, bird, and amphibian functional diversity time ser
 We distinguish between three possible scenarios of functional change: 1) significant loss of functional diversity with accompanying shifts in other functional metrics, 2) no functional diversity loss, but significant shifts in other functional metrics, 3) maintenance of functional diversity and composition.
 Based on expectation due to human impacts, we expect to find a significant functional loss with further restructuring indicated by the additional metrics.
 
-# Material and Methods
-
-## Data
-
-We obtained mammal, bird, and amphibian time series from the BioTIME database, a global repository of high quality assemblage time series.
-All studies included in the database follow consistent sampling protocols and represent full assemblages rather than populations of single species [@dornelas2018].
-Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale.
-Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @dornelas2018 for details on how sample extents were defined], with the area of each cell set to one standard deviation away from the mean of the single extent locations.
-All samples from a study within a single cell were considered to be a single time series, and species abundances were combined for all samples.
-
-```{r echo = FALSE, results = "asis"}
-tibble(Taxa = c("Mammals", "Birds", "Amphibians"),
-       Timeseries_Count = c(48, 2380, 11),
-       Species_Count = c(184, 700, 184),
-       Trait_Source = c("Elton Traits", "Elton Traits", "Amphibio"),
-       Traits = c("body mass, diet, active diel period", "body mass, diet, nocturnality, \nforest foraging strata, pelagic specialist", "habitat, diet, active diel period, \nactivity seasonality, body mass, body length, \nmin maturation size, max maturation size, \nmin offspring size, max offspring size, \nreproductive output, breeding strategy")
-) %>%
-  mutate_all(linebreak, align = "l") %>% 
-  kableExtra::kable(format = "latex", col.names = c("Taxa", "Number of \nTime Series", "Number of \nSpecies", "Trait Source", "Traits"), escape = FALSE, 
-               caption = "Summary of the data in the final trait database.") %>%
-  kable_classic() %>% 
-  kable_styling(latex_options= c("scale_down", "hold_position")) #%>%
-   #kableExtra::column_spec(2, width = "5cm") #%>%
-  # kableExtra::column_spec(4, width = "10cm")
-```
-
-We gathered trait data from the Elton Trait Database [mammals and birds, @wilman2014] and Amphibio [amphibians, @oliveira2017].
-These databases include species-level means for traits that partially represent species' multifaceted function in the community including body size, diet, and behavioral characteristics.
-For the full list of traits included in the analysis for each taxon see Table 1.
-Multiple traits (i.e. diet, foraging strata, activity seasonality, active diel period) were broken down into percentage or binary use for each level.
-
-In order to ensure taxonomic consistency across datasets, BioTIME species were paired with trait data based on their species identifier from the Integrated Taxonomic Information System database (retrieved 09-15-2020 from the on-line database, <https://doi.org/10.5066/F7KH0KBK>), obtained through the *taxadb* R package [@norman2020; @rcoreteam2021].
-If more than one species in the assemblage data resolved to the same identifier, observations were considered the same species.
-For trait data, traits for all species of the same identifier were averaged.
-Only studies with at least 75% trait coverage were included and observations for species with no trait data were excluded.
-In order to have a sufficient number of species to calculate functional diversity metrics, years with fewer than 5 species observed were also excluded.
-
-Many studies had a variable number of samples within years.
-To account for this inconsistency in sampling effort we used sample-based rarefaction by bootstrap resampling within years for each time series based on the smallest number of samples in a year for that time series.
-
-Our final dataset included 2,443 time series from 53 studies in 21 countries and 15 biomes and 13 different traits (Fig 1).
-The earliest sample was in 1923 and the most recent was in 2016.
-Only four studies (consisting of 11 time series) came from Amphibian studies due to the limited availability of amphibian time series and low species richness values for assemblages (Table 1).
-Amphibians are of particular concern due to impacts of habitat loss and pollution [@gibbons2000], so we include data while acknowledging that general inference for amphibians as a clade is not possible with the time series available.
-For a full breakdown of studies and their characteristics, see the supplement.
-
-```{r taxa-map, fig.cap="A) Map of time series locations with points colored by taxa, and B) histograms of time series duration broken down by taxa.", echo=FALSE}
-knitr::include_graphics(here::here("figures/study_map_hist.jpeg"))
-```
-
-## Diversity Metrics
-
-We calculated yearly metrics of functional and species diversity for each time series.
-Species-based metrics include species richness (*S*) and Jaccard similarity (*J*) as a measure of turnover.
-Jaccard similarity was calculated relative to the first observed year for a time series.
-A negative trend in *J* would therefore indicate increasing turnover.
-
-Functional diversity metrics were calculated using the *dbFD* function from the *FD* R package [@laliberté2010].
-Here we report functional richness (*FRic*), functional evenness (*FEve*), and functional divergence (*FDiv*) which together describe three complementary characteristics of the functional space [@mason2005; @hillebrand2009].
-*FRic* assesses the volume of the trait space occupied by species in the community, with higher values indicating communities with species of more extreme trait values.
-*FEve* describes how species are distributed across the trait space and how abundance is distributed across species.
-Higher values of *FEve* indicate more even spacing of species in the trait space and individuals across species.
-*FDiv* measures the degree to which species and their abundances maximize differences in the functional space.
-Higher values of *FDiv* therefore correspond to communities where many highly abundant species are on the edges of the trait space.
-We also calculated the community-weighted mean (*CWM*) of included traits to examine shifts in the distribution of each trait.
-
-All available trait data for each study were included in functional diversity calculations with the exception of traits that were the same value for all observed species in the study.
-For variables with multiple levels each level was included as a separate trait axis.
-Continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
-The number of trait axes was limited to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
-This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility [@blonder2018].
-Metrics incorporated weighting based on species abundance where available (three studies were presence only).
-
-## Null Models
-
-To assess functional change independent of species richness we calculated the standardized effect size (SES) for each of the three summary functional diversity metrics (*FRic*, *FEve*, *FDiv*) from null estimates [@swenson2012].
-Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
-Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
-Species pools included all species observed for a time series.
-This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
-We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
-We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
-SES estimates can be interpreted as how much of the functional characteristic (richness, evenness, divergence) was observed beyond what was expected by chance for a community of that species richness.
-
-## Analysis
-
-We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
-All timeseries with data for a given trait were included in the model.
-Trends could not be estimated for the *CWM'*s of three traits due to limited data: maximum age at maturity, minimum age of maturity, and minimum litter size.
-We fit 24 individual *CWM* models.
-
-For all other species and functional diversity metrics (*S*, *J*, *FRic*, *FEve*, *FDiv)* we obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model.
-BLUP's provide estimates for the conditional mean and variance of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
-
-To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those factors added as a predictor to the original model structure.
-We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [@lenth2021].
-We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
-All models were executed using the *lme4* package in R and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* package with a significance level of \$\\alpha = 0.05\$ [@bates2015; @kuznetsova2017; @rcoreteam2021].
-
-```{r timeseries-plot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
-knitr::include_graphics(here::here("figures/3met_long.jpeg"))
-```
-
 # Results
 
-We found no significant overall trend in species richness or summary functional diversity metrics (observed or standardized) (Fig 2).
+We found no significant overall trend in species richness or summary functional diversity metrics (observed or standardized) (Fig \ref{fig:timeseriesPlot}).
 We did find a significant overall decrease in Jaccard similarity, indicating increasing turnover through time.
-Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0 (Table 2).
+Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0 (Table \ref{tab:resultsTab}).
 Trends for different taxa, biomes, or realms were also non-significant with the exception of a significantly increasing trend for functional evenness of global studies (characterized by having samples on multiple continents), and a significantly decreasing standardized functional richness slope for freshwater studies.
 However, with only two global studies and two freshwater studies these results are not general trends.
 We found similar results for the *CWM* models, with a significant trend for only one trait, percentage of aerial foraging utilization, which showed a significant positive trend.
 
-```{r echo=FALSE}
+```{r resultsTab, echo=FALSE}
 read_csv(here::here("figures/man_model_table.csv")) %>%
   select(metric, everything()) %>%
   filter(group != "Residual" | is.na(group)) %>%
@@ -218,7 +116,7 @@ read_csv(here::here("figures/man_model_table.csv")) %>%
          metric = ifelse(metric == "S", "Species Richness", metric),
          effect = ifelse(effect == "ran_pars", "random", effect),
          group = case_when(
-           group == "rarefyID:study_id" ~ "timeseries within study",
+           group == "rarefyID:study_id" ~ "time series within study",
            group == "study_id" ~ "study",
            group == "Residual" ~ "residual",
            TRUE ~ group),
@@ -242,13 +140,13 @@ read_csv(here::here("figures/man_model_table.csv")) %>%
   kable_styling(latex_options= c("scale_down", "hold_position"))
 ```
 
-At the study level, 4 studies experienced a significant trend in species richness and only 10 of 54 studies for observed metrics and 3 of 54 studies for standardized metrics experienced a significant trend for a metric other than Jaccard similarity (Table 3).
+At the study level, 4 studies experienced a significant trend in species richness and only 10 of 54 studies for observed metrics and 3 of 54 studies for standardized metrics experienced a significant trend for a metric other than Jaccard similarity (Table \ref{tab:trendTab}).
 Most significant trends for observed functional metrics are in functional richness and disappeared after standardization, indicating that richness increases were likely due to changes in the number of species.
 However, the majority of the functional richness trends were negative, indicating that when change is occurring it is more often a loss.
 Hypothesis testing for study-level trends is likely affected by multiple testing issues and some trends identified as significant are therefore potentially spurious.
 Rather than interpreting changes in specific studies, we present these results as a general picture of how few studies experienced a significant trend and highlight that even that count is likely an overestimate.
 
-```{r echo = FALSE}
+```{r trendTab, echo = FALSE}
 library(tidyverse)
 
 data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "37"), FRic = c("2", "6"), FEve = c("1", "0"), FDiv = c("0", "1"), `SES FRic` = c("0", "1"), `SES FEve` = c("0", "2"), `SES FDiv` = c("0", "1")) %>%
@@ -298,7 +196,7 @@ While we did not directly measure changes in rare species, our results further c
 Rare species, defined by small populations and geographic restriction, are simultaneously more likely to be functionally distinct and at higher risk for extinction [@davies2004; @harnik2012; @loiseau2020].
 Locally, communities losing functionally rare species should exhibit strong functional shifts as lost species can eventually no longer be replaced by functionally similar species [@leitão2016].
 Observed patterns were instead consistent with species replacement by functionally redundant species from the species pool.
-Still, for many timeseries we likely did not have a large enough time window to capture community and species pool impoverishment due to extinction.
+Still, for many time series we likely did not have a large enough time window to capture community and species pool impoverishment due to extinction.
 
 What does local maintenance of functional structure mean for ecosystem function?
 The vast majority of experimental and observational work links declines in function to declines in functional or species diversity [@brose2016; @cadotte2011; @duffy2007].
@@ -314,7 +212,7 @@ Metrics need to be both closely linked to changes in ecosystem function and also
 Here we approach the question of functional change using the best available data and biodiversity synthesis approaches.
 However, a number of gaps in best practices may be obscuring a true underlying trend.
 First, the BioTIME database, while the most comprehensive data source of time series available, is limited in temporal and geographic scope.
-Most time series span only a few years (Figure 1) and may not provide the statistical power necessary to detect trends.
+Most time series span only a few years (Fig \ref{fig:taxaMap}) and may not provide the statistical power necessary to detect trends.
 The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
 We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021], particularly scenarios of conversion to urban, human-dominated landscapes.
 While evidence from other work shows even disturbed communities can maintain functional structure [@edwards2013; @matuoka2020], these results should not be interpreted as evidence of low functional impact in areas of heavy human disturbance.
@@ -348,6 +246,109 @@ One relatively low-cost high-reward data investment is collation of additional s
 Intentional trait selection is critical for linking functional patterns to ecological processes [@zhu2017], however synthesis is constrained to the traits in a few taxa-specific databases.
 Trait collection should explicitly consider existing frameworks for linking traits to processes [e.g. the response and effect framework @lavorel2002] to facilitate clear ecological interpretation of potential functional changes.
 
+# Material and Methods
+
+## Data
+
+We obtained mammal, bird, and amphibian time series from the BioTIME database, a global repository of high quality assemblage time series.
+All studies included in the database follow consistent sampling protocols and represent full assemblages rather than populations of single species [@dornelas2018].
+Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale.
+Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @dornelas2018 for details on how sample extents were defined], with the area of each cell set to one standard deviation away from the mean of the single extent locations.
+All samples from a study within a single cell were considered to be a single time series, and species abundances were combined for all samples.
+
+```{r traitSources, echo = FALSE, results = "asis"}
+tibble(Taxa = c("Mammals", "Birds", "Amphibians"),
+       Timeseries_Count = c(48, 2380, 11),
+       Species_Count = c(184, 700, 184),
+       Trait_Source = c("Elton Traits", "Elton Traits", "Amphibio"),
+       Traits = c("body mass, diet, active diel period", "body mass, diet, nocturnality, \nforest foraging strata, pelagic specialist", "habitat, diet, active diel period, \nactivity seasonality, body mass, body length, \nmin maturation size, max maturation size, \nmin offspring size, max offspring size, \nreproductive output, breeding strategy")
+) %>%
+  mutate_all(linebreak, align = "l") %>% 
+  kableExtra::kable(format = "latex", col.names = c("Taxa", "Number of \nTime Series", "Number of \nSpecies", "Trait Source", "Traits"), escape = FALSE, 
+               caption = "Summary of the data in the final trait database.") %>%
+  kable_classic() %>% 
+  kable_styling(latex_options= c("scale_down", "hold_position")) #%>%
+   #kableExtra::column_spec(2, width = "5cm") #%>%
+  # kableExtra::column_spec(4, width = "10cm")
+```
+
+We gathered trait data from the Elton Trait Database [mammals and birds, @wilman2014] and Amphibio [amphibians, @oliveira2017].
+These databases include species-level means for traits that partially represent species' multifaceted function in the community including body size, diet, and behavioral characteristics.
+For the full list of traits included in the analysis for each taxon see Table \ref{tab:traitSources}.
+Multiple traits (i.e. diet, foraging strata, activity seasonality, active diel period) were broken down into percentage or binary use for each level.
+
+In order to ensure taxonomic consistency across datasets, BioTIME species were paired with trait data based on their species identifier from the Integrated Taxonomic Information System database (retrieved 09-15-2020 from the on-line database, <https://doi.org/10.5066/F7KH0KBK>), obtained through the `taxadb` R package [@norman2020; @rcoreteam2021].
+If more than one species in the assemblage data resolved to the same identifier, observations were considered the same species.
+For trait data, traits for all species of the same identifier were averaged.
+Only studies with at least 75% trait coverage were included and observations for species with no trait data were excluded.
+In order to have a sufficient number of species to calculate functional diversity metrics, years with fewer than 5 species observed were also excluded.
+
+Many studies had a variable number of samples within years.
+To account for this inconsistency in sampling effort we used sample-based rarefaction by bootstrap resampling within years for each time series based on the smallest number of samples in a year for that time series.
+
+Our final dataset included 2,443 time series from 53 studies in 21 countries and 15 biomes and 13 different traits (Fig \ref{fig:taxaMap}).
+The earliest sample was in 1923 and the most recent was in 2016.
+Only four studies (consisting of 11 time series) came from Amphibian studies due to the limited availability of amphibian time series and low species richness values for assemblages (Table \ref{tab:traitSources}).
+Amphibians are of particular concern due to impacts of habitat loss and pollution [@gibbons2000], so we include data while acknowledging that general inference for amphibians as a clade is not possible with the time series available.
+For a full breakdown of studies and their characteristics, see the supplement.
+
+```{r taxaMap, fig.cap="A) Map of time series locations with points colored by taxa, and B) histograms of time series duration broken down by taxa.", echo=FALSE}
+knitr::include_graphics(here::here("figures/study_map_hist.jpeg"))
+```
+
+## Diversity Metrics
+
+We calculated yearly metrics of functional and species diversity for each time series.
+Species-based metrics include species richness (*S*) and Jaccard similarity (*J*) as a measure of turnover.
+Jaccard similarity was calculated relative to the first observed year for a time series.
+A negative trend in *J* would therefore indicate increasing turnover.
+
+Functional diversity metrics were calculated using the *dbFD* function from the *FD* R package [@laliberté2010].
+Here we report functional richness (*FRic*), functional evenness (*FEve*), and functional divergence (*FDiv*) which together describe three complementary characteristics of the functional space [@mason2005; @hillebrand2009].
+*FRic* assesses the volume of the trait space occupied by species in the community, with higher values indicating communities with species of more extreme trait values.
+*FEve* describes how species are distributed across the trait space and how abundance is distributed across species.
+Higher values of *FEve* indicate more even spacing of species in the trait space and individuals across species.
+*FDiv* measures the degree to which species and their abundances maximize differences in the functional space.
+Higher values of *FDiv* therefore correspond to communities where many highly abundant species are on the edges of the trait space.
+We also calculated the community-weighted mean (*CWM*) of included traits to examine shifts in the distribution of each trait.
+
+All available trait data for each study were included in functional diversity calculations with the exception of traits that were the same value for all observed species in the study.
+For variables with multiple levels each level was included as a separate trait axis.
+Continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
+The number of trait axes was limited to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
+This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility [@blonder2018].
+Metrics incorporated weighting based on species abundance where available (three studies were presence only).
+
+## Null Models
+
+To assess functional change independent of species richness we calculated the standardized effect size (SES) for each of the three summary functional diversity metrics (*FRic*, *FEve*, *FDiv*) from null estimates [@swenson2012].
+Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
+Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
+Species pools included all species observed for a time series.
+This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
+We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
+We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
+SES estimates can be interpreted as how much of the functional characteristic (richness, evenness, divergence) was observed beyond what was expected by chance for a community of that species richness.
+
+## Analysis
+
+We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
+All time series with data for a given trait were included in the model.
+Trends could not be estimated for the *CWM'*s of three traits due to limited data: maximum age at maturity, minimum age of maturity, and minimum litter size.
+We fit 24 individual *CWM* models.
+
+For all other species and functional diversity metrics (*S*, *J*, *FRic*, *FEve*, *FDiv)* we obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model.
+BLUP's provide estimates for the conditional mean and variance of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
+
+To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those factors added as a predictor to the original model structure.
+We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [@lenth2021].
+We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
+All models were executed using the *lme4* package in R and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* package with a significance level of \$\\alpha = 0.05\$ [@bates2015; @kuznetsova2017; @rcoreteam2021].
+
+```{r timeseriesPlot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
+knitr::include_graphics(here::here("figures/3met_long.jpeg"))
+```
+
 # Data Availability
 
 Code for the analyses in this chapter is archived on Zenodo at \<[[DOI:10.5281/zenodo.5514335\\\\](DOI:10.5281/zenodo.5514335){.uri}](%5BDOI:10.5281/zenodo.5514335%5D(DOI:10.5281/zenodo.5514335)%7B.uri%7D){.uri}\> [\@norman_karinormanbiodivts_2021].
@@ -359,5 +360,6 @@ Original data sources are open access and available at their respective provider
 We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits.
 We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database.
 Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to K.E.A.N..
+
 
 # References
