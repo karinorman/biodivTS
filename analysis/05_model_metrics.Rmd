@@ -162,6 +162,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
         bind_rows(group_slopes, slope_constrasts) %>%
         mutate(metric = metric_name, model = list(fit$result), model_id = model_id,
                n_ts = n_distinct(fit_data$rarefyID),
+               formula = formula,
                warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
     }else{
       return(tibble())
@@ -173,6 +174,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
     tidy(fit$result) %>%
       mutate(metric = metric_name, model = list(fit$result), model_id = model_id, 
              n_ts = n_distinct(fit_data$rarefyID),
+             formula = formula,
              warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
   }
 }
@@ -270,10 +272,17 @@ missing_mods <- setdiff(uniq_mods, uniq_metric_model)
 
 Write out table of model estimates for manuscript
 ```{r}
+#manuscript table
 metric_model_table %>% 
   filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
   select(-c(model_id, warning, statistic, df)) %>% 
   write_csv(here::here("figures", "man_model_table.csv"))
+
+#supplement of complete model output
+metric_model_table %>%
+  select(-c(model_id, n_ts, warning, lower.CL, upper.CL, significant)) %>%
+  write_csv(here::here("paper", "model_estimates_supp.csv"))
+  
 ```
 
 #### Process Model Output
