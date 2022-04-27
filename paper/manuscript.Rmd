@@ -57,7 +57,7 @@ options(scipen=999)
 
 ## Significance Statement {.unnumbered}
 
-The globe is in the midst of a biodiversity crisis due to anthropogenic impacts. It is critical to understand how ecological communities are changing in response xxx. Previous broad-scale assessments of biodiversity change through time have focused on metrics of species identity rather than the role species play in the community. Functional trait data offer a powerful opportunity to directly assess changes in community functional composition alongside species-based patterns. Here, we pair vertebrate community timeseries with functional trait data to take a first look at temporal trends in functional composition. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects 
+It is critical to understand how ecological communities are responding to the ongoing biodiversity crisis. Previous broad-scale assessments of community change through time have focused on metrics of species identity, which do not account for differences between species. Functional trait approaches offer a powerful alternative to species-based approaches by directly assessing changes in the species characteristics that define their ecological role. Here, we pair vertebrate community timeseries with functional trait data to take a first look at temporal trends in functional composition across biomes, realms, and taxa. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects of functional structure. We also identified key methodological holes that may be obscuring a potential underlying trend. 
 
 # Introduction
 
