@@ -201,10 +201,5 @@ elton_mamm <- undupe_ids(elton_mamm)
 ```{r}
 #save locally
 usethis::use_data(elton_bird, elton_mamm)
-
-#save to cache
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
-pins::pin(elton_bird, board = "github")
-pins::pin(elton_mamm, board = "github")
 ```
 

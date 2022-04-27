@@ -38,11 +38,8 @@ bt <- #read.csv("data/biotime_query.csv") %>%
   read.csv(system.file("extdata", "biotime/BioTIMEQuery02_04_2018 2.csv", package = "biodivTS")) %>%
   rename_with(toupper)
 ##	Get the meta data locally
-meta <- read.csv(system.file("extdata", "biotime/BioTIMEQuery02_04_2018 2.csv", package = "biodivTS")) %>%
+meta <- read.csv(system.file("extdata", "biotime/BioTIMEMetadata_02_04_2018.csv", package = "biodivTS")) %>%
   rename_with(toupper)
-# pin to use later
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
-pins::pin(meta, board = "github")
 
 ##	join abundance records with the metadata
 bt <- inner_join(meta, bt, by='STUDY_ID')
@@ -220,9 +217,6 @@ rarefyID_cell_centre <- bind_rows(rarefyID_cell_centre, SL_coords, ML_coords)
 ##	not sure why but I have multiple entries for each rarefyID!
 rarefyID_cell_centre <- rarefyID_cell_centre %>% distinct(STUDY_ID, rarefyID, cell_extent, rarefyID_x, rarefyID_y)
 
-#save to cache
-pins::pin(rarefyID_cell_centre, board = "github")
-
 ##======================================================================
 ##	reduce to data required for rarefying, and rename a couple of columns
 ##	NB: we will rarefy to the smallest number of ObsEventID's within studies
@@ -247,9 +241,6 @@ bt_grid_collate <- bt_grid %>%
 
 #save locally
 usethis::use_data(bt_grid_collate)
-
-#save to cache
-pins::pin(bt_grid_collate, board = "github")
 
 ##==================================== EXPLORE AND FILTER ON COVERAGE ========================================
 # ##	first collate taxa within cells, to calculate coverage for count data (see below for incidence)
@@ -435,7 +426,3 @@ pins::pin(bt_grid_collate, board = "github")
 # #save locally
 # usethis::use_data(dgg)
 # usethis::use_data(bt_grid_filtered)
-#
-# #save to cache
-# pins::pin(dgg, board = "github")
-# pins::pin(bt_grid_filtered, board = "github")

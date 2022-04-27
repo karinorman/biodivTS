@@ -19,12 +19,12 @@ devtools::load_all()
 ```
 
 ```{r}
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
+#load data, objects named the same as the filename
 
-biotime_data <- pins::pin_get("biotime-data", board = "github")
-elton_mamm <- pins::pin_get("elton-mamm", board = "github")
-elton_bird <- pins::pin_get("elton-bird", board = "github")
-amphibio <- pins::pin_get("amphibio", board = "github")
+load(here::here("data/biotime_data.rda")) #load biotime_data
+load(here::here("data/elton_mamm.rda")) #load elton_mamm
+load(here::here("data/elton_bird.rda")) #load elton_bird
+load(here::here("data/amphibio.rda")) #load amphibio
 
 biotime_data <- biotime_data %>%
   ungroup() %>%
@@ -145,7 +145,6 @@ Final merged data set to save
 ```{r}
 #save locally and in cache
 usethis::use_data(bt_traitfiltered)
-pins::pin(bt_traitfiltered, board = "github")
 ```
 
 Create a reference table of trait data
@@ -160,21 +159,19 @@ trait_ref <- biotime_traits %>%
 
 #save locally and in cache
 usethis::use_data(trait_ref)
-pins::pin(trait_ref, board = "github")
 ```
 
 Create table of info for each study
 ```{r}
-metadata <- pins::pin_get("metadata", board = "github")
+load(here::here("data/meta.rda")) #load meta
 
 study_table <- biotime_traits %>%
   select(study_id, plot) %>%
   count(study_id, name = "n_plots") %>% 
-  left_join(metadata %>% select(study_id, realm, climate, habitat, biome_map, taxa, 
+  left_join(meta %>% select(study_id, realm, climate, habitat, biome_map, taxa, 
                                 organisms, start_year, end_year), by = "study_id") %>%
   left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
 
 #save locally and in cache
-usethis::use_data(study_table)
-pins::pin(study_table, board = "github")
+#usethis::use_data(study_table)
 ```

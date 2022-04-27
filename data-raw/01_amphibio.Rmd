@@ -91,9 +91,5 @@ amphibio <- undupe_ids(amphibio)
 ```{r}
 #save locally
 usethis::use_data(amphibio)
-
-#save to cache
-pins::board_register_github(name = "github", repo = "karinorman/biodivTS_data", branch = "master")
-pins::pin(amphibio, board = "github")
 ```
 

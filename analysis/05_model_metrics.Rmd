@@ -17,19 +17,22 @@ library(emmeans)
 #### Read in data, get final dataset for models
 Get data and put it in long form 
 ```{r}
-pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
+#get data
+load(here::here("data/meta.rda"))
+load(here::here("data/bt_traitfiltered.rda"))
+load(here::here("data/rarefied_metrics.rda"))
 
-#get metadata
-meta <- pins::pin_get("meta", board = "github") %>%
+meta <- meta %>%
   select(study_id, realm, climate, habitat, protected_area, biome_map)
 
-meta <- pins::pin_get("bt-traitfiltered", board = "github") %>%
+meta <- bt_traitfiltered %>% 
   select(study_id, rarefyid, taxa) %>% distinct() %>%
   left_join(meta)
 
+rm(bt_traitfiltered) 
+
 #get metric data
-metrics <- pins::pin_get("rarefied-metrics", board = "github") %>%
-  # pivot_longer(., cols = setdiff(everything(), one_of("rarefyID", "STUDY_ID", "SamplePool", "SampleN", "num_years", "duration", "startYear", "endYear", "YEAR", "cell", "rarefied", "type", "realm", "climate", "habitat", "biome_map", "taxa", "organisms", "cent_lat", "cent_long", "abundance_type", "BROAD_TYPE", "taxa_mod", "climate_mod")), names_to = "metric", values_to = "value") %>%
+metrics <- rarefied_metrics %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
   mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
   left_join(meta, c("rarefyID" = "rarefyid"))
@@ -63,7 +66,7 @@ model_data <- metrics %>%
   #this study has many low species richness observations, so FD metrics weren't calculated, just drop it
   filter(study_id != 348)
 
-pins::pin(model_data, board = "github")
+usethis::use_data(model_data)
 ```
 
 Write out file with all necessary metadata for the supplement.
@@ -72,25 +75,6 @@ meta %>%
   filter(study_id %in% model_data$study_id) %>% 
   select(-c(link_id, date_study_added, sample_desc_name)) %>% 
   write_csv(here::here("paper", "study_metadata.csv"))
-```
-
-
-Option to add human footprint data
-```{r}
-# hfp_data <- pins::pin_get("hfp-data", board = "github")
-# 
-# model_data_hfp <- model_data %>% 
-#   #dplyr::select(rarefyID, year) %>% 
-#   #distinct() %>%
-#   mutate(hfp_year = case_when(
-#     year < 2001 ~ 1993,
-#     TRUE ~ 2009
-#   ), 
-#   hfp_rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
-#   hfp_rarefyID = str_replace_all(hfp_rarefyID, pattern = "_mamm", "")) %>%
-#   left_join(hfp_data %>% dplyr::select(-STUDY_ID) %>% mutate(year = as.numeric(year)), by = c("hfp_year" = "year", "hfp_rarefyID" = "rarefyID")) %>%
-#   dplyr::select(-hfp_year)
-
 ```
 
 ####Data exploration
@@ -181,6 +165,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
         bind_rows(group_slopes, slope_constrasts) %>%
         mutate(metric = metric_name, model = list(fit$result), model_id = model_id,
                n_ts = n_distinct(fit_data$rarefyID),
+               formula = formula,
                warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
     }else{
       return(tibble())
@@ -192,6 +177,7 @@ get_model <- function(metric_name, formula, model_id, data, ...){
     tidy(fit$result) %>%
       mutate(metric = metric_name, model = list(fit$result), model_id = model_id, 
              n_ts = n_distinct(fit_data$rarefyID),
+             formula = formula,
              warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
   }
 }
@@ -243,14 +229,6 @@ bad_models <- mod_results %>%
 #Turn off REML for these models, and they fit! 
 bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
 
-# metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
-#           bad_mod_results %>% filter(is.na(warning))) %>%
-#   mutate(significant = case_when(
-#     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
-#     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
-#     TRUE ~ NA
-#   ))
-
 #models that still won't converge
 bad_models2 <- bad_mod_results %>%
   select(metric, model_id, warning) %>% 
@@ -261,18 +239,19 @@ bad_models2 <- bad_mod_results %>%
 #Fit with a different algorithm
 bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
 
-metric_model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
+model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
           bad_mod_results %>% filter(is.na(warning)),
           bad_mod_results2 %>% filter(is.na(warning))) %>%
   mutate(significant = case_when(
     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
     TRUE ~ NA
-  )) %>%
-  select(-model)
+  )) #%>%
+  #select(-model)
+
+metric_model_table <- model_table %>% select(-model)
 
 usethis::use_data(metric_model_table)
-pins::pin(metric_model_table, board = "github")
 ```
 
 Get list of models that couldn't be fit due to model limitations 
@@ -289,41 +268,18 @@ missing_mods <- setdiff(uniq_mods, uniq_metric_model)
 
 Write out table of model estimates for manuscript
 ```{r}
+#manuscript table
 metric_model_table %>% 
   filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
   select(-c(model_id, warning, statistic, df)) %>% 
   write_csv(here::here("figures", "man_model_table.csv"))
-```
 
-Models with interactions
-```{r}
-# int_raw_value_mods <- tibble(metric_name = c("SES_FRic", "SES_FEve", "SES_FDiv", "FRic", "FEve", "FDiv", "Jaccard_base"), 
-#                          base_dur = "value ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-#                          base_srt = "value ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
-#   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
-#                names_to = "model_id", values_to = "formula")
-# 
-# int_log_value_mods <- tibble(metric_name = c("S"),
-#                          base_dur = "logvalue ~ year_scaled + duration_scaled*year_scaled + (year_scaled|study_id/rarefyID)",
-#                          base_srt = "logvalue ~ year_scaled + startyear_scaled*year_scaled + (year_scaled|study_id/rarefyID)") %>%
-#   pivot_longer(cols = c(base_dur, taxa_dur, realm_dur, climate_dur, base_srt, taxa_srt, realm_srt, climate_srt), 
-#                names_to = "model_id", values_to = "formula")
-# 
-# 
-# # mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
-# #   select(metric_name, formula, model_id)
-# 
-# #Fit models with base settings
-# int_mod_results <- pmap_dfr(bind_rows(int_raw_value_mods, int_log_value_mods), get_model, data = model_data)
-# 
-# #get the models that had convergence warnings
-# bad_models <- int_mod_results %>%
-#   select(metric, model_id, warning) %>% 
-#   filter(!is.na(warning)) %>% 
-#   distinct() %>%
-#   left_join(int_raw_value_mods, by = c("metric" = "metric_name", "model_id")) 
+#supplement of complete model output
+metric_model_table %>%
+  select(-c(model_id, n_ts, warning, lower.CL, upper.CL, significant)) %>%
+  write_csv(here::here("paper", "model_estimates_supp.csv"))
+  
 ```
-
 
 #### Process Model Output
 
@@ -364,7 +320,7 @@ get_study_slopes <- function(metric, model, model_id){
       model_id = model_id)
 }
 
-model_df <- metric_model_table %>%
+model_df <- model_table %>%
   filter(model_id == "base") %>%
   select(metric, model, model_id) %>%
   group_by(metric, model_id) %>% 
@@ -372,7 +328,6 @@ model_df <- metric_model_table %>%
 
 #get study level slopes for base, and levels for categorical random effect in non-base models
 re_slopes <- pmap_dfr(model_df, get_study_slopes)
-pins::pin(re_slopes, board = "github")
 
 #get only study-level slopes for the base models
 study_slopes <- re_slopes %>% 
@@ -411,7 +366,7 @@ study_slopes %>%
 ```
 
 #### Analizing slopes
-Is slope a function of timeseries characteristics?
+Is slope a function of time series characteristics?
 ```{r}
 library(multcomp)
 
@@ -445,8 +400,7 @@ startyear_slope <- study_slope_data %>%
   mutate(covariate = "startyear")
 
 #All model estimates in one dataframe
-slope_models <- bind_rows(duration_slope, startyear_slope)
-pins::pin(slope_models, board = "github")
+# slope_models <- bind_rows(duration_slope, startyear_slope)
 
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()

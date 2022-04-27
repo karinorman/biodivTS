@@ -13,8 +13,6 @@ This script calculates n null samples for each rarefied samples, calculates the 
 library(tidyverse)
 library(FD)
 library(furrr)
-
-pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
 ```
 
 Get dataframe of filenames and corresponding rarefyID's
@@ -27,8 +25,8 @@ files <- list.files(path) %>%
 
 Get species pools for each timeseries
 ```{r}
-bt_traitfiltered <- pins::pin_get("bt-traitfiltered", board = "github")
-trait_ref <- pins::pin_get("trait-ref", board = "github")
+load(here::here("data/bt_traitfiltered.rda"))
+load(here::here("data/trait_ref.rda"))
 
 #for each rarefyID, get complete list of species
 species_pools <- bt_traitfiltered %>%
@@ -253,7 +251,6 @@ null_table <- future_map_dfr(null_files, process_nulls, n = 500)
 
 #write out null table
 usethis::use_data(null_table)
-pins::pin(null_table, board = "github")
 ```
 
 
