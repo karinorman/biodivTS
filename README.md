@@ -21,7 +21,7 @@ All scripts for the analysis are stored in `analysis/` and should be executed fo
 
 File Name | Description | Input | Output
 --------- | ----------- | ----- | ------
-01_filter_by_traits.Rmd | Merge trait and timeseries data. | `biotime_data.rda`, `elton_mamm.rda`, `elton_bird.rda`, `amphibio.rda`, `metadata.rda` | `bt_traitfiltered.rda`, `trait_ref.rda`, `study_table.rda`
+01_filter_by_traits.Rmd | Merge trait and timeseries data. | `biotime_data.rda`, `elton_mamm.rda`, `elton_bird.rda`, `amphibio.rda`, `meta.rda` | `bt_traitfiltered.rda`, `trait_ref.rda`, `study_table.rda`
 02_rarefy_timeseries| Calculate rarefied metrics. | `bt_traitfiltered.Rmd` | samples and metrics in `rarefied_metrics/` and `rarefied_samples/`, (file for each sample)
 03_rarefy_null_models.Rmd | Get null model samples for each rarefied sample, calculated metrics. | `rarefied_samples/`, `bt_traitfiltered.Rmd` | `null_table.Rmd`
 04_collate_rarefied_resamps_median.Rmd | Combine rarefied metrics with null model stats to get final dataframe of metrics. | `rarefied_metrics/`, `null_table.rda`, | `rarefied_metrics.rda`
