@@ -7,13 +7,7 @@ It is archived on Zenodo at: https://doi.org/10.5281/zenodo.5514335
 
 All scripts for accessing and processing raw data are found in the `data-raw` folder with scripts of the same name as the data source. For data sources with more than one script they, execution order follows the number prefix. 
 
-Interim and final data products are archived as releases for the [biodivTS_data repository](https://github.com/karinorman/biodivTS_data) and are accessible using the [pins](https://pins.rstudio.com/) r package:
-
-```r
-pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
-biotime_data <- pins::pin_get("biotime-data", board = "github")
-```
-
+Raw data and interim and final data products are archived on Zendo at https://doi.org/10.5281/zenodo.6499442. 
 
 ## Workflow
 
