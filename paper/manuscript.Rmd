@@ -58,7 +58,7 @@ options(scipen=999)
 
 ## Significance Statement {.unnumbered}
 
-It is critical to understand how ecological communities are responding to the ongoing biodiversity crisis. Previous broad-scale assessments of community change through time have focused on metrics of species identity, which do not account for differences between species. Functional trait approaches offer a powerful alternative to species-based approaches by directly assessing changes in the species characteristics that define their ecological role. Here, we pair vertebrate community time series with functional trait data to take a first look at temporal trends in functional composition across biomes, realms, and taxa. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects of functional structure. We also identified key methodological holes that may be obscuring a potential underlying trend. 
+How are ecological communities responding to anthropogenic change? Functional trait approaches allow us to assess this questions by directly measuring shifts in the characteristics that define a species' ecological role. Here, we pair vertebrate community time series with functional trait data to take a first look at temporal trends in functional composition across biomes, realms, and taxa. We found no evidence of systematic functional loss across communities, with maintenance of all measured aspects of functional structure. We also highlight the need for targeted data collection and methodological expansion to further assess functional trends.
 
 # Introduction
 
@@ -107,6 +107,12 @@ Non-significant overall trends indicate that although some studies experience in
 Trends for different taxa, biomes, or realms were also non-significant with the exception of a significantly increasing trend for functional evenness of global studies (characterized by having samples on multiple continents), and a significantly decreasing standardized functional richness slope for freshwater studies.
 However, with only two global studies and two freshwater studies these results are not general trends.
 We found similar results for the *CWM* models, with a significant trend for only one trait, percentage of aerial foraging utilization, which showed a significant positive trend.
+
+
+```{r timeseriesPlot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
+knitr::include_graphics(here::here("figures/3met_long.jpeg"))
+```
+
 
 ```{r resultsTab, echo=FALSE}
 read_csv(here::here("figures/man_model_table.csv")) %>%
@@ -345,10 +351,6 @@ We estimated within-level slopes and calculated between-level contrasts using th
 We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
 All models were executed using the *lme4* package in R and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2021].
 
-```{r timeseriesPlot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
-knitr::include_graphics(here::here("figures/3met_long.jpeg"))
-```
-
 # Data Availability
 
 Code for the analyses in this chapter is archived on Zenodo at [10.5281/zenodo.5514334](https://doi.org/10.5281/zenodo.5514334).
@@ -359,7 +361,6 @@ Original data sources are open access and available at their respective provider
 
 We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits.
 We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database.
-Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to K.E.A.N..
-
+Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to KEAN. CB acknowledges support from NSF CAREER Award #1942280 & NIFA project CA-B-INS-0162-H.
 
 # References
