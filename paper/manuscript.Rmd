@@ -1,18 +1,18 @@
 ---
 title: Evaluating the evidence of widespread maintenance of functional composition in vertebrate communities
-authors: 
-  - name: "Kari E. A. Norman"
-    affiliation: Université de Montréal
-    location: Montréal, Quebec
-    email: kari.norman@berkeley.edu
-  - name: "Perry de Valpine"
-    affiliation: University of California, Berkeley
-    location: Berkeley, California
-    email: pdevalpine@berkeley.edu
-  - name: "Carl Boettiger"
-    affiliation: University of California, Berkeley
-    location: Berkeley, California
-    email: cboettig@berkeley.edu
+# authors: 
+#   - name: "Kari E. A. Norman"
+#     affiliation: Université de Montréal
+#     location: Montréal, Quebec
+#     email: kari.norman@berkeley.edu
+#   - name: "Perry de Valpine"
+#     affiliation: University of California, Berkeley
+#     location: Berkeley, California
+#     email: pdevalpine@berkeley.edu
+#   - name: "Carl Boettiger"
+#     affiliation: University of California, Berkeley
+#     location: Berkeley, California
+#     email: cboettig@berkeley.edu
 abstract: |
  Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing species turnover but no overall trend in species diversity through time. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to mechanisms of ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time, pairing thousands of vertebrate assemblage time series from the BioTIME database with existing trait data representative of a species' functional role. We found no overall trend in any functional diversity metric, despite similar species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness and at the study-level, where only 3 of 54 studies experienced a significant trend in at least one functional diversity metric. Results give evidence that across a variety of taxa, climates, and biomes, functional characteristics are maintained even in the face of significant environmental and community change. We also discuss the potential for underlying functional shifts to be obscured by current approaches and data, calling for targeted data collection efforts to combat existing biases in monitoring and trait data. 
 
@@ -351,11 +351,11 @@ We estimated within-level slopes and calculated between-level contrasts using th
 We assessed the impact of time series duration and start year on study-level trends using general linear models with duration and start year as predictors.
 All models were executed using the *lme4* package in R and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2021].
 
-# Data Availability
+<!-- # Data Availability -->
 
-Code for the analyses in this chapter is archived on Zenodo at [10.5281/zenodo.5514334](https://doi.org/10.5281/zenodo.5514334).
-Data products are also archived on Zenodo at [10.5281/zenodo.6499442](https://doi.org/10.5281/zenodo.6499442).
-Original data sources are open access and available at their respective providers.
+<!-- Code for the analyses in this chapter is archived on Zenodo at [10.5281/zenodo.5514334](https://doi.org/10.5281/zenodo.5514334). -->
+<!-- Data products are also archived on Zenodo at [10.5281/zenodo.6499442](https://doi.org/10.5281/zenodo.6499442). -->
+<!-- Original data sources are open access and available at their respective providers. -->
 
 # Acknowledgments
 
