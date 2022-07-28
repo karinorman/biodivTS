@@ -106,7 +106,7 @@ res <- dg_closest_res_to_area(dgg, SL_extent_mean+SL_extent_sd)
 dgg <- dgsetres(dgg, res)
 
 ##	get the corresponding grid cells for all observations
-bt <- bt %>% mutate(cell = dgtransform(dgg, lat=lat_to_grid, lon=lon_to_grid))
+bt <- bt %>% mutate(cell = dgGEO_to_SEQNUM(dgg, in_lon_deg=lon_to_grid, in_lat_deg=lat_to_grid)$seqnum)
 
 ##	what just happened?
 check <- bt %>% group_by(StudyMethod, STUDY_ID) %>% summarise(n_cell = n_distinct(cell))

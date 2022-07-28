@@ -64,7 +64,15 @@ model_data <- metrics %>%
          scale = attributes(year_scaled)$`scaled:scale`) %>%
   ungroup() %>%
   #this study has many low species richness observations, so FD metrics weren't calculated, just drop it
-  filter(study_id != 348)
+  filter(study_id != 348) %>%
+  #somehow the taxa labels didn't get updated when the timeseries for multi-taxa studies were split up, do that now
+   mutate(new_taxa = str_split_fixed(rarefyID, "_", n = 3)[,3],
+            taxa = case_when(
+            new_taxa == "bird" ~ "Birds",
+               new_taxa == "mamm" ~ "Mammals", 
+               TRUE ~ as.character(taxa)
+           )) %>%
+  select(-new_taxa)
 
 usethis::use_data(model_data)
 ```
