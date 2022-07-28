@@ -89,6 +89,7 @@ study_map <- map_data("world") %>%
   ggthemes::theme_map() +
   scale_color_manual(values = my_pal) +
   theme(legend.title  = element_blank()) +
+  #theme(legend.title  = element_blank(), legend.text = element_text(size = 12)) +
   guides(color = guide_legend(override.aes= list(alpha = 0.8)))
 
 ggsave(here::here("figures/study_map.jpeg"), bg = "white")
@@ -100,12 +101,14 @@ duration_hist <- study_data %>%
   ggplot(aes(duration)) + 
   geom_histogram(aes(fill = taxa)) + 
   theme_classic() + 
+  #theme_classic(base_size = 12) + 
   facet_wrap(~taxa, scales = "free") +
-  xlab("Timeseries Duration") +
+  xlab("Time Series Duration") +
   theme(strip.background = element_blank(), 
         strip.text = element_blank(),
         legend.position = "none", 
-        axis.title = element_text(size=8)) +
+        axis.title = element_text(size=8),
+        ) +
   scale_fill_manual(values = my_pal)
 
 plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1))
@@ -147,7 +150,9 @@ plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, col
     geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
     #geom_smooth(color = "black", method = "glm", se = FALSE) +
     geom_line(mapping = aes(y = pred)) +
-    theme_classic() +
+    theme_classic() + 
+    #theme_classic(base_size = 12) + 
+    #theme(legend.position = "none") +
     theme(axis.title = element_text(size=7), legend.position = "none") +
     ylab(ylabel) +
     xlab(xlabel) +
@@ -159,21 +164,16 @@ plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, col
   return(trend_plot)
 }
 
-model_coef <- metric_model_table %>%
-  filter(model_id == "base") %>%
-  select(metric, model) %>%
-   mutate(coef = map(model, broom.mixed::tidy)) %>% 
-  select(-model) %>% 
-  unnest(cols = c(coef))
-
 group_colors <- c("Global" = my_pal[1], "Polar/Temperate" = my_pal[6], "Temperate/Tropical" = my_pal[3], "Tropical" = my_pal[4], "Temperate" = my_pal[2], "Overall Mean" = "#000000")
 
 plot_map <- tibble(metric_name = c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", "SES_FEve"), 
            ylabel = c("log(S)", "Jaccard", "Functional Richness SES", "Functional Divergence SES", "Functional Evenness SES"),
-           #ylabel = c("log(S)", "Jaccard", "FRic SES", "FDiv SES", "FEve SES"),
+           #ylabel = c("log(S)", "Jaccard", "Functional\nRichness SES", "Functional\nDivergence SES", "Functional\nEvenness SES"),
            yval = c("logvalue", "value", "value", "value", "value"),
            xlabel = c(NA, NA, NA, "year", "year"))
-m_plots <- pmap(plot_map, plot_metric, data = model_data, model_coef = model_coef, color_list = group_colors)
+m_plots <- pmap(plot_map, plot_metric, data = model_data, 
+                model_coef = metric_model_table %>% filter(model_id == "base"), 
+                color_list = group_colors)
 
 plot_join <- plot_grid(plotlist=m_plots, labels = "AUTO", nrow = 3, align = 'vh',
                        hjust = -1, axis = "l", scale = 0.9)
@@ -185,7 +185,8 @@ leg_plot <- model_data %>%
   geom_smooth(aes(color = climate, group = study_id), method = "glm", se = FALSE, size = 0.7) +
   theme_classic() +
   theme(axis.title = element_text(size=7)) +
-  scale_colour_manual(values = group_colors, drop = FALSE)
+  #theme(legend.title = element_text(size = 12), legend.text = element_text(size = 12)) +
+  scale_colour_manual(values = group_colors, drop = FALSE, name = "Climate")
 
 # extract the legend from one of the plots
 legend <- get_legend(leg_plot)
