@@ -217,6 +217,7 @@ rarefyID_cell_centre <- bind_rows(rarefyID_cell_centre, SL_coords, ML_coords)
 ##	not sure why but I have multiple entries for each rarefyID!
 rarefyID_cell_centre <- rarefyID_cell_centre %>% distinct(STUDY_ID, rarefyID, cell_extent, rarefyID_x, rarefyID_y)
 
+usethis::use_data(rarefyID_cell_centre)
 ##======================================================================
 ##	reduce to data required for rarefying, and rename a couple of columns
 ##	NB: we will rarefy to the smallest number of ObsEventID's within studies
