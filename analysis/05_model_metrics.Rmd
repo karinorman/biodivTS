@@ -89,7 +89,7 @@ meta %>%
 
 Visualize number of years for each timeseries
 ```{r}
-hist_numYears <- metrics %>%
+hist_numYears <- model_data %>%
   select(year, rarefyID) %>% 
   distinct() %>% 
   count(rarefyID, name = "num_years") %>% 
@@ -103,25 +103,39 @@ hist_numYears <- metrics %>%
        y = 'Number of cells') +
   theme_bw() +
   theme(panel.grid.minor.x = element_blank())
+
+hist_duration <- model_data %>%
+  select(rarefyID, duration) %>% 
+  distinct() %>% 
+  ggplot() +
+  geom_histogram(aes(x = duration),
+                 binwidth = 2) +
+  scale_x_continuous(name = 'Number of years sampled',
+                     breaks = c(2,4,8,16,32,48,64,96)) +
+  #scale_y_continuous(breaks = c(0,2500,5000,7500,10000,12500, 15000, 17500, 20000,22500)) +
+  labs(tag = 'B',
+       y = 'Number of cells') +
+  theme_bw() +
+  theme(panel.grid.minor.x = element_blank())
 ```
 
 Visualize distributions of response
 ```{r}
-metrics %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_hind")) %>%
-  ggplot() +
-  geom_histogram(aes(x = logvalue),
-                 bins = 60) +
-  facet_wrap(~metric, scales = "free") +
-  labs(title = "Distribution of Log values")
-
-metrics %>%
-  filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "SES_FDis", "SES_FDiv", "SES_FEve", "SES_FRic", "Jaccard_hind")) %>%
-  ggplot() +
-  geom_histogram(aes(x = value),
-                 bins = 60) +
-  facet_wrap(~metric, scales = "free") +
-  labs(title = "Distribution of raw values")
+# metrics %>%
+#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_hind")) %>%
+#   ggplot() +
+#   geom_histogram(aes(x = logvalue),
+#                  bins = 60) +
+#   facet_wrap(~metric, scales = "free") +
+#   labs(title = "Distribution of Log values")
+# 
+# metrics %>%
+#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "SES_FDis", "SES_FDiv", "SES_FEve", "SES_FRic", "Jaccard_hind")) %>%
+#   ggplot() +
+#   geom_histogram(aes(x = value),
+#                  bins = 60) +
+#   facet_wrap(~metric, scales = "free") +
+#   labs(title = "Distribution of raw values")
 ```
 
 ####Fit GLMs to overall patterns and data broken down by groups
