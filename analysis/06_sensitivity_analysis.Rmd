@@ -83,6 +83,30 @@ get_fixed_slopes <- function(metric, model, model_id, model_data){
 }
 ```
 
+Define models to fit
+```{r}
+metric_names <- unique(model_data$metric)
+raw_value_mods <- tibble(metric_name = metric_names[metric_names != "S"], 
+                         base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)"
+                         ) %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula") %>%
+  #don't fit the CWM_litter_size_min_n and climate model, not enough data
+  filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate")
+
+log_value_mods <- tibble(metric_name = c("S"), 
+                         base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)"
+                         ) %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+
+mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
+  select(metric_name, formula, model_id)
+```
 
 1. Min time series duration
 ```{r}
@@ -108,6 +132,20 @@ save(duration_sens, no_amph, file = here::here("data/sensitivity_models.rda"))
 
 3. Trait Coverage
 ```{r}
+load(here::here("data/study_table.rda"))
+
+model_data <- model_data %>%
+  left_join(study_table %>% select(study_id, coverage) %>% mutate(study_id = as.factor(study_id)))
+
+covg_dfs <- list(covg75 = filter(model_data),
+                covg85 = filter(model_data, coverage >= 0.85),
+                covg90 = filter(model_data, coverage >= 0.90))
+
+coverage_sens <- map_dfr(covg_dfs, ~pmap_dfr(mods %>% 
+                                               filter(metric_name %in% c("FRic", "FDiv", "FEve", "S", "SES_FRic",
+                                                                         "SES_FDiv", "SES_FEve"), 
+                                                      model_id == "base"), 
+                                             get_model, data = .x), .id = "dataID")
 
 ```
 

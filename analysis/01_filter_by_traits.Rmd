@@ -173,5 +173,5 @@ study_table <- biotime_traits %>%
   left_join(coverage %>% select(study_id, coverage = perc), by = "study_id")
 
 #save locally and in cache
-#usethis::use_data(study_table)
+usethis::use_data(study_table)
 ```
