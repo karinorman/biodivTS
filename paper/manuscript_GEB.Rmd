@@ -162,8 +162,7 @@ SES estimates can be interpreted as how much of the functional characteristic (r
 
 We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
 All time series with data for a given trait were included in the model.
-Trends could not be estimated for the *CWM'*s of three traits due to limited data: maximum age at maturity, minimum age of maturity, and minimum litter size.
-We fit 24 individual *CWM* models.
+We fit 18 individual *CWM* models.
 
 For all other species and functional diversity metrics (*S*, *J*, *FRic*, *FEve*, *FDiv)* we obtained study-level estimates of temporal change from the Best Linear Unbiased Predictors (BLUPs) for each overall trend model.
 BLUP's provide estimates for the conditional mean and variance of a random effect from which we calculated 95% confidence intervals to determine significance of study-level slopes.
