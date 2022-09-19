@@ -89,7 +89,7 @@ coverage <- comp_biotime_traits %>%
   arrange(desc(perc))
 
 #studies to include, since they meet the coverage requirement 
-inc_coverage <- coverage %>% filter(perc > percent)
+inc_coverage <- coverage %>% filter(perc >= percent)
 
 biotime_traits <- comp_biotime_traits %>%
   #get studies with appropriate coverage and drop observations that we don't have trait data for, and unlabeled non-id'd species
