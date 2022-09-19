@@ -238,6 +238,9 @@ mods <- bind_rows(raw_value_mods, log_value_mods) %>%
 
 Fit models
 ```{r}
+#exclude amphibians
+model_data <- model_data %>% filter(taxa != "Amphibians")
+
 #Fit models with base settings
 mod_results <- pmap_dfr(mods, get_model, data = model_data)
 
@@ -284,7 +287,7 @@ uniq_metric_model <- metric_model_table %>% select(metric, model_id) %>% distinc
 uniq_mods <- mods %>% select(metric = metric_name, model_id) %>% distinct()
 
 #this is a list of models that weren't fit because there weren't enough timeseries OR they didn't converge
-#min_litter_size just won't converge
+#most are amphibian traits or traits only found for one taxa (with taxa as a covariate), the nectar diet realm model wouldn't converge
 missing_mods <- setdiff(uniq_mods, uniq_metric_model)
 ```
 
