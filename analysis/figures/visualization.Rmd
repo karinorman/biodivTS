@@ -25,34 +25,7 @@ library(tidyverse)
 ```
 
 ```{r}
-pins::board_register_github(repo = "karinorman/biodivTS_data", branch = "master")
-# country_data <- pins::pin_get("country-data-bind", board = "github") %>%
-#   mutate(country = str_remove(country, "Commonwealth of The "),
-#          country = str_remove(country, "Kingdom of "),
-#          country = str_remove(country, "Republic of "),
-#          country = str_remove(country, "Kingdom of "),
-#          country = str_remove(country, "Federative Republic of "),
-#          country = str_remove(country, "Federative "),) %>%
-#   mutate(country = case_when(
-#     country == "United States" ~ "USA",
-#     country == "Russian Federation" ~ "Russia",
-#     country == "United Great Britain and Northern Ireland" ~ "UK",
-#     country == "Czechia" ~ "Czech Republic",
-#     TRUE ~ country
-#   )) %>% 
-#   count(country, code)
-# 
-# mapdata <- map_data("world") %>%
-#   left_join(country_data, by = c("region" = "country"))
-# 
-# mapdata %>%
-#   ggplot(aes(long, lat)) +
-#   geom_polygon(mapping = aes(group = group, fill = n)) +
-#   ggthemes::theme_map() +
-#   #scale_fill_continuous(color = "#32A251")
-#   scale_fill_gradient(low = "white", high = "#39737c")
-
-#ggsave("study_map.jpeg")
+load(here::here("data/model_data.rda"))
 ```
 
 Define color palette
@@ -64,7 +37,7 @@ my_pal <- c("#d9be3b", "#77976e", "#086788", "#cc8214", "#bfac88", "#99adbf")
 #library(forcats)
 
 #get rarefyid centers
-included_ids <- pins::pin_get("model-data", board = "github") %>%
+included_ids <- model_data %>%
   select(rarefyID, taxa, climate, realm, duration) %>%
   distinct() %>% 
   mutate(rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
