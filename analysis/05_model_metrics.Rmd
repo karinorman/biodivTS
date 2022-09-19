@@ -370,14 +370,14 @@ Summaries of study slopes
 study_slopes %>% 
   filter(sig == TRUE) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
-  group_by(metric) %>% 
-  summarise(n_study_id = n_distinct(study_id)) %>%
-  mutate(percent = n_study_id/53) 
+  mutate(positive = ifelse(estimate > 0, TRUE, FALSE)) %>%
+  group_by(metric, positive) %>% 
+  summarise(n_study_id = n_distinct(study_id)) 
 
 #And which studies were they?
 study_slopes %>% 
   filter(sig == TRUE) %>% 
-  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   select(study_id, metric) %>%
   distinct()
 
@@ -398,8 +398,6 @@ library(multcomp)
 study_slope_data <- study_slopes %>%
   dplyr::select(study_id, metric, estimate) %>%
   left_join(meta %>% 
-              dplyr::select(-rarefyid) %>% 
-              distinct() %>%
               mutate(study_id = as.character(study_id))) %>%
   left_join(model_data %>% dplyr::select(study_id, startyear, duration) %>% distinct())
 
