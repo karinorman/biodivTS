@@ -26,6 +26,7 @@ library(tidyverse)
 
 ```{r}
 load(here::here("data/model_data.rda"))
+load(here::here("data/rarefyID_cell_centre.rda"))
 ```
 
 Define color palette
@@ -38,12 +39,13 @@ my_pal <- c("#d9be3b", "#77976e", "#086788", "#cc8214", "#bfac88", "#99adbf")
 
 #get rarefyid centers
 included_ids <- model_data %>%
+  filter(taxa != "Amphibians") %>%
   select(rarefyID, taxa, climate, realm, duration) %>%
   distinct() %>% 
   mutate(rarefyID = str_replace_all(rarefyID, pattern = "_bird", ""), 
   rarefyID = str_replace_all(rarefyID, pattern = "_mamm", ""))
 
-study_data <- pins::pin_get("rarefyID-cell-centre", board = "github") %>%
+study_data <- rarefyID_cell_centre %>%
   inner_join(included_ids) #%>%
   #mutate(taxa = as.factor(taxa), taxa = fct_relevel(taxa, "Birds"))
   
@@ -55,12 +57,12 @@ study_map <- map_data("world") %>%
   geom_point(data = study_data,
              aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.4, inherit.aes = FALSE) +
   #plot the US amphibian point on top so we can see it
-  geom_point(data = study_data %>% 
-               #filter(taxa %in% c("Amphibians")), 
-               filter(taxa %in% c("Amphibians"), rarefyID_y > 0),
-             aes(rarefyID_x, rarefyID_y ), color = "#d9be3b", alpha = 0.8, inherit.aes = FALSE) +
+  # geom_point(data = study_data %>% 
+  #              #filter(taxa %in% c("Amphibians")), 
+  #              filter(taxa %in% c("Amphibians"), rarefyID_y > 0),
+  #            aes(rarefyID_x, rarefyID_y ), color = "#d9be3b", alpha = 0.8, inherit.aes = FALSE) +
   ggthemes::theme_map() +
-  scale_color_manual(values = my_pal) +
+  scale_color_manual(values = my_pal[2:3]) +
   theme(legend.title  = element_blank()) +
   #theme(legend.title  = element_blank(), legend.text = element_text(size = 12)) +
   guides(color = guide_legend(override.aes= list(alpha = 0.8)))
@@ -82,17 +84,16 @@ duration_hist <- study_data %>%
         legend.position = "none", 
         axis.title = element_text(size=8),
         ) +
-  scale_fill_manual(values = my_pal)
+  scale_fill_manual(values = my_pal[2:3])
 
-plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1))
+plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1.25))
 
 ggsave2(here::here("figures/study_map_hist.jpeg"), bg = "white")
 ```
 
 Metric plots with trend lines
 ```{r}
-metric_model_table <- pins::pin_get("metric-model-table", board = "github")
-model_data <- pins::pin_get("model-data", board = "github")
+load(here::here("data/metric_model_table.rda"))
 
 plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, color_list){
 
