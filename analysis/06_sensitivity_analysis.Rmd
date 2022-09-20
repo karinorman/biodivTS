@@ -110,23 +110,17 @@ mods <- bind_rows(raw_value_mods, log_value_mods) %>%
 
 1. Min time series duration
 ```{r}
-dur_dfs <- list(min3 = filter(model_data, duration > 2),
-                min4 = filter(model_data, duration > 3),
-                min5 = filter(model_data, duration > 4))
+dur_dfs <- list(min3 = filter(model_data, taxa != "Amphibians", duration > 2),
+                min4 = filter(model_data, taxa != "Amphibians", duration > 3),
+                min5 = filter(model_data, taxa != "Amphibians", duration > 4))
 
-duration_sens <- map_dfr(dur_dfs, ~pmap_dfr(mods, get_model, data = .x), .id = "dataID")
+duration_sens <- map_dfr(dur_dfs, ~pmap_dfr(filter(mods, model_id == "base"), get_model, data = .x), .id = "dataID")
 ```
 
 2. Inclusion of Amphibians - nothing changes when you exclude them 
 ```{r}
-no_amph <- pmap_dfr(mods, get_model, data = model_data %>% filter(taxa != "Amphibians")) %>%
-  mutate(dataID = no_amph)
-
-# this annoyingly doesn't work because of some dataframe column
-# sens_models <- bind_rows(bind_cols(select(duration_sens, -dataID), pull(duration_sens, dataID)) %>% select(-model, -formula), 
-#                          no_amph %>% select(-model, -formula))
-
-save(duration_sens, no_amph, file = here::here("data/sensitivity_models.rda"))
+with_amph <- pmap_dfr(filter(mods, model_id == "base"), get_model, data = model_data) %>%
+  mutate(dataID = "with_amph")
 ```
 
 
@@ -137,15 +131,16 @@ load(here::here("data/study_table.rda"))
 model_data <- model_data %>%
   left_join(study_table %>% select(study_id, coverage) %>% mutate(study_id = as.factor(study_id)))
 
-covg_dfs <- list(covg75 = filter(model_data),
-                covg85 = filter(model_data, coverage >= 0.85),
-                covg90 = filter(model_data, coverage >= 0.90))
+covg_dfs <- list(covg75 = filter(model_data, taxa != "Amphibians"),
+                covg85 = filter(model_data, taxa != "Amphibians", coverage >= 0.85),
+                covg90 = filter(model_data, taxa != "Amphibians", coverage >= 0.90))
 
-coverage_sens <- map_dfr(covg_dfs, ~pmap_dfr(mods %>% 
-                                               filter(metric_name %in% c("FRic", "FDiv", "FEve", "S", "SES_FRic",
-                                                                         "SES_FDiv", "SES_FEve"), 
-                                                      model_id == "base"), 
+coverage_sens <- map_dfr(covg_dfs, ~pmap_dfr(filter(mods, model_id == "base"), 
                                              get_model, data = .x), .id = "dataID")
 
+sens_mods <- bind_rows(duration_sens, coverage_sens, with_amph) %>%
+  select(-model) %>%
+  filter(metric != "Jaccard_next") %>%
+  write_csv(here::here("paper", "sensitivity_models.csv"))
 ```
 
