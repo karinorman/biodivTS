@@ -1,0 +1,31 @@
+---
+title: "Sensitivity Analysis"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+We performed sensitivity analyses to assess whether or not the general trends for biodiversity metrics changed based on major data processing decisions. We looked at 1) the minimum duration of included time series, 2) the minimum cut off for percentage of species with traits from a time series, and 3) in inclusion of amphibian data. The table below summarizes all models run and the variables for which a significant trend was detected. A star indicates a trend that was not detected in the original analyses presented in the manuscript. The model_id corresponds to the model_id in the CSV of sensitivity model results.
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(dplyr)
+library(kableExtra)
+
+tibble(sensitivity_test = c(rep("duration", 3), rep("trait coverage", 2), "amphibians"), 
+       model_id = c("min3", "min4", "min5", "covg85", "covg90", "with_amph"),
+       description = c("Exclude time series with fewer than 3 years",
+                       "Exclude time series with fewer than 4 years",
+                       "Exclude time series with fewer than 5 years",
+                       "Exclude time series with less than 85% of species with trait data",
+                       "Exclude time series with less than 90% of species with trait data",
+                       "Include Amphibian data"),
+       sig_metrics = c("CWM seed diet*, CWM canopy foraging*, CWM aerial foraging, Jaccard", 
+       "CWM seed diet*, CWM canopy foraging*, FRic*, Jaccard", 
+       "CWM seed diet*, CWM canopy foraging*, Jaccard", rep("Jaccard", 3))
+) %>% kable(format = "latex") %>%
+  column_spec(3:4, width = "3cm") %>%
+  collapse_rows(columns = 1, valign = "middle") %>%
+  kable_paper() %>%
+  kable_styling(latex_options= c("hold_position"))
+```
+
