@@ -364,6 +364,55 @@ study_slopes <- re_slopes %>%
 #   pivot_wider(names_from = "metric", values_from = "estimate")
 ```
 
+Get study level slopes using bootstrap resampling
+```{r}
+extract_study_slopes <- function(model){
+  
+  #get the statistics for the year variable
+  year_scaled_est <- tidy(model) %>%
+    filter(term == "year_scaled") %>%
+    pull(estimate)
+  
+  estimate <- broom.mixed::tidy(model, effects="ran_vals") %>%
+    filter(group == "study_id", term == "year_scaled") %>% 
+    select(-c(effect, group, term)) %>%
+    rename(cond.estimate = estimate) %>%
+    mutate(estimate = cond.estimate + year_scaled_est) %>%
+    select(level, estimate) %>%
+    deframe()
+  
+  return(estimate)
+}
+
+bootstrap_study_slopes <- function(metric, model, model_id, nsim){
+  print(c(metric, model_id))
+  
+  fric_vars <- bootMer(model, FUN = extract_study_slopes, nsim = nsim, use.u = TRUE)
+  
+  estimates <- enframe(fric_vars$t0, name = "study_id", value = "estimate") 
+  
+  as_tibble(fric_vars$t) %>% 
+    pivot_longer(everything(), names_to = "study_id", values_to = "values") %>%
+    group_by(study_id) %>%
+    summarize(n = n(), std.error = sd(values)/sqrt(n)) %>%
+    left_join(estimates) %>%
+    select(-n) %>%
+    mutate(metric = metric, model_id = model_id)
+}
+
+#future::plan("multisession", workers = 30)
+
+bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes) %>%
+  # furrr::future_pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes, 
+  #                                          .options = furrr::furrr_options(seed = TRUE)) %>%
+  mutate(upr.ci = estimate + (2*std.error),
+         lwr.ci = estimate - (2*std.error),
+         sig = case_when(
+             lwr.ci < 0 & upr.ci > 0 ~ FALSE,
+             TRUE ~ TRUE
+           ))
+```
+
 Summaries of study slopes
 ```{r}
 #First - how many studies had a significant trend for each metric? 
