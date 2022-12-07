@@ -157,7 +157,7 @@ library(tidyverse)
 
 data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "37"), FRic = c("2", "6"), FEve = c("1", "0"), FDiv = c("0", "1"), `SES FRic` = c("0", "1"), `SES FEve` = c("0", "2"), `SES FDiv` = c("0", "1")) %>%
   column_to_rownames("sign") %>%
-  kable(caption = "Number of studies that experienced a signficiant trend in each calculated metric out of 53 total studies.")
+  kable(caption = "Number of studies that experienced a significant trend in each calculated metric out of 53 total studies.")
 ```
 
 Study-level slopes for multiple metrics were significantly related to the duration and start year of studies.
@@ -357,10 +357,10 @@ All models were executed using the *lme4* package in R and p-values were calcula
 <!-- Data products are also archived on Zenodo at [10.5281/zenodo.6499442](https://doi.org/10.5281/zenodo.6499442). -->
 <!-- Original data sources are open access and available at their respective providers. -->
 
-# Acknowledgments
+<!-- # Acknowledgments -->
 
-We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits.
-We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database.
-Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to KEAN. CB acknowledges support from NSF CAREER Award #1942280 & NIFA project CA-B-INS-0162-H.
+<!-- We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits. -->
+<!-- We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database. -->
+<!-- Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to KEAN. CB acknowledges support from NSF CAREER Award #1942280 & NIFA project CA-B-INS-0162-H. -->
 
 # References
