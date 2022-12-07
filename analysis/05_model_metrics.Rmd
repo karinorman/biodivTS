@@ -151,18 +151,30 @@ performance::check_model()
 
 Function approach to model
 ```{r}
-get_model <- function(metric_name, formula, model_id, data, ...){
+get_model <- function(metric_name, formula, model_id, data, study_id, ...){
   print(c(metric_name, model_id))
   qlmer <- quietly(lmer)
   
-  fit_data <- data %>%
-    filter(metric == metric_name) %>%
-    mutate(year_scaled = scale(year),
-           duration_scaled = scale(duration, scale = FALSE),
-           startyear_scaled = scale(startyear, scale = FALSE),
-           taxa = as.factor(taxa),
-           realm = as.factor(realm),
-           climate = as.factor(climate))
+  if (missing(study_id)){
+    fit_data <- data %>%
+      filter(metric == metric_name) %>%
+      mutate(year_scaled = scale(year),
+             duration_scaled = scale(duration, scale = FALSE),
+             startyear_scaled = scale(startyear, scale = FALSE),
+             taxa = as.factor(taxa),
+             realm = as.factor(realm),
+             climate = as.factor(climate))
+  } else{
+    fit_data <- data %>%
+      filter(metric == metric_name) %>%
+      mutate(year_scaled = scale(year),
+             duration_scaled = scale(duration, scale = FALSE),
+             startyear_scaled = scale(startyear, scale = FALSE),
+             taxa = as.factor(taxa),
+             realm = as.factor(realm),
+             climate = as.factor(climate)) %>%
+      filter(study_id == study_id)
+  }
   
   if(n_distinct(fit_data$rarefyID) < 2){
     return(tibble())
@@ -274,6 +286,15 @@ model_table <- bind_rows(mod_results %>% filter(is.na(warning)),
   )) #%>%
   #select(-model)
 
+# get number of observations for each model
+# lmm_obs <- model_table %>% 
+#   filter(model_id == "base") %>% 
+#   select(metric, model) %>% 
+#   rowwise() %>% 
+#   mutate(nobs = nobs(model)) %>% 
+#   select(-model) %>% 
+#   distinct()
+
 metric_model_table <- model_table %>% select(-model)
 
 usethis::use_data(metric_model_table)
@@ -335,8 +356,8 @@ get_study_slopes <- function(metric, model, model_id){
       cond.var = cond.std.error*cond.std.error, 
            var = cond.var + year_scaled_var,
            std.error = sqrt(var),
-           upr.ci = estimate + (2*std.error),
-           lwr.ci = estimate - (2*std.error),
+           upr.ci = estimate + (1.96*std.error),
+           lwr.ci = estimate - (1.96*std.error),
            sig = case_when(
              lwr.ci < 0 & upr.ci > 0 ~ FALSE,
              TRUE ~ TRUE
@@ -359,9 +380,7 @@ study_slopes <- re_slopes %>%
   filter(model_id == "base") %>%
   rename(study_id = level)
 
-# study_slopes_wide <- study_slopes %>%
-#   select(study_id, metric, estimate) %>%
-#   pivot_wider(names_from = "metric", values_from = "estimate")
+usethis::use_data(study_slopes)
 ```
 
 Get study level slopes using bootstrap resampling
@@ -477,3 +496,22 @@ startyear_slope <- study_slope_data %>%
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
 ```
+
+#### Looking at BBS specifically to compare slopes and significance
+```{r}
+bbs_models <- map_dfr(metric_names[metric_names != "S"], 
+                      ~get_model(data = model_data, 
+                                 metric_name = .x, "value ~ year_scaled + (year_scaled|rarefyID)", 
+                                 model_id = "base",
+                                 study_id = 195))
+
+bbs_models %>% 
+  filter(term == "year_scaled") %>% 
+  rowwise() %>% 
+  mutate(nobs = nobs(model)) %>% 
+  select(-model, -model_id, -formula, -n_ts, -warning, -group) %>% 
+  relocate(metric) %>% 
+  arrange(metric) %>% 
+  write_csv(here::here("data/bbs_slopes_indvmodels.csv"))
+```
+
