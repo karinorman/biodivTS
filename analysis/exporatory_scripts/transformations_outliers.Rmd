@@ -1,0 +1,245 @@
+---
+title: "Outlier assessment"
+output: html_document
+date: "2023-01-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lme4)
+library(broom.mixed)
+library(lmerTest)
+library(emmeans)
+```
+
+#### Read in data, get final dataset for models
+```{r}
+load(here::here("data/model_data.rda"))
+
+model_data <- filter(model_data, taxa != "Amphibians")
+```
+
+Let's look at models for FRic
+
+### FRic model
+
+```{r}
+fric_data <- model_data %>% filter(metric == "FRic") %>%
+  rename(FRic = value) %>%
+   mutate(year_scaled = scale(year),
+          taxa = as.factor(taxa),
+             realm = as.factor(realm),
+             climate = as.factor(climate),
+          logFRic = log(FRic))
+```
+
+let's do the full model for all studies
+```{r}
+fric_full_fit <- lmer("FRic ~ year_scaled + (year_scaled|study_id/rarefyID)", data = fric_data, REML = FALSE)
+
+logfric_full_fit <- lmer("logFRic ~ year_scaled + (year_scaled|study_id/rarefyID)", data = fric_data, control = lmerControl(optimizer = "bobyqa"))
+
+# remove the outlier
+logfric_full_fit_ex <- lmer("logFRic ~ year_scaled + (year_scaled|study_id/rarefyID)", data = fric_data %>% filter(study_id != 515), control = lmerControl(optimizer = "bobyqa"))
+```
+
+look at normality
+```{r}
+# hist(ranef(fric_full_fit)$study_id$`(Intercept)`)
+# shapiro.test(ranef(fric_full_fit)$study_id$`(Intercept)`) # test of normality
+hist(ranef(fric_full_fit)$study_id$`year_scaled`)
+shapiro.test(ranef(fric_full_fit)$study_id$`year_scaled`)
+
+hist(ranef(logfric_full_fit)$study_id$`(Intercept)`)
+shapiro.test(ranef(logfric_full_fit)$study_id$`(Intercept)`)
+hist(ranef(logfric_full_fit)$study_id$`year_scaled`)
+shapiro.test(ranef(logfric_full_fit)$study_id$`year_scaled`)
+```
+```{r}
+test_normality <- function(model_fit, metric_name){
+  intercepts <- ranef(model_fit)$study_id$`(Intercept)`
+  slopes <- ranef(model_fit)$study_id$`year_scaled`
+  
+  hist(intercepts, main = paste("intercepts for", metric_name))
+  hist(slopes, main = paste("slopes for", metric_name))
+  
+  bind_rows(tidy(shapiro.test(intercepts)) %>% mutate(type = "intercept"),
+            tidy(shapiro.test(slopes)) %>% mutate(type = "slope")) %>%
+    mutate(metric = metric_name)
+}
+
+test_normality(logfric_full_fit, "log(FRic)")
+```
+
+# Look at normality for base models we've already fit 
+
+```{r}
+# model_table comes from 05_model_metrics.Rmd
+
+model_df <- model_table %>%
+  filter(model_id == "base") %>%
+  select(metric, model, model_id) %>%
+  group_by(metric, model_id) %>% 
+  slice_head()
+
+mod_normality <- map2_dfr(model_df$model, model_df$metric, test_normality)
+```
+
+# Let's make almost everything log, not SES metrics because they're already normalized
+```{r}
+metric_names <- unique(model_data$metric)
+
+log_mods <- tibble(metric_name = metric_names[!metric_names %in% c("SES_FRic", "SES_FDiv", "SES_FEve")], 
+                         formula = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                   model_id = "base") 
+
+log_mods_fit <- pmap_dfr(log_mods, get_model, data = model_data)
+
+log_model_df <- log_mods_fit %>%
+  filter(model_id == "base") %>%
+  select(metric, model, model_id) %>%
+  group_by(metric, model_id) %>% 
+  slice_head()
+
+logmod_normality <- map2_dfr(log_model_df$model, log_model_df$metric, test_normality)
+```
+
+# The logvalue in model_data is actually log(value + 1), which works for the CWM but not the summary metrics
+```{r}
+log_metrics <- c("FRic", "S", "FDiv", "FEve")
+log_mods <- tibble(metric_name = log_metrics, 
+                         formula = "log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                   model_id = "base") 
+
+logvalue_mods <- tibble(metric_name = metric_names[!metric_names %in% append(c("SES_FRic", "SES_FDiv", "SES_FEve"), log_metrics)], 
+                         formula = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                   model_id = "base") 
+
+trans_mods <- bind_rows(log_mods, logvalue_mods)
+
+trans_mods_fit <- pmap_dfr(trans_mods, get_model, data = model_data) %>%
+  mutate(REML = TRUE, bobyqa = FALSE)
+
+# have to make sure they all converge #
+
+#get the models that had convergence warnings
+bad_models <- trans_mods_fit %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(trans_mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Turn off REML for these models, and they fit! 
+bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE) %>%
+  mutate(REML = FALSE, bobyqa = FALSE)
+
+#models that still won't converge
+bad_models2 <- bad_mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(trans_mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Fit with a different algorithm
+bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa")) %>%
+  mutate(REML = TRUE, bobyqa = TRUE)
+
+transmodel_table <- bind_rows(trans_mods_fit %>% filter(is.na(warning)), 
+          bad_mod_results %>% filter(is.na(warning)),
+          bad_mod_results2 %>% filter(is.na(warning)))
+
+
+# let's look at normality of the random effects
+trans_model_df <- transmodel_table %>%
+  select(metric, model, model_id, formula, REML, bobyqa) %>%
+  group_by(metric, model_id) %>% 
+  slice_head() %>%
+  ungroup()
+
+transmod_normality <- map2_dfr(trans_model_df$model, trans_model_df$metric, test_normality)
+```
+
+# Let's figure out if we have outlier issues, after visually inspecting the random effects
+
+```{r}
+s_mod <- trans_model_df %>% filter(metric == "S") %>% pull(model) %>% .[[1]]
+
+intercepts <- ranef(s_mod)$study_id$`(Intercept)`
+slopes <- ranef(s_mod)$study_id$`year_scaled`
+
+which(slopes < -1) # It's row 22
+ranef(s_mod)$study_id[22,] # It's study 377
+
+s_fit <- lmer("log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)", data = model_data %>% filter(metric == "S", study_id != 377), control = lmerControl(optimizer = "bobyqa"))
+```
+
+Let's make it a function
+```{r}
+check_outliers <- function(start_mod, metric_name, outlier_criterion, lmer_formula, REML = TRUE, bobyqa = FALSE){
+
+  intercepts <- ranef(start_mod)$study_id$`(Intercept)`
+  slopes <- ranef(start_mod)$study_id$`year_scaled`
+
+  rows <- which(eval(rlang::parse_expr(outlier_criterion))) # It's row 22
+  print(rows)
+  if(length(rows) > 1) warning(paste("There is more than one study outside the outlier cutoff for", metric_name))
+  
+  study <- as.integer(rownames(ranef(start_mod)$study_id[rows,]))
+  
+  if (isTRUE(REML)){
+    if (isTRUE(bobyqa)) {
+        fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study), 
+              control = lmerControl(optimizer = "bobyqa"))
+    } else {
+      fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study))
+    }
+  } else{
+    if (isTRUE(bobyqa)) {
+        fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study), 
+              REML = FALSE,
+              control = lmerControl(optimizer = "bobyqa"))
+    } else {
+      fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study),
+              REML = FALSE)
+    }
+  }
+
+
+  tibble(metric = metric_name,
+         old_estimate = tidy(start_mod) %>% filter(term == "year_scaled") %>% pull(estimate), 
+         old_p = tidy(start_mod) %>% filter(term == "year_scaled") %>% pull(p.value), 
+         new_estimate = tidy(fit) %>% filter(term == "year_scaled") %>% pull(estimate), 
+         new_p = tidy(fit) %>% filter(term == "year_scaled") %>% pull(p.value))
+
+}
+
+#check_outliers("S", "slopes < -1", "log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)", REML = TRUE, bobyqa = TRUE)
+
+# create dataframe for outlier criterion based on visualize of random effects
+criterion <- tibble(metric_name = c("CWM_bodymass_value", "CWM_diet_inv", "CWM_diet_scav", "CWM_diet_vect", 
+                                     "CWM_diet_vend", "CWM_diet_vunk", "CWM_forstrat_aerial", "CWM_forstrat_midhigh",
+                                     "CWM_forstrat_understory", "Jaccard_base", "S"),
+                    outlier_criterion = c("slopes > 0.4", "slopes < -0.5", "slopes > 0.6", "slopes > 0.4", 
+                                          "slopes > 0.5", "slopes < -0.5", "slopes > 0.04", "slopes < -0.05", 
+                                          "slopes < -0.4", "slopes > 0.02", "slopes < -1")
+                    )
+
+# get metric info for how models were fit
+outlier_mods <- trans_model_df %>% 
+  select(start_mod = model, metric_name = metric, lmer_formula = formula, REML, bobyqa) %>%
+  right_join(criterion) %>%
+  select(start_mod, metric_name, outlier_criterion, lmer_formula, REML, bobyqa)
+
+outlier_comp <- pmap_dfr(outlier_mods, check_outliers)
+
+```
+
