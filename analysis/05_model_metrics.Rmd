@@ -394,6 +394,101 @@ metric_model_table %>%
   
 ```
 
+#### Examine Outliers
+
+Let's identify any major outliers in slope random effects for the base models to see if they're impacting the overall trend. 
+
+First two functions to visualize and exclude outliers
+
+```{r}
+test_normality <- function(model_fit, metric_name){
+  intercepts <- ranef(model_fit)$study_id$`(Intercept)`
+  slopes <- ranef(model_fit)$study_id$`year_scaled`
+  
+  hist(intercepts, main = paste("intercepts for", metric_name))
+  hist(slopes, main = paste("slopes for", metric_name))
+  
+  bind_rows(tidy(shapiro.test(intercepts)) %>% mutate(type = "intercept"),
+            tidy(shapiro.test(slopes)) %>% mutate(type = "slope")) %>%
+    mutate(metric = metric_name)
+}
+
+check_outliers <- function(start_mod, metric_name, outlier_criterion, lmer_formula, REML = TRUE, bobyqa = FALSE){
+
+  intercepts <- ranef(start_mod)$study_id$`(Intercept)`
+  slopes <- ranef(start_mod)$study_id$`year_scaled`
+
+  rows <- which(eval(rlang::parse_expr(outlier_criterion))) # It's row 22
+  print(rows)
+  if(length(rows) > 1) warning(paste("There is more than one study outside the outlier cutoff for", metric_name))
+  
+  study <- as.integer(rownames(ranef(start_mod)$study_id[rows,]))
+  
+  if (isTRUE(REML)){
+    if (isTRUE(bobyqa)) {
+        fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study), 
+              control = lmerControl(optimizer = "bobyqa"))
+    } else {
+      fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study))
+    }
+  } else{
+    if (isTRUE(bobyqa)) {
+        fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study), 
+              REML = FALSE,
+              control = lmerControl(optimizer = "bobyqa"))
+    } else {
+      fit <- lmer(lmer_formula, 
+              data = model_data %>% filter(metric == metric_name, study_id != study),
+              REML = FALSE)
+    }
+  }
+
+
+  tibble(metric = metric_name,
+         old_estimate = tidy(start_mod) %>% filter(term == "year_scaled") %>% pull(estimate), 
+         old_p = tidy(start_mod) %>% filter(term == "year_scaled") %>% pull(p.value), 
+         new_estimate = tidy(fit) %>% filter(term == "year_scaled") %>% pull(estimate), 
+         new_p = tidy(fit) %>% filter(term == "year_scaled") %>% pull(p.value))
+
+}
+```
+
+Visualize the random effects for the base models
+```{r}
+base_mods <- model_table %>% 
+  filter(model_id == "base") %>%
+  select(metric, model, formula, REML, bobyqa) %>%
+  group_by(metric) %>% 
+  slice_head() %>%
+  ungroup()
+
+mod_normality <- map2_dfr(base_mods$model, base_mods$metric, test_normality)
+```
+
+Based on the visualization, we identify some metrics that are suspect for outliers
+```{r}
+# create dataframe for outlier criterion based on visualize of random effects
+criterion <- tibble(metric_name = c("CWM_bodymass_value", "CWM_diet_inv", "CWM_diet_scav", "CWM_diet_vect", 
+                                     "CWM_diet_vend", "CWM_diet_vunk", "CWM_forstrat_aerial", "CWM_forstrat_midhigh",
+                                     "CWM_forstrat_understory", "Jaccard_base", "S"),
+                    outlier_criterion = c("slopes > 0.4", "slopes < -0.5", "slopes > 0.6", "slopes > 0.4", 
+                                          "slopes > 0.5", "slopes < -0.5", "slopes > 0.04", "slopes < -0.05", 
+                                          "slopes < -0.4", "slopes > 0.02", "slopes < -1")
+                    )
+
+# get info for how original models were fit
+outlier_mods <- trans_model_df %>% 
+  select(start_mod = model, metric_name = metric, lmer_formula = formula, REML, bobyqa) %>%
+  right_join(criterion) %>%
+  select(start_mod, metric_name, outlier_criterion, lmer_formula, REML, bobyqa)
+
+# refit without outliers and compare
+outlier_comp <- pmap_dfr(outlier_mods, check_outliers)
+```
+
 #### Fit individual models
 ```{r}
 #get list of studies that only have one time series
