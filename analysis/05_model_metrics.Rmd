@@ -479,8 +479,16 @@ criterion <- tibble(metric_name = c("CWM_bodymass_value", "CWM_diet_inv", "CWM_d
                                           "slopes < -0.4", "slopes > 0.02", "slopes < -1")
                     )
 
+unique_mod_df <- model_table %>%
+  filter(model_id == "base") %>%
+  select(metric, model, model_id, formula, REML, bobyqa) %>%
+  group_by(metric) %>% 
+  slice_head() %>%
+  ungroup()
+
+
 # get info for how original models were fit
-outlier_mods <- trans_model_df %>% 
+outlier_mods <- unique_mod_df %>% 
   select(start_mod = model, metric_name = metric, lmer_formula = formula, REML, bobyqa) %>%
   right_join(criterion) %>%
   select(start_mod, metric_name, outlier_criterion, lmer_formula, REML, bobyqa)
@@ -548,7 +556,6 @@ bad_indv_results2 <- pmap_dfr(bad_indv_models2 %>% select(-warning), get_model, 
 
 Fit models for studies with only one time series
 ```{r}
-
 #get dataframe of glm's to fit
 glm_indv_model_df <- single_ts %>% 
   mutate(model_id = "base",
