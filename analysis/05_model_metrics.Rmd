@@ -154,7 +154,7 @@ Function approach to model
 get_model <- function(metric_name, formula, model_id, data, filter_study_id, ...){
   print(c(metric_name, model_id))
   qlmer <- quietly(lmer)
-  print(filter_study_id)
+  #print(filter_study_id)
   
   if (missing(filter_study_id)){
     fit_data <- data %>%
@@ -281,7 +281,11 @@ get_glm_model <- function(metric_name, formula, model_id, data, filter_study_id,
 Create dataframe of mixed effects models to fit
 ```{r}
 metric_names <- unique(model_data$metric)
-raw_value_mods <- tibble(metric_name = metric_names[metric_names != "S"], 
+raw_metrics <- c("SES_FRic", "SES_FDiv", "SES_FEve")
+log_metrics <- c("FRic", "S", "FDiv", "FEve")
+logone_metrics <- metric_names[!metric_names %in% c(raw_metrics, log_metrics)]
+
+raw_value_mods <- tibble(metric_name = raw_metrics, 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
@@ -290,14 +294,21 @@ raw_value_mods <- tibble(metric_name = metric_names[metric_names != "S"],
   #don't fit the CWM_litter_size_min_n and climate model, not enough data
   filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate")
 
-log_value_mods <- tibble(metric_name = c("S"), 
+log_mods <- tibble(metric_name = log_metrics, 
+                         base = "log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "log(value) ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "log(value) ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "log(value) ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+
+logone_mods <- tibble(metric_name = logone_metrics, 
                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
                          climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
-mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
+mods <- bind_rows(raw_value_mods, log_mods, logone_mods) %>% 
   select(metric_name, formula, model_id)
 ```
 
@@ -307,7 +318,8 @@ Fit models
 model_data <- model_data %>% filter(taxa != "Amphibians")
 
 #Fit models with base settings
-mod_results <- pmap_dfr(mods, get_model, data = model_data)
+mod_results <- pmap_dfr(mods, get_model, data = model_data) %>%
+  mutate(REML = TRUE, bobyqa = FALSE)
 
 #get the models that had convergence warnings
 bad_models <- mod_results %>%
@@ -317,7 +329,8 @@ bad_models <- mod_results %>%
   left_join(mods, by = c("metric" = "metric_name", "model_id")) 
 
 #Turn off REML for these models, and they fit! 
-bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
+bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE) %>%
+  mutate(REML = FALSE, bobyqa = FALSE)
 
 #models that still won't converge
 bad_models2 <- bad_mod_results %>%
@@ -327,7 +340,8 @@ bad_models2 <- bad_mod_results %>%
   left_join(mods, by = c("metric" = "metric_name", "model_id")) 
 
 #Fit with a different algorithm
-bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
+bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa")) %>%
+  mutate(REML = TRUE, bobyqa = TRUE)
 
 model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
           bad_mod_results %>% filter(is.na(warning)),
@@ -403,7 +417,7 @@ mixed_indv_model_df <- map_dfr(unique(model_data$study_id), ~metric_df %>% mutat
   anti_join(single_ts, by = c("metric_name", "filter_study_id"))
 
 # fit models for individual studies 
-mixed_indv_mod_results <- pmap_dfr(indv_model_df %>% filter(!metric_name %in% c("Jaccard_base", "Jaccard_next")), get_model, data = model_data)
+mixed_indv_mod_results <- pmap_dfr(mixed_indv_model_df %>% filter(!metric_name %in% c("Jaccard_base", "Jaccard_next")), get_model, data = model_data)
 
 #get dataframe of glm's to fit
 glm_indv_model_df <- single_ts %>% 
