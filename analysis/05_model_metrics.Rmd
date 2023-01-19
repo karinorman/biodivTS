@@ -151,7 +151,7 @@ performance::check_model()
 
 Function approach to model
 ```{r}
-get_model <- function(metric_name, formula, model_id, data, filter_study_id, ...){
+get_model <- function(metric_name, formula, model_id, data, filter_study_id, bobyqa = FALSE, ...){
   print(c(metric_name, model_id))
   qlmer <- quietly(lmer)
   #print(filter_study_id)
@@ -196,7 +196,12 @@ get_model <- function(metric_name, formula, model_id, data, filter_study_id, ...
   if(!model_id %in% c("base", "base_dur", "base_srt")){
     if(fit_data %>% pull(model_id) %>% n_distinct() >1) {
       
-      fit <- qlmer(formula = formula, data = fit_data, ...)
+      if (isFALSE(bobyqa)){
+        fit <- qlmer(formula = formula, data = fit_data, ...)
+      } else{
+        fit <- qlmer(formula = formula, data = fit_data, control = lmerControl(optimizer = "bobyqa"), ...)
+        plain_fit <- lmer(formula = formula, data = fit_data, control = lmerControl(optimizer = "bobyqa"), ...)
+      }
       
       slopes <- get_fixed_slopes(metric = metric_name, model = fit$result, model_id = model_id, model_data = fit_data) 
       
@@ -210,7 +215,8 @@ get_model <- function(metric_name, formula, model_id, data, filter_study_id, ...
       
       df <- tidy(fit$result) %>% 
         bind_rows(group_slopes, slope_constrasts) %>%
-        mutate(metric = metric_name, model = list(fit$result), model_id = model_id,
+        mutate(metric = metric_name, 
+               model = ifelse(exists("plain_fit"), list(plain_fit), list(fit$result)), model_id = model_id,
                n_ts = n_distinct(fit_data$rarefyID),
                formula = formula,
                warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
@@ -219,17 +225,25 @@ get_model <- function(metric_name, formula, model_id, data, filter_study_id, ...
     }
   }else{
     
-    fit <- qlmer(formula = formula, data = fit_data, ...)
+    if (isFALSE(bobyqa)){
+      fit <- qlmer(formula = formula, data = fit_data, ...)
+    } else {
+      fit <- qlmer(formula = formula, data = fit_data, control = lmerControl(optimizer = "bobyqa"), ...)
+      plain_fit <- lmer(formula = formula, data = fit_data, control = lmerControl(optimizer = "bobyqa"), ...)
+    }
+      
     
     if (missing(filter_study_id)){
       df_out <- tidy(fit$result) %>%
-        mutate(metric = metric_name, model = list(fit$result), model_id = model_id, 
+        mutate(metric = metric_name, 
+               model = ifelse(exists("plain_fit"), list(plain_fit), list(fit$result)), model_id = model_id, 
                n_ts = n_distinct(fit_data$rarefyID),
                formula = formula,
                warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings))
     }else
       df_out <- tidy(fit$result) %>%
-        mutate(metric = metric_name, model = list(fit$result), model_id = model_id, 
+        mutate(metric = metric_name, 
+               model = ifelse(exists("plain_fit"), list(plain_fit), list(fit$result)), model_id = model_id, 
                n_ts = n_distinct(fit_data$rarefyID),
                formula = formula,
                warning = ifelse(length(fit$warnings) == 0, NA, fit$warnings), 
@@ -340,7 +354,7 @@ bad_models2 <- bad_mod_results %>%
   left_join(mods, by = c("metric" = "metric_name", "model_id")) 
 
 #Fit with a different algorithm
-bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa")) %>%
+bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, bobyqa = TRUE) %>%
   mutate(REML = TRUE, bobyqa = TRUE)
 
 model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
@@ -654,6 +668,7 @@ extract_study_slopes <- function(model){
 }
 
 bootstrap_study_slopes <- function(metric, model, model_id, nsim){
+  browser()
   print(c(metric, model_id))
   
   fric_vars <- bootMer(model, FUN = extract_study_slopes, nsim = nsim, use.u = TRUE)
@@ -671,7 +686,7 @@ bootstrap_study_slopes <- function(metric, model, model_id, nsim){
 
 #future::plan("multisession", workers = 30)
 
-bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes) %>%
+bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base", metric == "CWM_bodymass_value") %>% mutate(nsim = 100), bootstrap_study_slopes) %>%
   # furrr::future_pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes, 
   #                                          .options = furrr::furrr_options(seed = TRUE)) %>%
   mutate(upr.ci = estimate + (2*std.error),
