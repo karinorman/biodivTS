@@ -166,7 +166,7 @@ get_model <- function(metric_name, formula, model_id, data, filter_study_id, bob
              realm = as.factor(realm),
              climate = as.factor(climate))
   } else{
-    print("Filter study")
+    print(paste("Filter study", filter_study))
     
     fit_data <- data %>%
       filter(metric == metric_name) %>%
@@ -523,16 +523,19 @@ single_ts <- model_data %>%
   rename(metric_name = metric, filter_study_id = study_id)
 
 # get dataframe of mixed effects models to fit
-metric_df <- bind_rows(tibble(metric_name = raw_metrics, 
-                         formula = "value ~ year_scaled + (year_scaled|rarefyID)"),
-          tibble(metric_name = logone_metrics, 
-                         formula = "logvalue ~ year_scaled + (year_scaled|rarefyID)"),
-          tibble(metric_name = log_metrics, 
-                         formula = "log(value) ~ year_scaled + (year_scaled|rarefyID)")) %>%
-  mutate(model_id = "base")
+metric_df <- model_data %>%
+  select(filter_study_id = study_id, metric_name = metric) %>% 
+  distinct() %>% 
+  mutate(model_id = "base",
+         formula = case_when(
+           metric_name %in% raw_metrics ~ "value ~ year_scaled + (year_scaled|rarefyID)",
+           metric_name %in% log_metrics ~ "log(value) ~ year_scaled + (year_scaled|rarefyID)",
+           TRUE ~ "logvalue ~ year_scaled + (year_scaled|rarefyID)"
+           )
+         )
 
 # exclude studies/metrics with only one rarefyID
-mixed_indv_model_df <- map_dfr(unique(model_data$study_id), ~metric_df %>% mutate(filter_study_id = .x)) %>%
+mixed_indv_model_df <- metric_df %>%
   anti_join(single_ts, by = c("metric_name", "filter_study_id"))
 
 # fit models for individual studies 
@@ -565,7 +568,15 @@ bad_indv_models2 <- bad_indv_results %>%
 bad_indv_results2 <- pmap_dfr(bad_indv_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa")) %>%
   mutate(REML = TRUE, bobyqa = TRUE)
 
-##FIXME: some of these still don't converge##
+# There are 12 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
+# tofit_mods <- bad_indv_results2 %>% filter(!is.na(warning)) %>% select(metric, study_id, formula) %>% distinct()
+# 
+# pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>% 
+#          filter(metric_name == metric, study_id == filter_study_id) %>%
+#         mutate(n = n(), nrarefyID = n_distinct(rarefyID)) %>%
+#         select(metric, study_id, nrarefyID, n) %>%
+#         distinct()}) %>% View()
+
 ```
 
 Fit models for studies with only one time series
@@ -668,7 +679,7 @@ extract_study_slopes <- function(model){
 }
 
 bootstrap_study_slopes <- function(metric, model, model_id, nsim){
-  browser()
+
   print(c(metric, model_id))
   
   fric_vars <- bootMer(model, FUN = extract_study_slopes, nsim = nsim, use.u = TRUE)
@@ -686,7 +697,7 @@ bootstrap_study_slopes <- function(metric, model, model_id, nsim){
 
 #future::plan("multisession", workers = 30)
 
-bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base", metric == "CWM_bodymass_value") %>% mutate(nsim = 100), bootstrap_study_slopes) %>%
+bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes) %>%
   # furrr::future_pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes, 
   #                                          .options = furrr::furrr_options(seed = TRUE)) %>%
   mutate(upr.ci = estimate + (2*std.error),
@@ -699,11 +710,11 @@ bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base", metric == "
 slope_comp <- study_slopes %>% 
   select(study_id, metric, sig_bulp = sig) %>%
   left_join(bootstrap_slopes %>% 
-              select(study_id, metric, sig_boot = sig)) %>%
+              select(study_id, metric, boot_estimate = estimate, boot_stde = std.error, sig_boot = sig)) %>%
   left_join(indv_mod_results %>%
               filter(term == "year_scaled") %>%
             mutate(sig_indv = if_else(p.value < 0.05, TRUE, FALSE)) %>%
-              select(study_id, metric, sig_indv))
+              select(study_id, metric, indv_estimate = estimate, indv_stde = std.error, sig_indv))
 ```
 
 Summaries of study slopes
