@@ -119,25 +119,6 @@ hist_duration <- model_data %>%
   theme(panel.grid.minor.x = element_blank())
 ```
 
-Visualize distributions of response
-```{r}
-# metrics %>%
-#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "Jaccard_hind")) %>%
-#   ggplot() +
-#   geom_histogram(aes(x = logvalue),
-#                  bins = 60) +
-#   facet_wrap(~metric, scales = "free") +
-#   labs(title = "Distribution of Log values")
-# 
-# metrics %>%
-#   filter(metric %in% c("FRic", "FEve", "FDiv", "FDis", "S", "SES_FDis", "SES_FDiv", "SES_FEve", "SES_FRic", "Jaccard_hind")) %>%
-#   ggplot() +
-#   geom_histogram(aes(x = value),
-#                  bins = 60) +
-#   facet_wrap(~metric, scales = "free") +
-#   labs(title = "Distribution of raw values")
-```
-
 ####Fit GLMs to overall patterns and data broken down by groups
 
 Convergence problems! See here:
@@ -166,7 +147,7 @@ get_model <- function(metric_name, formula, model_id, data, filter_study_id, bob
              realm = as.factor(realm),
              climate = as.factor(climate))
   } else{
-    print(paste("Filter study", filter_study))
+    print(paste("Filter study", filter_study_id))
     
     fit_data <- data %>%
       filter(metric == metric_name) %>%
@@ -358,24 +339,14 @@ bad_models2 <- bad_mod_results %>%
 bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, bobyqa = TRUE) %>%
   mutate(REML = TRUE, bobyqa = TRUE)
 
- model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
+model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
           bad_mod_results %>% filter(is.na(warning)),
           bad_mod_results2 %>% filter(is.na(warning))) %>%
   mutate(significant = case_when(
     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
     TRUE ~ NA
-  )) #%>%
-  #select(-model)
-
-# get number of observations for each model
-# lmm_obs <- model_table %>% 
-#   filter(model_id == "base") %>% 
-#   select(metric, model) %>% 
-#   rowwise() %>% 
-#   mutate(nobs = nobs(model)) %>% 
-#   select(-model) %>% 
-#   distinct()
+  )) 
 
 metric_model_table <- model_table %>% select(-model)
 
@@ -390,23 +361,8 @@ uniq_metric_model <- metric_model_table %>% select(metric, model_id) %>% distinc
 uniq_mods <- mods %>% select(metric = metric_name, model_id) %>% distinct()
 
 #this is a list of models that weren't fit because there weren't enough timeseries OR they didn't converge
-#most are amphibian traits or traits only found for one taxa (with taxa as a covariate), the nectar diet realm model wouldn't converge
+#most traits only found for one taxa with taxa as a covariate, the nectar diet realm model was data limited
 missing_mods <- setdiff(uniq_mods, uniq_metric_model)
-```
-
-Write out table of model estimates for manuscript
-```{r}
-#manuscript table
-metric_model_table %>% 
-  filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
-  select(-c(model_id, warning, statistic, df)) %>% 
-  write_csv(here::here("figures", "man_model_table.csv"))
-
-#supplement of complete model output
-metric_model_table %>%
-  select(-c(model_id, n_ts, warning, lower.CL, upper.CL, significant)) %>%
-  write_csv(here::here("paper", "model_estimates_supp.csv"))
-  
 ```
 
 #### Examine Outliers
@@ -430,6 +386,8 @@ test_normality <- function(model_fit, metric_name){
 
 check_outliers <- function(start_mod, metric_name, outlier_criterion, lmer_formula, REML = TRUE, bobyqa = FALSE){
 
+  print(metric_name)
+  
   intercepts <- ranef(start_mod)$study_id$`(Intercept)`
   slopes <- ranef(start_mod)$study_id$`year_scaled`
 
@@ -489,7 +447,7 @@ Based on the visualization, we identify some metrics that are suspect for outlie
 criterion <- tibble(metric_name = c("CWM_bodymass_value", "CWM_diet_inv", "CWM_diet_scav", "CWM_diet_vect", 
                                      "CWM_diet_vend", "CWM_diet_vunk", "CWM_forstrat_aerial", "CWM_forstrat_midhigh",
                                      "CWM_forstrat_understory", "Jaccard_base", "S"),
-                    outlier_criterion = c("slopes > 0.4", "slopes < -0.5", "slopes > 0.6", "slopes > 0.4", 
+                    outlier_criterion = c("slopes > 0.4", "slopes < -20", "slopes > 0.6", "slopes > 0.4", 
                                           "slopes > 0.5", "slopes < -0.5", "slopes > 0.04", "slopes < -0.05", 
                                           "slopes < -0.4", "slopes > 0.02", "slopes < -1")
                     )
@@ -540,7 +498,9 @@ mixed_indv_model_df <- metric_df %>%
   anti_join(single_ts, by = c("metric_name", "filter_study_id"))
 
 # fit models for individual studies 
-mixed_indv_mod_results <- pmap_dfr(mixed_indv_model_df %>% filter(!metric_name %in% c("Jaccard_base", "Jaccard_next")), get_model, data = model_data)
+mixed_indv_mod_results <- pmap_dfr(mixed_indv_model_df %>% 
+                                     filter(!metric_name %in% c("Jaccard_base", "Jaccard_next")), 
+                                   get_model, data = model_data)
 
 # they didn't all converge
 #get the models that had convergence warnings
@@ -572,7 +532,7 @@ bad_indv_results2 <- pmap_dfr(bad_indv_models2 %>% select(-warning), get_model, 
 # There are 12 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
 # tofit_mods <- bad_indv_results2 %>% filter(!is.na(warning)) %>% select(metric, study_id, formula) %>% distinct()
 # 
-# pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>% 
+# pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>%
 #          filter(metric_name == metric, study_id == filter_study_id) %>%
 #         mutate(n = n(), nrarefyID = n_distinct(rarefyID)) %>%
 #         select(metric, study_id, nrarefyID, n) %>%
@@ -619,26 +579,41 @@ indv_mod_table <- indv_mod_results %>% select(-model)
 usethis::use_data(indv_mod_table)
 ```
 
+Write out table of model estimates for manuscript
+```{r}
+#manuscript table
+metric_model_table %>% 
+  filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
+  select(-c(model_id, warning, statistic, df)) %>% 
+  write_csv(here::here("figures", "man_model_table.csv"))
+
+#supplement of complete model output
+bind_rows(metric_model_table, indv_mod_table) %>%
+    select(-c(model_id, n_ts, warning, lower.CL, upper.CL, significant, REML, bobyqa)) %>%
+  write_csv(here::here("paper", "model_estimates_supp.csv"))
+  
+```
+
 Summaries of study slopes
 ```{r}
 #First - how many studies had a significant trend for each metric? 
-study_slopes %>% 
-  filter(sig == TRUE) %>% 
+indv_mod_table %>% 
+  filter(term == "year_scaled", p.value < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
   mutate(positive = ifelse(estimate > 0, TRUE, FALSE)) %>%
   group_by(metric, positive) %>% 
   summarise(n_study_id = n_distinct(study_id)) 
 
 #And which studies were they?
-study_slopes %>% 
-  filter(sig == TRUE) %>% 
+indv_mod_table %>% 
+  filter(term == "year_scaled", p.value < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   select(study_id, metric) %>%
   distinct()
 
 #Which were significant for multiple metrics?
-study_slopes %>% 
-  filter(sig == TRUE) %>% 
+indv_mod_table %>% 
+  filter(term == "year_scaled", p.value < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
   group_by(study_id) %>%
   filter(n() > 1) %>%
@@ -683,22 +658,3 @@ startyear_slope <- study_slope_data %>%
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
 ```
-
-#### Looking at BBS specifically to compare slopes and significance
-```{r}
-bbs_models <- map_dfr(metric_names[metric_names != "S"], 
-                      ~get_model(data = model_data, 
-                                 metric_name = .x, "value ~ year_scaled + (year_scaled|rarefyID)", 
-                                 model_id = "base",
-                                 study_id = 195))
-
-bbs_models %>% 
-  filter(term == "year_scaled") %>% 
-  rowwise() %>% 
-  mutate(nobs = nobs(model)) %>% 
-  select(-model, -model_id, -formula, -n_ts, -warning, -group) %>% 
-  relocate(metric) %>% 
-  arrange(metric) %>% 
-  write_csv(here::here("data/bbs_slopes_indvmodels.csv"))
-```
-
