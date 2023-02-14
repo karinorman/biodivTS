@@ -16,6 +16,8 @@ library(lmerTest)
 library(emmeans)
 
 load(here::here("data/model_data.rda"))
+#exclude amphibians
+model_data <- model_data %>% filter(taxa != "Amphibians")
 ```
 
 Let's test the sensitivity of the general trends (and study level patterns?) to major data processing decisions.
@@ -86,45 +88,48 @@ get_fixed_slopes <- function(metric, model, model_id, model_data){
 Define models to fit
 ```{r}
 metric_names <- unique(model_data$metric)
-raw_value_mods <- tibble(metric_name = metric_names[metric_names != "S"], 
+raw_metrics <- c("SES_FRic", "SES_FDiv", "SES_FEve", 
+                 "CWM_diet_inv", "CWM_forstrat_ground", "CWM_forstrat_watbelowsurf", "FEve")
+log_metrics <- c("FRic", "S", "FDiv")
+logone_metrics <- metric_names[!metric_names %in% c(raw_metrics, log_metrics)]
+
+raw_value_mods <- tibble(metric_name = raw_metrics, 
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
-                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)"
-                         ) %>%
+                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula") %>%
   #don't fit the CWM_litter_size_min_n and climate model, not enough data
   filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate")
 
-log_value_mods <- tibble(metric_name = c("S"), 
+log_mods <- tibble(metric_name = log_metrics, 
+                         base = "log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "log(value) ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "log(value) ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "log(value) ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+
+logone_mods <- tibble(metric_name = logone_metrics, 
                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
-                         climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)"
-                         ) %>%
+                         climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
 
-mods <- bind_rows(raw_value_mods, log_value_mods) %>% 
+mods <- bind_rows(raw_value_mods, log_mods, logone_mods) %>% 
   select(metric_name, formula, model_id)
 ```
 
 1. Min time series duration
 ```{r}
-dur_dfs <- list(min3 = filter(model_data, taxa != "Amphibians", duration > 2),
-                min4 = filter(model_data, taxa != "Amphibians", duration > 3),
-                min5 = filter(model_data, taxa != "Amphibians", duration > 4))
+dur_dfs <- list(min3 = filter(model_data, duration > 2),
+                min4 = filter(model_data, duration > 3),
+                min5 = filter(model_data, duration > 4))
 
 duration_sens <- map_dfr(dur_dfs, ~pmap_dfr(filter(mods, model_id == "base"), get_model, data = .x), .id = "dataID")
 ```
 
-2. Inclusion of Amphibians - nothing changes when you exclude them 
-```{r}
-with_amph <- pmap_dfr(filter(mods, model_id == "base"), get_model, data = model_data) %>%
-  mutate(dataID = "with_amph")
-```
-
-
-3. Trait Coverage
+2. Trait Coverage
 ```{r}
 load(here::here("data/study_table.rda"))
 
@@ -138,9 +143,12 @@ covg_dfs <- list(covg75 = filter(model_data, taxa != "Amphibians"),
 coverage_sens <- map_dfr(covg_dfs, ~pmap_dfr(filter(mods, model_id == "base"), 
                                              get_model, data = .x), .id = "dataID")
 
-sens_mods <- bind_rows(duration_sens, coverage_sens, with_amph) %>%
+sens_mods <- bind_rows(duration_sens, coverage_sens) %>%
   select(-model) %>%
-  filter(metric != "Jaccard_next") %>%
-  write_csv(here::here("paper", "sensitivity_models.csv"))
+  filter(metric != "Jaccard_next")
+
+usethis::use_data(sens_mods)
+
+write_csv(sens_mods, here::here("paper", "sensitivity_models.csv"))
 ```
 
