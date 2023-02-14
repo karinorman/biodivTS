@@ -1,0 +1,148 @@
+---
+title: "Untitled"
+output: html_document
+date: "2023-02-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Get study level slope estimates using BLUP's
+```{r}
+get_study_slopes <- function(metric, model, model_id){
+  
+  filter_name <- ifelse(model_id == "base", "study_id", model_id)
+  
+  #get the statistics for the year variable
+  year_scaled_coef <- tidy(model) %>%
+    filter(term == "year_scaled") 
+  
+  #get the year estimate
+  year_scaled_est <- pull(year_scaled_coef, estimate) 
+  
+  #get year variation
+  year_scaled_var <- year_scaled_coef %>% 
+    mutate(var = std.error*std.error) %>%
+    pull(var)
+  
+  #get study level conditional estimates and add to over all estimates
+  study_ests <- broom.mixed::tidy(model, effects="ran_vals") %>%
+    filter(group == filter_name, term == "year_scaled") %>% 
+    select(-c(effect, group, term)) %>%
+    rename(cond.std.error = std.error, cond.estimate = estimate) %>%
+    mutate(estimate = cond.estimate + year_scaled_est,
+      cond.var = cond.std.error*cond.std.error, 
+           var = cond.var + year_scaled_var,
+           std.error = sqrt(var),
+           upr.ci = estimate + (1.96*std.error),
+           lwr.ci = estimate - (1.96*std.error),
+           sig = case_when(
+             lwr.ci < 0 & upr.ci > 0 ~ FALSE,
+             TRUE ~ TRUE
+           ),
+      metric = metric,
+      model_id = model_id)
+}
+
+model_df <- model_table %>%
+  filter(model_id == "base") %>%
+  select(metric, model, model_id) %>%
+  group_by(metric, model_id) %>% 
+  slice_head()
+
+#get study level slopes for base, and levels for categorical random effect in non-base models
+re_slopes <- pmap_dfr(model_df, get_study_slopes)
+
+#get only study-level slopes for the base models
+study_slopes <- re_slopes %>% 
+  filter(model_id == "base") %>%
+  rename(study_id = level)
+
+usethis::use_data(study_slopes)
+```
+
+Get study level slopes using bootstrap resampling
+```{r}
+extract_study_slopes <- function(model){
+  
+  #get the statistics for the year variable
+  year_scaled_est <- tidy(model) %>%
+    filter(term == "year_scaled") %>%
+    pull(estimate)
+  
+  estimate <- broom.mixed::tidy(model, effects="ran_vals") %>%
+    filter(group == "study_id", term == "year_scaled") %>% 
+    select(-c(effect, group, term)) %>%
+    rename(cond.estimate = estimate) %>%
+    mutate(estimate = cond.estimate + year_scaled_est) %>%
+    select(level, estimate) %>%
+    deframe()
+  
+  return(estimate)
+}
+
+bootstrap_study_slopes <- function(metric, model, model_id, nsim){
+
+  print(c(metric, model_id))
+  
+  fric_vars <- bootMer(model, FUN = extract_study_slopes, nsim = nsim, use.u = TRUE)
+  
+  estimates <- enframe(fric_vars$t0, name = "study_id", value = "estimate") 
+  
+  as_tibble(fric_vars$t) %>% 
+    pivot_longer(everything(), names_to = "study_id", values_to = "values") %>%
+    group_by(study_id) %>%
+    summarize(n = n(), std.error = sd(values)/sqrt(n)) %>%
+    left_join(estimates) %>%
+    select(-n) %>%
+    mutate(metric = metric, model_id = model_id)
+}
+
+#future::plan("multisession", workers = 30)
+
+bootstrap_slopes <- pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes) %>%
+  # furrr::future_pmap_dfr(model_df %>% filter(model_id == "base") %>% mutate(nsim = 100), bootstrap_study_slopes, 
+  #                                          .options = furrr::furrr_options(seed = TRUE)) %>%
+  mutate(upr.ci = estimate + (2*std.error),
+         lwr.ci = estimate - (2*std.error),
+         sig = case_when(
+             lwr.ci < 0 & upr.ci > 0 ~ FALSE,
+             TRUE ~ TRUE
+           ))
+```
+
+```{r}
+slope_comp <- study_slopes %>% 
+  select(study_id, metric, blup_estimate = estimate, blup_stde = std.error, sig_bulp = sig) %>%
+  left_join(bootstrap_slopes %>% 
+              select(study_id, metric, boot_estimate = estimate, boot_stde = std.error, sig_boot = sig)) %>%
+  left_join(indv_mod_results %>%
+              filter(term == "year_scaled") %>%
+            mutate(sig_indv = if_else(p.value < 0.05, TRUE, FALSE)) %>%
+              select(study_id, metric, indv_estimate = estimate, indv_stde = std.error, sig_indv))
+```
+
+```{r}
+load(here::here("data/indv_mod_table.rda"))
+
+slopes_long <- slope_comp %>% 
+    select(study_id, metric, blup_estimate, blup_stde, boot_estimate, boot_stde, indv_estimate, indv_stde) %>%
+  pivot_longer(cols = c(blup_estimate, blup_stde, boot_estimate, boot_stde, indv_estimate, indv_stde),
+  names_to = c("type", ".value"),
+  names_pattern = "(.+)_(.+)"
+  )
+
+slopes_long %>% 
+  #filter(metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", "SES_FEve")) %>%
+  filter(metric == "Jaccard_base") %>%
+  filter(type != "blup") %>%
+  ggplot(aes(x = study_id, y = estimate)) +
+  geom_point(aes(colour = type), size = 3.5) +
+  geom_errorbar(aes(ymin = estimate-(2*stde), ymax = estimate + (2*stde))) + 
+    facet_wrap(vars(metric))
+  
+    
+```
+

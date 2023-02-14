@@ -1,0 +1,172 @@
+---
+title: "Outlier assessment"
+output: html_document
+date: "2023-01-13"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lme4)
+library(broom.mixed)
+library(lmerTest)
+library(emmeans)
+```
+
+#### Read in data, get final dataset for models
+```{r}
+load(here::here("data/model_data.rda"))
+
+model_data <- filter(model_data, taxa != "Amphibians")
+```
+
+Create dataframe of mixed effects models to fit
+```{r}
+# metric_names <- unique(model_data$metric)
+# raw_metrics <- c("SES_FRic", "SES_FDiv", "SES_FEve")
+# log_metrics <- c("FRic", "S", "FDiv", "FEve")
+# logone_metrics <- metric_names[!metric_names %in% c(raw_metrics, log_metrics)]
+# 
+# raw_value_mods <- tibble(metric_name = raw_metrics, 
+#                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
+#                          taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+#                          realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+#                          climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
+#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula") %>%
+#   #don't fit the CWM_litter_size_min_n and climate model, not enough data
+#   filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate")
+# 
+# log_mods <- tibble(metric_name = log_metrics, 
+#                          base = "log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)",
+#                          taxa = "log(value) ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+#                          realm = "log(value) ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+#                          climate = "log(value) ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
+#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+# 
+# logone_mods <- tibble(metric_name = logone_metrics, 
+#                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
+#                          taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+#                          realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+#                          climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
+#   pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+# 
+# mods <- bind_rows(raw_value_mods, log_mods, logone_mods) %>% 
+#   select(metric_name, formula, model_id)
+```
+
+Fit models
+```{r}
+# #exclude amphibians
+# model_data <- model_data %>% filter(taxa != "Amphibians")
+# 
+# #Fit models with base settings
+# mod_results <- pmap_dfr(mods, get_model, data = model_data) %>%
+#   mutate(REML = TRUE, bobyqa = FALSE)
+# 
+# #get the models that had convergence warnings
+# bad_models <- mod_results %>%
+#   select(metric, model_id, warning) %>% 
+#   filter(!is.na(warning)) %>% 
+#   distinct() %>%
+#   left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+# 
+# #Turn off REML for these models, and they fit! 
+# bad_mod_results <- pmap_dfr(bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE) %>%
+#   mutate(REML = FALSE, bobyqa = FALSE)
+# 
+# #models that still won't converge
+# bad_models2 <- bad_mod_results %>%
+#   select(metric, model_id, warning) %>% 
+#   filter(!is.na(warning)) %>% 
+#   distinct() %>%
+#   left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+# 
+# #Fit with a different algorithm
+# bad_mod_results2 <- pmap_dfr(bad_models2 %>% select(-warning), get_model, data = model_data, bobyqa = TRUE) %>%
+#   mutate(REML = TRUE, bobyqa = TRUE)
+# 
+# model_table <- bind_rows(mod_results %>% filter(is.na(warning)), 
+#           bad_mod_results %>% filter(is.na(warning)),
+#           bad_mod_results2 %>% filter(is.na(warning))) %>%
+#   mutate(significant = case_when(
+#     p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
+#     !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
+#     TRUE ~ NA
+#   )) 
+```
+
+Need to also fit the non-log models
+```{r}
+nonlog_mods <- tibble(metric_name = metric_names[metric_names != "S"], 
+                         base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
+                         taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
+                         realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
+                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula") %>%
+  #don't fit the CWM_litter_size_min_n and climate model, not enough data
+  filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate") %>% 
+  select(metric_name, formula, model_id)
+```
+
+Fit models
+```{r}
+#Fit models with base settings
+nonlog_mod_results <- pmap_dfr(nonlog_mods, get_model, data = model_data)
+
+#get the models that had convergence warnings
+nonlog_bad_models <- nonlog_mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Turn off REML for these models, and they fit! 
+nonlog_bad_mod_results <- pmap_dfr(nonlog_bad_models %>% select(-warning), get_model, data = model_data, REML = FALSE)
+
+#models that still won't converge
+nonlog_bad_models2 <- nonlog_bad_mod_results %>%
+  select(metric, model_id, warning) %>% 
+  filter(!is.na(warning)) %>% 
+  distinct() %>%
+  left_join(mods, by = c("metric" = "metric_name", "model_id")) 
+
+#Fit with a different algorithm
+nonlog_bad_mod_results2 <- pmap_dfr(nonlog_bad_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa"))
+
+nonlog_model_table <- bind_rows(nonlog_mod_results %>% filter(is.na(warning)), 
+          nonlog_bad_mod_results %>% filter(is.na(warning)),
+          nonlog_bad_mod_results2 %>% filter(is.na(warning))) %>%
+  mutate(significant = case_when(
+    p.value > 0.05 | lower.CL < 0 & upper.CL > 0 ~ FALSE,
+    !is.na(p.value) | !is.na(lower.CL) ~ TRUE,
+    TRUE ~ NA
+  ))
+```
+
+Function to compare pre and post transformation normality
+```{r}
+library(DHARMa)
+
+comp_normality <- function(metric, model, log_model){
+  model_sim <- simulateResiduals(fittedModel = model, plot = F)
+  log_model_sim <- simulateResiduals(fittedModel = log_model, plot = F)
+  
+  plot(model_sim, title = paste(metric, "untransformed"))
+  plot(log_model_sim, title = paste(metric, "log transformed"))
+}
+
+model_comp_df <- nonlog_model_table %>%
+  filter(model_id == "base") %>%
+  select(metric, model) %>% 
+  group_by(metric) %>%
+  slice_head(n=1) %>%
+  left_join(model_table %>% 
+              filter(model_id == "base") %>%
+              select(metric, log_model = model) %>% 
+              group_by(metric) %>%
+              slice_head(n=1))
+
+pmap(model_comp_df, comp_normality)
+```
+Based on visual comparison, the following metrics are better *not* transformed: diet_inv, forstrat_ground, forstrat_watbelowsurf, FEve.
+
+
