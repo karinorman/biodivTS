@@ -19,4 +19,4 @@ File Name | Description | Input | Output
 02_rarefy_timeseries| Calculate rarefied metrics. | `bt_traitfiltered.Rmd` | samples and metrics in `rarefied_metrics/` and `rarefied_samples/`, (file for each sample)
 03_rarefy_null_models.Rmd | Get null model samples for each rarefied sample, calculated metrics. | `rarefied_samples/`, `bt_traitfiltered.Rmd` | `null_table.Rmd`
 04_collate_rarefied_resamps_median.Rmd | Combine rarefied metrics with null model stats to get final dataframe of metrics. | `rarefied_metrics/`, `null_table.rda`, | `rarefied_metrics.rda`
-05_model_metrics.Rmd | Foramt data for modeling and run all models. | `meta.rda`, `rarefied_metrics.rda` | `model_data.rda`, `metric_model_table.rda`
+05_model_metrics.Rmd | Foramt data for modeling and run all models. | `meta.rda`, `rarefied_metrics.rda` | `model_data.rda`, `metric_model_table.rda`, 'indv_mod_table'
