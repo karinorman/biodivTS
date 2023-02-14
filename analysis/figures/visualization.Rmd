@@ -141,11 +141,11 @@ plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, col
 group_colors <- c("Global" = my_pal[1], "Polar/Temperate" = my_pal[6], "Temperate/Tropical" = my_pal[3], "Tropical" = my_pal[4], "Temperate" = my_pal[2], "Overall Mean" = "#000000")
 
 plot_map <- tibble(metric_name = c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", "SES_FEve"), 
-           ylabel = c("log(S)", "Jaccard", "Functional Richness SES", "Functional Divergence SES", "Functional Evenness SES"),
+           ylabel = c("log(S)", "log(Jaccard + 1)", "Functional Richness SES", "Functional Divergence SES", "Functional Evenness SES"),
            #ylabel = c("log(S)", "Jaccard", "Functional\nRichness SES", "Functional\nDivergence SES", "Functional\nEvenness SES"),
-           yval = c("logvalue", "value", "value", "value", "value"),
+           yval = c("log(value)", "logvalue", "value", "value", "value"),
            xlabel = c(NA, NA, NA, "year", "year"))
-m_plots <- pmap(plot_map, plot_metric, data = model_data, 
+m_plots <- pmap(plot_map, plot_metric, data = model_data %>% mutate("log(value)" = log(value)), 
                 model_coef = metric_model_table %>% filter(model_id == "base"), 
                 color_list = group_colors)
 
