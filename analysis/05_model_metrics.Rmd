@@ -625,12 +625,12 @@ Is slope a function of time series characteristics?
 ```{r}
 library(multcomp)
 
-study_slope_data <- study_slopes %>%
+study_slope_data <- indv_mod_table %>%
+  filter(term == "year_scaled") %>%
   dplyr::select(study_id, metric, estimate) %>%
   left_join(meta %>% 
               mutate(study_id = as.character(study_id))) %>%
   left_join(model_data %>% dplyr::select(study_id, startyear, duration) %>% distinct())
-
 
 duration_slope <- study_slope_data %>%
   group_nest(metric) %>%
@@ -653,7 +653,7 @@ startyear_slope <- study_slope_data %>%
   mutate(covariate = "startyear")
 
 #All model estimates in one dataframe
-# slope_models <- bind_rows(duration_slope, startyear_slope)
+slope_models <- bind_rows(duration_slope, startyear_slope)
 
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
