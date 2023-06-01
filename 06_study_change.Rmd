@@ -1,0 +1,141 @@
+---
+title: "Study Level trends"
+journal: "Ecology Letters"
+date: "`r Sys.Date()`"
+csl: pnas.csl
+layout: 3p
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
+output: 
+  rticles::arxiv_article:
+    keep_tex: true
+#  word_document: default
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+```{r}
+load(here::here("data/indv_mod_table.rda"))
+load(here::here("data/model_data.rda"))
+```
+
+# Types of Biodiversity Change
+
+```{r}
+wide_table <- indv_mod_table %>% 
+  filter(p.value < 0.05, term == "year_scaled", model_id == "base") %>% 
+  dplyr::select(study_id, metric, estimate) %>% 
+  pivot_wider(names_from = "metric", values_from = "estimate") %>% 
+  dplyr::select(., -starts_with("CWM_")) %>% 
+  dplyr::select(study_id, S, Jaccard_base, everything(), -Jaccard_next) %>%
+  left_join(model_data %>% 
+              dplyr::select(study_id, duration) %>%
+              distinct() %>%
+              group_by(study_id) %>% 
+              mutate(duration = max(duration)) %>% distinct() %>% 
+              mutate(study_id = as.character(study_id))) 
+```
+# Add decriptive columns to table 
+```{r}
+fun_change_table <- wide_table %>%
+  mutate(rich_change = ifelse(!is.na(S), "Richness Change", "No Richness Change"),
+         turnover = ifelse(!is.na(Jaccard_base), "Turnover", "No Turnover"),
+         fun_change = case_when(
+           if_all(c(FRic, SES_FRic, FDiv, SES_FDiv, FEve, SES_FEve), ~is.na(.)) ~ "No Functional Change",
+           .default = "Functional Change"
+         ))
+
+labels = fun_change_table %>%
+  dplyr::select(rich_change, turnover, fun_change) %>%
+  distinct() %>%
+  mutate(group = LETTERS[1:8])
+  
+fun_change_table <- fun_change_table %>%
+  left_join(labels)
+
+fun_change_table %>% 
+  count(rich_change, turnover, fun_change, group) 
+```
+
+Let's split up the corrected and uncorrected functional metrics
+```{r}
+ses_wide_table <-  wide_table %>%
+  dplyr::select(-FRic, -FDiv, -FEve) %>%
+  mutate(rich_change = ifelse(!is.na(S), TRUE, FALSE),
+         turnover = ifelse(!is.na(Jaccard_base), TRUE, FALSE),
+         fun_change = case_when(
+           if_all(c(SES_FRic, SES_FDiv, SES_FEve), ~is.na(.)) ~ FALSE,
+           .default = TRUE
+         ))
+
+ses_wide_table %>% 
+  count(rich_change, turnover, fun_change) 
+```
+```{r}
+uncor_wide_table <-  wide_table %>%
+  dplyr::select(-SES_FRic, -SES_FDiv, -SES_FEve) %>%
+  mutate(rich_change = ifelse(!is.na(S), TRUE, FALSE),
+         turnover = ifelse(!is.na(Jaccard_base), TRUE, FALSE),
+         fun_change = case_when(
+           if_all(c(FRic, FDiv, FEve), ~is.na(.)) ~ FALSE,
+           .default = TRUE
+         ))
+
+uncor_wide_table %>% 
+  count(rich_change, turnover, fun_change) 
+```
+
+# Look at distribution of durations
+```{r}
+duration_table <- fun_change_table %>%
+  dplyr::select(study_id, rich_change, turnover, fun_change, group) %>%
+  left_join(model_data %>% 
+              dplyr::select(study_id, rarefyID, duration) %>% 
+              distinct())
+
+```
+
+```{r}
+plot_table <- duration_table %>%
+  filter(group %in% c("A", "B", "C", "D"))
+
+group_types <- as_labeller(
+  c("A" = "No species change or turnover, functional change", "B" = "Turnover, no richness or functional change", "C" = "No change", "D" = "Turnover, species and functional Change")
+)
+
+my_pal <- c("#d9be3b", "#77976e", "#086788", "#cc8214", "#bfac88", "#99adbf")
+group_colors <- c("A" = "#d9be3b", "B" = "#77976e", "C" = "#086788", "D" = "#cc8214")
+
+ggplot(plot_table, aes(x = duration, fill = group)) +
+  geom_histogram(data = dplyr::select(plot_table, -group), fill = "grey", alpha = .5) +
+  geom_histogram(colour = "black") +
+  facet_wrap(~ group, labeller = group_types) +
+  guides(fill = FALSE) +  # to remove the legend
+  scale_fill_manual(values = group_colors) +
+  theme_classic()      
+```
+Let's make a pretty table now
+```{r}
+library(kableExtra)
+
+fun_change_table %>% 
+  dplyr::select(-group) %>%
+  count(rich_change, turnover, fun_change) %>%
+  pivot_wider(names_from = rich_change, values_from = n) %>%
+  kable() %>%
+  collapse_rows(columns = 1, valign = "middle")
+
+```
+
