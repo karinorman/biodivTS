@@ -1,19 +1,9 @@
 ---
 title: "Study Level trends"
-journal: "Ecology Letters"
-date: "`r Sys.Date()`"
-csl: pnas.csl
-layout: 3p
+output: pdf_document
 header-includes:
-   - \usepackage{lineno}
-   - \linenumbers
-output: 
-  rticles::arxiv_article:
-    keep_tex: true
-#  word_document: default
-editor_options: 
-  markdown: 
-    wrap: sentence
+  - \usepackage{booktabs}
+date: "2023-06-05"
 ---
 
 ```{r setup, include=FALSE}
@@ -112,7 +102,7 @@ plot_table <- duration_table %>%
   filter(group %in% c("A", "B", "C", "D"))
 
 group_types <- as_labeller(
-  c("A" = "No species change or turnover, functional change", "B" = "Turnover, no richness or functional change", "C" = "No change", "D" = "Turnover, species and functional Change")
+  c("A" = "No richness change or turnover, functional change", "B" = "No turnover, richness and functional change", "C" = "No change", "D" = "Turnover, richness and functional Change")
 )
 
 my_pal <- c("#d9be3b", "#77976e", "#086788", "#cc8214", "#bfac88", "#99adbf")
@@ -127,15 +117,32 @@ ggplot(plot_table, aes(x = duration, fill = group)) +
   theme_classic()      
 ```
 Let's make a pretty table now
-```{r}
+```{r, echo=FALSE}
 library(kableExtra)
 
 fun_change_table %>% 
   dplyr::select(-group) %>%
   count(rich_change, turnover, fun_change) %>%
   pivot_wider(names_from = rich_change, values_from = n) %>%
-  kable() %>%
-  collapse_rows(columns = 1, valign = "middle")
-
+  select(fun_change, everything()) %>%
+  arrange(fun_change) %>%
+  mutate(`No Richness Change` = cell_spec(`No Richness Change`,
+                                           color = case_when(
+                                             `No Richness Change` == 12 ~ "#d9be3b",
+                                             `No Richness Change` == 11 ~ "#086788",
+                                             .default = "black"))) %>%
+  mutate(`Richness Change` = cell_spec(`Richness Change`,
+                                           color = case_when(
+                                             `Richness Change` == 6 ~ "#77976e",
+                                             `Richness Change` == 7 ~ "#cc8214",
+                                             .default = "black"))
+         ) %>%
+  kable(format = "latex", col.names = c("", "", "No Richness Change", "Richness Change"), 
+        booktabs = TRUE, align = "c", escape = FALSE) %>%
+  kable_styling("striped") %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1:2, bold = TRUE) %>%
+  collapse_rows(columns = 1, valign = "middle") %>%
+  kable_as_image("figures/change_table", file_format = "jpeg", latex_header_includes = c("\\\\usepackage{booktabs}"))
 ```
 
