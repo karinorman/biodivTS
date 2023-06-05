@@ -97,7 +97,7 @@ duration_table <- fun_change_table %>%
 
 ```
 
-```{r}
+```{r, echo = FALSE, message = FALSE, fig.show = 'hold', fig.cap= "Break down of studies by the type of change they exhibited."}
 plot_table <- duration_table %>%
   filter(group %in% c("A", "B", "C", "D"))
 
@@ -112,12 +112,11 @@ ggplot(plot_table, aes(x = duration, fill = group)) +
   geom_histogram(data = dplyr::select(plot_table, -group), fill = "grey", alpha = .5) +
   geom_histogram(colour = "black") +
   facet_wrap(~ group, labeller = group_types) +
+  ylab("count of time series") +
   guides(fill = FALSE) +  # to remove the legend
   scale_fill_manual(values = group_colors) +
   theme_classic()      
-```
-Let's make a pretty table now
-```{r, echo=FALSE}
+
 library(kableExtra)
 
 fun_change_table %>% 
@@ -142,7 +141,7 @@ fun_change_table %>%
   kable_styling("striped") %>%
   row_spec(0, bold = TRUE) %>%
   column_spec(1:2, bold = TRUE) %>%
-  collapse_rows(columns = 1, valign = "middle") %>%
-  kable_as_image("figures/change_table", file_format = "jpeg", latex_header_includes = c("\\\\usepackage{booktabs}"))
+  collapse_rows(columns = 1, valign = "middle") #%>%
+  #kable_as_image("figures/change_table", file_format = "jpeg", latex_header_includes = c("\\\\usepackage{booktabs}"))
 ```
 
