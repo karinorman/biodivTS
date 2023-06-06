@@ -73,6 +73,7 @@ ses_wide_table <-  wide_table %>%
 ses_wide_table %>% 
   count(rich_change, turnover, fun_change) 
 ```
+
 ```{r}
 uncor_wide_table <-  wide_table %>%
   dplyr::select(-SES_FRic, -SES_FDiv, -SES_FEve) %>%
@@ -97,7 +98,7 @@ duration_table <- fun_change_table %>%
 
 ```
 
-```{r, echo = FALSE, message = FALSE, fig.show = 'hold', fig.cap= "Break down of studies by the type of change they exhibited."}
+```{r}
 plot_table <- duration_table %>%
   filter(group %in% c("A", "B", "C", "D"))
 
@@ -115,9 +116,15 @@ ggplot(plot_table, aes(x = duration, fill = group)) +
   ylab("count of time series") +
   guides(fill = FALSE) +  # to remove the legend
   scale_fill_manual(values = group_colors) +
-  theme_classic()      
+  theme_classic() 
 
+ggsave(here::here("figures/duration_hist.jpeg"), bg = "white")
+```
+
+```{r, echo = FALSE, message = FALSE, fig.show = 'hold', fig.cap= "Break down of studies by the type of change they exhibited."}
 library(kableExtra)
+
+knitr::include_graphics(here::here("figures/duration_hist.jpeg"))
 
 fun_change_table %>% 
   dplyr::select(-group) %>%
