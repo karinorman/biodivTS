@@ -194,9 +194,9 @@ All models in our analysis were fit using the *lme4* package in R and p-values w
 We found no significant overall trend in species richness or summary functional diversity metrics (observed or standardized) (Fig \ref{fig:timeseriesPlot}).
 We did find a significant overall decrease in Jaccard similarity, indicating accumulating changes in species composition.
 Non-significant overall trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies was plausibly 0 (Table \ref{tab:resultsTab}).
-Trends for different taxa, biomes, or realms were also non-significant for richness and summary functional diversity metrics, with the exception of a significantly increasing trend for functional evenness of global studies (characterized by having samples on multiple continents), and a significantly increasing functional richness slope for tropical studies.
-However, neither trend was exhibited for the standardized metric, indicating that differences were largely due to changes in species richness.
-Further, with only two global studies these results are not true general trends.
+Trends for different taxa, biomes, or realms were also non-significant for richness and summary functional diversity metrics, with the exception of a significantly increasing trend for functional evenness of global studies (characterized by having samples on multiple continents), and a significantly decreasing functional richness slope for temperate/tropical studies and mammal studies.
+However, trends were not exhibited for the standardized metric indicating that differences were largely due to changes in species richness.
+Further, with only two global studies, the trend should not be considered truely general.
 The general trends for *CWM* models were similarly not significant, with a significant positive trend for only percentage of fish in diet composition.
 
 ```{r timeseriesPlot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
@@ -236,26 +236,6 @@ read_csv(here::here("figures/man_model_table.csv")) %>%
   kable_styling(latex_options= c("scale_down", "hold_position"))
 ```
 
-At the study level, 4 studies experienced a significant trend in species richness and only 9 of 50 studies for observed metrics and 3 of 50 studies for standardized metrics experienced a significant trend for a metric other than Jaccard similarity (Table \ref{tab:trendTab}).
-Most significant trends for observed functional metrics are in functional richness and disappeared after standardization, indicating that richness increases were likely due to changes in the number of species.
-However, the majority of the functional richness trends were negative, indicating that when change is occurring it is more often a loss.
-Hypothesis testing for study-level trends is likely affected by multiple testing issues and some trends identified as significant are therefore potentially spurious.
-Rather than interpreting changes in specific studies, we present these results as a general picture of how few studies experienced a significant trend and highlight that even that count is likely an overestimate.
-
-```{r trendTab, echo = FALSE}
-library(tidyverse)
-
-data.frame(sign = c("+", "-"), S = c("1", "3"), `Jaccard Similarity` = c("0", "31"), FRic = c("2", "5"), FEve = c("1", "0"), FDiv = c("0", "1"), `SES FRic` = c("0", "1"), `SES FEve` = c("0", "2"), `SES FDiv` = c("0", "1")) %>%
-  column_to_rownames("sign") %>%
-  kable(caption = "Number of studies that experienced a significant trend in each calculated metric out of 50 total studies.")
-```
-
-Study-level slopes for multiple metrics were significantly related to the duration and start year of studies.
-Slopes for species richness were significantly more negative with later start date and more positive for longer duration studies.
-Jaccard similarity and functional evenness both had significantly more negative slopes with more recent start year, whereas functional divergence was significantly more positive.
-Slopes for functional evenness were also significantly more positive for longer duration studies.
-See supplement for estimates and p-values for all models.
-
 We did find significant differences between taxa, realms, and climate for Jaccard similarity and some of the *CWM's*.
 For example while Jaccard similarity was decreasing in the general trend and there were significant within group slopes for Mammals, Birds, and Terrestrial communities, there was no significant slope for the marine realm, indicating that the general trend is mostly driven by turnover in terrestrial communities.
 For bird communities, we also found within group trends and between group differences for trends in foraging behavior.
@@ -263,11 +243,43 @@ We found a significant increasing trend in utilization of the canopy in Tropical
 There was a significant decrease in utilization of the understory for Terrestrial communities and significant increase in foraging below the water surface for global studies (but see the previous limitations of Global data).
 There was also a significant positive slope for *CWM* body mass for the single Temperate/Tropical study (with three time series) which were marine mammal communities.
 
-We found significant dietary shifts across communities.
-We found a significant increase in fruit consumption in Terrestrial communities and a significant decrease in nectar consumption in Tropical communities, a trend significantly different than that for Terrestrial communities.
+We found significant dietary shifts across communities, with a significant increase in fruit consumption in Terrestrial communities and a significant decrease in nectar consumption in Tropical communities, a trend significantly different than that for Terrestrial communities.
 There was a significant increase in seed consumption in bird species, which was significantly different from the trend for Mammal communities.
 There was a significant increase in fish consumption for the two Global studies.
-Vertebrate consumption significantly decreased for Marine communities and for Global and Tropical communities.
+Vertebrate consumption significantly decreased for Marine studies and for studies of Global and Tropical communities.
+
+At the study level, 15 of 50 studies exhibited a significant trend in species richness and 11 exhibited significant turnover.
+For observed functional metrics, 25 of 50 studies exhibited a trend in a least one metric, and 15 of 50 studies exhibited a significant trend for at least one standardized metrics (Table \ref{tab:trendTab}).
+In general, there were more signifcant trends for uncorrected metrics, with some disappearing after correction, indicating that those trends were likely due to changes in the number of species.
+Hypothesis testing for study-level trends is likely affected by multiple testing issues and some trends identified as significant are therefore potentially spurious.
+Rather than interpreting changes in specific studies, we present these results as a general picture of how few studies experienced a significant trend and highlight that even that count is likely an overestimate.
+
+```{r trendTab, echo = FALSE}
+library(tidyverse)
+
+load(here::here("data/indv_mod_table.rda"))
+
+indv_mod_table %>%
+  filter(term == "year_scaled", p.value < 0.05) %>%
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>%
+  mutate(positive = ifelse(estimate > 0, "+", "-")) %>%
+  group_by(metric, positive) %>%
+  summarise(n_study_id = n_distinct(study_id)) %>%
+  pivot_wider(names_from = "metric", values_from = "n_study_id", values_fill = 0) %>%
+  select(positive, S, Jaccard_base, FRic, FEve, FDiv, SES_FRic, SES_FEve, SES_FDiv) %>%
+  kable(format = "latex", 
+        col.names = c("", "S", "Jaccard Similarity", "FRic", "FEve", "FDiv", "SES FRic", "SES FEve", "SES FDiv"),
+        caption = "Number of studies that experienced a significant trend in each calculated metric out of 50 total studies.", 
+        booktabs = TRUE, align = "c", escape = FALSE) %>%
+  kable_styling("striped")
+
+```
+
+Study-level slopes for multiple metrics were significantly related to the duration and start year of studies.
+Slopes for species richness were significantly more negative with later start date and more positive for longer duration studies.
+Jaccard similarity and functional evenness both had significantly more negative slopes with more recent start year, whereas functional divergence was significantly more positive.
+Slopes for functional evenness were also significantly more positive for longer duration studies.
+See supplement for estimates and p-values for all models.
 
 We assessed the sensitivity of general trend results to major data processing decision by rerunning models with increasingly conservative subsets of the data.
 After excluding time series with less than two, three, and four year durations, we found that the general trend for increase in CWM aerial foraging disappeared, but two other trends in CWM's appeared.
