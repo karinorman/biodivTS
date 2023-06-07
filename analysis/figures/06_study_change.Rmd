@@ -57,6 +57,8 @@ fun_change_table <- fun_change_table %>%
 
 fun_change_table %>% 
   count(rich_change, turnover, fun_change, group) 
+
+#usethis::use_data(fun_change_table)
 ```
 
 Let's split up the corrected and uncorrected functional metrics
@@ -103,7 +105,7 @@ plot_table <- duration_table %>%
   filter(group %in% c("A", "B", "C", "D"))
 
 group_types <- as_labeller(
-  c("A" = "No richness change or turnover, functional change", "B" = "No turnover, richness and functional change", "C" = "No change", "D" = "Turnover, richness and functional Change")
+  c("A" = "No richness change or turnover, functional change", "B" = "No turnover, richness and functional change", "C" = "No change", "D" = "Turnover, richness and functional change")
 )
 
 my_pal <- c("#d9be3b", "#77976e", "#086788", "#cc8214", "#bfac88", "#99adbf")
@@ -114,6 +116,7 @@ ggplot(plot_table, aes(x = duration, fill = group)) +
   geom_histogram(colour = "black") +
   facet_wrap(~ group, labeller = group_types) +
   ylab("count of time series") +
+  xlab("time series duration") +
   guides(fill = FALSE) +  # to remove the legend
   scale_fill_manual(values = group_colors) +
   theme_classic() 
@@ -146,9 +149,11 @@ fun_change_table %>%
   kable(format = "latex", col.names = c("", "", "No Richness Change", "Richness Change"), 
         booktabs = TRUE, align = "c", escape = FALSE) %>%
   kable_styling("striped") %>%
-  row_spec(0, bold = TRUE) %>%
-  column_spec(1:2, bold = TRUE) %>%
+  # row_spec(0, bold = TRUE) %>%
+  # column_spec(1:2, bold = TRUE) %>%
   collapse_rows(columns = 1, valign = "middle") #%>%
-  #kable_as_image("figures/change_table", file_format = "jpeg", latex_header_includes = c("\\\\usepackage{booktabs}"))
+  #save_kable(here::here("figures/change_table.jpeg"), latex_header_includes = c("\\\\usepackage{booktabs}"), keep_tex = TRUE)
+
+
 ```
 

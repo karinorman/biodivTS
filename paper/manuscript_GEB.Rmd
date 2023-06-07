@@ -293,13 +293,82 @@ A complete list of models run in the sensitivity analysis and their results can 
 Our study represents the largest broad-scale multi-taxa assessment of functional change through time to date, giving a first look at aggregate and local trends in functional diversity in mammal and bird communities.
 Surprisingly, we did not detect an overall trend in any of the summary functional diversity metrics.
 As with previous species-based syntheses, we also found no overall trend in species richness accompanied by increasing turnover through time [@dornelas2018], indicating that non-significant trends in functional metrics may be consistent with similar well-documented species derived trends.
-We found no evidence of systematic functional richness loss or functional change.
-A lack of trend for almost all realms, biomes, and taxonomic groups gives further evidence that changes in functional structure are not occurring in the systems observed in our dataset.
+We found no trend in functional change for almost all realms, biomes, and taxonomic groups, with evidence of functional richness loss for mammal studies.
+These results are consistent with... particularly as the trend was also significantly more negative the the trend for birds.
+
+Despite a lack of general trends in summary functional metrics, we did find multiple trends in *CWM*'s for studies coming from the same taxa, realms, or climates, many of which are consistent with previous findings for those contexts.
+For example, the decrease in insect consumption for tropical communities reflects well documented declines in tropical insectivorous birds [@sherry2021].
+Reduction in utilization of understory foraging for terrestrial communities could be the result of disturbance like human recreation or increased predation from introduced species.
+Other shifts in diet for both Birds and Mammals, including increasing fruit, seed, and vertebrate consumption and decreasing seed consumption in some climates point to important areas for further exploration.
+
+At the study level, biodiversity change fell into four dominant scenarios of change based on trends in richness, turnover, and functional metrics: no change, only functional change, richness and functional change with turnover, and richness and functional change without turnover (Table \ref{tab:changeScenarios}).
+Around a quarter of studies experienced no trend in richness, turnover, or functional metrics.
+These studies spanned the distribution of study durations excluding only the very longest running studies, with the longest no change time series lasting 23 years.
+
+Another quarter of the studies showed no trend in richness or turnover, but did show a significant shift in at least one summary functional metric.
+These communities are best aligned with scenarios of species replacement where only a few functional outliers replaced functionally indistinct species or vice versa (there were studies with positive and negative trends in all three functional metrics).
+Studies in the scenario of only functional change were heavily skewed toward shorter running time series, indicating that they may represent a limited snapshot of communities that on longer time scales would be exhibiting significant change in species based metrics, particularly as species replacement continues adding to turnover.
+Communities in this scenario, and the previous scenario of no functional change are consistent with hypotheses that species richness may be strongly regulated through time [@brown2001; @gotelli2017], and emphasize that maintenance of functional structure can be divorced from those processes.
+
+About 10 percent of studies, but the majority of time series in our dataset, exhibited richness and functional change but no turnover.
+These studies also spanned the the distribution of time series durations, excluding the longest running studies.
+With the exception of one study, trends in functional change for this group were only found for uncorrected metrics and disappeared after correction, indicating that functional change in this group is almost exclusively the result of species gains or losses rather than turnover of species with different functional traits.
+
+About 15 percent of studies, which were also exclusively the longest running studies, had a trend in turnover, richness, and functional change.
+The studies in this scenario fell into two groups: a positive trend in richness with a positive trend in functional richness (corrected and uncorrected), and a negative trend in species richness with a negative trend in uncorrected functional richness and no trend in corrected richness but a trend in other corrected functional metrics.
+This would indicate that when species are lost from a community, they are not more functionally unique than expected by chance, though they may produce shifts in other aspects of functional structure.
+When species are gained however, they disproportionately add to the functional richness of the community.
+
+Our results illuminate the relationship between species-based and functional metrics observed in real communities.
+Critically, particularly for the short observation time windows that characterize the majority of ecological data, functional shifts may be underlying seemingly static species-based community metrics.
+Species-based approaches may therefore be missing areas where significant change in the functional space could be impacting ecosystem function and resilience.
+In scenarios where there are significant species gains or losses over time, we found evidence that species losses may be relatively functionally indistinct, while species gains contribute disproportionately to the richness of a functional space.
+This finding is consistent with evidence that at least in brid communities common, functionally general species are being lost even as rare species are increasing [@inger2015; @rosenberg2019; @schipper2016].
+
+Our results are consistent with ecological expectations that community dissimilarity would be greater the larger the observation time window purely due to background processes, which is likely further accelerated by global change drivers [@dornelas2023].
+While we do not attempt to address how observed rates differ from background expectation here, we can make some assertions about the implication of turnover for functional change.
+Where turnover is occurring, it is almost always accompanied by a directional change in the functional space.
+Species are not therefore being replaced by exact functional counter parts.
+The fact that we observed both increases and decreases in corrected functional richness accompanying turnover is a reminder that replacements are not always an indication of functional loss.
+We also can't tease apart whether these are directional shifts due to changing environmental pressures, or simply shifts due to the available set of traits in the species pool.
 
 Very few of the studies in our data set experienced a significant trend in species richness for the observation period, our data therefore mostly represent communities undergoing significant change in species composition but not species counts.
 Results should therefore not be extrapolated to communities experiencing significant species losses or gains as in scenarios of recovery from disturbance or catastrophic human impact.
 While we cannot make generalizations about scenarios with richness losses or gains from out data, for the four studies that did experience significant species richness changes, only one exhibited any trend in a summary functional metric with a significant decrease in FRic but not SES FRic, indicating it was mostly functional loss due to species loss.
 We therefore have preliminary evidence that maintenance of functional structure can occur even in the face of species richness gains or losses, but additional data sources will be necessary to further explore how prevalent those scenarios are.
+
+-   there are a few clear types of change, and probability of falling in those groups does seem related to length of the time series
+
+```{r changeScenarios, echo = FALSE, message = FALSE, fig.show = 'hold', fig.cap= "Break down of studies by the type of change they exhibited."}
+
+load(here::here("data/fun_change_table.rda"))
+
+knitr::include_graphics(here::here("figures/duration_hist.jpeg"))
+
+fun_change_table %>% 
+  dplyr::select(-group) %>%
+  count(rich_change, turnover, fun_change) %>%
+  pivot_wider(names_from = rich_change, values_from = n) %>%
+  select(fun_change, everything()) %>%
+  arrange(fun_change) %>%
+  mutate(`No Richness Change` = cell_spec(`No Richness Change`,
+                                           color = case_when(
+                                             `No Richness Change` == 12 ~ "#d9be3b",
+                                             `No Richness Change` == 11 ~ "#086788",
+                                             .default = "black"))) %>%
+  mutate(`Richness Change` = cell_spec(`Richness Change`,
+                                           color = case_when(
+                                             `Richness Change` == 6 ~ "#77976e",
+                                             `Richness Change` == 7 ~ "#cc8214",
+                                             .default = "black"))
+         ) %>%
+  kable(format = "latex", col.names = c("", "", "No Richness Change", "Richness Change"), 
+        booktabs = TRUE, align = "c", escape = FALSE) %>%
+  kable_styling("striped") %>%
+  #row_spec(0, bold = TRUE) %>%
+  #column_spec(1:2, bold = TRUE) %>%
+  collapse_rows(columns = 1, valign = "middle")
+```
 
 Communities demonstrated almost universal maintenance of functional structure.
 While the majority of the studies (\~70%) included in our data experienced significant species turnover, only three (for standardized metrics) experienced a significant shift in any summary functional metric.
@@ -312,12 +381,6 @@ First, functional redundancy in the species pool maintains resilience of the fun
 Alternatively, while there may be low redundancy in the functional space, functional composition in the species pool may be replenished by changes in the composition of the species pool.
 Addition of new species to the species pool could occur under multiple mechanisms of global change, including the introduction of non-native species, shifts in species ranges due to climate change, and spatial homogenization due to replacement of specialist species by generalist ones.
 Future work directly assessing changes in the species pool and attributing those shifts to specific mechanisms will be critical for understanding how functional structure is maintained and what may interrupt that maintenance.
-
-Despite maintenance of summary functional metrics we did find multiple trends in *CWM*'s for studies coming from the same taxa, realms, or climates, many of which are consistent with previous findings for those contexts.
-For example, the decrease in insect consumption for tropical communities reflects well documented declines in tropical insectivorous birds [@sherry2021].
-Reduction in utilization of understory foraging for terrestrial communities could be the result of disturbance like human recreation or increased predation from introduced species.
-Other shifts in diet for both Birds and Mammals, including increasing fruit, seed, and vertebrate consumption and decreasing seed consumption in some climates point to important areas for further exploration.
-Generally, these findings indicate that even when some shifts in the functional space are occurring, often as a direct result of global change impacts, summary metrics describing functional structure can be maintained.
 
 These results challenge implicit assumptions that functional loss is the default state of all or even many communities [@carmona2021; @dirzo2014; @young2016].
 And while there is some evidence in our data that functional loss may be more common than functional gains for communities experiencing functional change, there was no significant trend for even the longest running and most heavily impacted studies.
@@ -367,11 +430,15 @@ For example, we focus here mostly on ecological traits (i.e. foraging strategy, 
 
 ## Policy Implications
 
-Our results should not be interpreted as an indication that the ongoing biodiversity crisis is less severe than previously described, or that there is no concern for functional change as a result of anthropogenic impact.
+While we found on over all trends in functional metrics, our results should not be interpreted as an indication that the ongoing biodiversity crisis is less severe than previously described, or that there is no concern for functional change as a result of anthropogenic impact.
+In fact, study-level trends indicate quite the opposite, that functional shifts with unknown implications for ecosystem characteristics may be going undetected by common species-based approaches.
 These findings compliment a substantial body of work linking functional degradation to species losses as a result of direct human intervention in the form of land use change and intensification or habitat fragmentation [@flynn2009; @magioli2021; @tinoco2018].
 Rather than assuming functional structure will be maintained in areas of concern, our work indicates that when measurements of functional diversity show significant shifts, it should be considered an indication of substantial community change and outside the normal expectation.
 
 ## Future Work
+
+While the trends we see here are statistically significant, we still do not know if they are ecologically significant.
+There is substantial work to be done to link degrees of change in functional structure to measurable outcomes in ecosystem processes.
 
 Here we make a significant first step in establishing a general trend for functional diversity through time across a variety of taxa and systems.
 We present the conclusion best supported by available data and acknowledge that overall trends could look very different for communities experiencing significant species losses or gains.
