@@ -13,6 +13,7 @@ library(lme4)
 library(broom.mixed)
 library(lmerTest)
 library(emmeans)
+library(purrr)
 ```
 #### Read in data, get final dataset for models
 Get data and put it in long form 
@@ -532,11 +533,11 @@ bad_indv_results2 <- pmap_dfr(bad_indv_models2 %>% select(-warning), get_model, 
 # There are 12 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
 # tofit_mods <- bad_indv_results2 %>% filter(!is.na(warning)) %>% select(metric, study_id, formula) %>% distinct()
 # 
-# pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>%
+# missing_indv_studies <- pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>%
 #          filter(metric_name == metric, study_id == filter_study_id) %>%
 #         mutate(n = n(), nrarefyID = n_distinct(rarefyID)) %>%
 #         select(metric, study_id, nrarefyID, n) %>%
-#         distinct()}) %>% View()
+#         distinct()})
 
 ```
 
@@ -585,12 +586,12 @@ Write out table of model estimates for manuscript
 metric_model_table %>% 
   filter(model_id == "base", metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>% 
   select(-c(model_id, warning, statistic, df)) %>% 
-  write_csv(here::here("figures", "man_model_table.csv"))
+  readr::write_csv(here::here("figures", "man_model_table.csv"))
 
 #supplement of complete model output
 bind_rows(metric_model_table, indv_mod_table) %>%
     select(-c(model_id, n_ts, warning, lower.CL, upper.CL, significant, REML, bobyqa)) %>%
-  write_csv(here::here("paper", "model_estimates_supp.csv"))
+  readr::write_csv(here::here("paper", "model_estimates_supp.csv"))
   
 ```
 
@@ -599,10 +600,11 @@ Summaries of study slopes
 #First - how many studies had a significant trend for each metric? 
 indv_mod_table %>% 
   filter(term == "year_scaled", p.value < 0.05) %>% 
-  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   mutate(positive = ifelse(estimate > 0, TRUE, FALSE)) %>%
   group_by(metric, positive) %>% 
-  summarise(n_study_id = n_distinct(study_id)) 
+  summarise(n_study_id = n_distinct(study_id)) %>%
+  pivot_wider(names_from = "metric", values_from = "n_study_id")
 
 #And which studies were they?
 indv_mod_table %>% 
