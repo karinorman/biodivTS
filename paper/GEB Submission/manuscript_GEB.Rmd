@@ -1,18 +1,5 @@
 ---
 title: Prevailing scenarios of functional change in anthropocene bird and mammal communities
-authors:
-  - name: "Kari E. A. Norman"
-    affiliation: Université de Montréal
-    location: Montréal, Quebec
-    email: kari.norman@berkeley.edu
-  - name: "Perry de Valpine"
-    affiliation: University of California, Berkeley
-    location: Berkeley, California
-    email: pdevalpine@berkeley.edu
-  - name: "Carl Boettiger"
-    affiliation: University of California, Berkeley
-    location: Berkeley, California
-    email: cboettig@berkeley.edu
 abstract: |
   Aim: Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing species turnover but no overall trend in species diversity through time at the local scale. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to mechanisms of ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time.
   
@@ -190,8 +177,9 @@ SES estimates can be interpreted as how much of the functional characteristic (r
 
 We estimated general trends for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each time series nested within the study.
 We fit 18 individual *CWM* models.
-All time series with data for a given trait were included in the model.
-We estimated study level trends using individual linear models, for studies with more than one times series we fit a random slope and intercept for time series.
+All time series with data for a given trait were included in the corresponding *CWM* model.
+We estimated study level trends using individual linear models.
+For studies with more than one times series we fit a random slope and intercept for time series.
 Some study-level models could not be fit for five studies for at least one metric due to data limitations, but those studies were still included in the general models.
 They represented 12 of 1350 study-level models fit for each metric.
 For further details see the supplement.
@@ -200,7 +188,8 @@ Where appropriate, response variables were $log$ or $log(x+1)$ transformed to be
 To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those factors added as a predictor to the original model structure.
 We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.8.2, @lenth2022].
 We assessed the impact of time series duration and start year on study-level trends using linear models with duration and start year as predictors.
-We also assessed the impact of potential study-level outliers on general trends, details on that process can be found in the supplement.
+We also assessed the impact of potential study-level outliers on general trends.
+Details on that process can be found in the supplement.
 All models in our analysis were fit using the *lme4* (v1.1-30) package in R (v4.2.3) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
 
 # Results
@@ -289,7 +278,7 @@ indv_mod_table %>%
 
 ```
 
-Study-level slopes for summary functional metrics were significantly related start year of the time series for Jaccard similarity and functional evenness, both of which had significantly more negative slopes with more recent start year.
+Study-level slopes for summary functional metrics were significantly related to start year of the time series for Jaccard similarity and functional evenness, both of which had significantly more negative slopes with more recent start year.
 No summary functional metrics were significantly related to the start year of the time series.
 
 We assessed the sensitivity of general trend results to major data processing decision by rerunning models with increasingly conservative subsets of the data.
@@ -362,7 +351,7 @@ The vast majority of experimental and observational work links declines in funct
 By those criteria very few communities in our dataset are in a state of concern for loss of functionality (Table \ref{tab:trendTab}), though we did find evidence that mammal communities may be in greater danger than bird communities.
 Still, shifts in metrics are only relevant if the underlying traits are those most critical for ecosystem function.
 We were limited in this analysis to the traits available rather than those with strong empirical links to function.
-Similarly, the dimensions of functional space most important for ecosystem function are still a topic of ongoing debate, and at least some known aspects important for multifunctionality were not measured here [e.g. dispersion, rarity, abundance of dominant species, @bagousse-pinguet2021].
+Similarly, the dimensions of functional space most important for ecosystem function are still a topic of on going debate, and at least some known aspects important for multifunctionality were not measured here [e.g. dispersion, rarity, abundance of dominant species, @bagousse-pinguet2021].
 
 ## Potential Methodological Limitations
 
@@ -370,7 +359,7 @@ Here we approach the question of functional change using the best available data
 While we found signatures of change at the study level, some gaps in best practices may be obscuring a true general trend at the aggregate level.
 First, the BioTIME database, while the most comprehensive data source of time series available, is limited in temporal and geographic scope.
 Most time series span only a few years (Fig \ref{fig:taxaMap}) and may not provide the statistical power necessary to detect trends [@wauchope2019].
-The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study exhibits a strong Northern Hemisphere bias.
+The database is also not a representative sample of the world's biodiversity or areas of greatest threat [@gonzalez2016; @vellend2017], and the subset of data in this study is predominantly from North America.
 We may simply not have data from those areas experiencing the greatest perturbation [@hughes2021], particularly scenarios of conversion to urban, human-dominated landscapes.
 While evidence from other work shows even disturbed communities can maintain functional structure [@edwards2013; @matuoka2020], these results should not be interpreted as evidence of low functional impact in areas of heavy human disturbance.
 
@@ -408,20 +397,10 @@ The degree of change in a process considered ecological meaningful is somewhat s
 It is further hampered by the use of species-level trait data, as the traits most closely linked to a process of interest may not be available [@zhu2017].
 Future trait collection that explicitly considers existing frameworks for linking traits to processes [e.g. the response and effect framework @lavorel2002] would facilitate improved ecological interpretation of potential functional changes.
 
-<!-- # Data Availability -->
+# Acknowledgments
 
-<!-- Code for the analyses in this chapter is archived on Zenodo at [10.5281/zenodo.5514334](https://doi.org/10.5281/zenodo.5514334). -->
+We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits.
 
-<!-- Data products are also archived on Zenodo at [10.5281/zenodo.6499442](https://doi.org/10.5281/zenodo.6499442). -->
-
-<!-- Original data sources are open access and available at their respective providers. -->
-
-<!-- # Acknowledgments -->
-
-<!-- We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits. -->
-
-<!-- We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database. -->
-
-<!-- Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to KEAN. CB acknowledges support from NSF CAREER Award #1942280 & NIFA project CA-B-INS-0162-H. -->
+We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database.
 
 # References

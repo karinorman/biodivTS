@@ -1,0 +1,62 @@
+---
+title: Prevailing scenarios of functional change in anthropocene bird and mammal communities
+authors:
+  - name: "Kari E. A. Norman"
+    affiliation: Université de Montréal
+    location: Montréal, Quebec
+    email: kari.norman@berkeley.edu
+  - name: "Perry de Valpine"
+    affiliation: University of California, Berkeley
+    location: Berkeley, California
+    email: pdevalpine@berkeley.edu
+  - name: "Carl Boettiger"
+    affiliation: University of California, Berkeley
+    location: Berkeley, California
+    email: cboettig@berkeley.edu
+abstract: |
+  Aim: Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing species turnover but no overall trend in species diversity through time at the local scale. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to mechanisms of ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time.
+  
+  Location: Global, with a North American focus
+  
+  Time period: 1923-2014
+  
+  Major taxa studied: Mammals, Birds
+  
+  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of a species' functional role to reconstruct time series of functional diversity metrics. Using generalized linear mixed models we estimated general trends in those metrics and trends for individual studies.
+  
+  Results: We found no overall trend in any functional diversity metric, despite data replicating species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness. At the study-level, we identified four prevailing scenarios of species and functional change, which showed links to the duration of the observation window.
+  
+  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevelant than the other across many taxa, biomes, and realms. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however the majority of studies showed a shift in a species or functional metric. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
+journal: "Ecology Letters"
+date: "`r Sys.Date()`"
+bibliography: refs.bib
+csl: pnas.csl
+layout: 3p
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers
+output: 
+  rticles::arxiv_article:
+    keep_tex: true
+#  word_document: default
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+
+# Data Availability
+
+Code for the analyses in this chapter is archived on Zenodo at [10.5281/zenodo.5514334](https://doi.org/10.5281/zenodo.5514334).
+
+Data products are also archived on Zenodo at [10.5281/zenodo.6499442](https://doi.org/10.5281/zenodo.6499442).
+
+Original data sources are open access and available at their respective providers.
+
+# Funding
+
+Support for this work was provided by U.S. Department of Energy through the Computational Sciences Graduate Fellowship (DE-FG02-97ER25308) awarded to KEAN. CB acknowledges support from NSF CAREER Award #1942280 & NIFA project CA-B-INS-0162-H.
+
+# Biosketch
+
+Kari Norman’s research is generally focused on understanding the impacts of anthropogenic change on biodiversity. She brings together existing data sources to understand broadscale change and develops software tools to facilitate robust synthesis workflows. 
