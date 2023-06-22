@@ -1,9 +1,11 @@
 ---
-title: "Sensitivity Analysis"
+title: "Supplement 1"
 output:
   pdf_document: default
   html_document: default
 ---
+
+# Sensitivity Analysis 
 
 We performed sensitivity analyses to assess whether or not the general trends for biodiversity metrics changed based on major data processing decisions. We looked at 1) the minimum duration of included time series, 2) the minimum cut off for percentage of species with traits from a time series, and 3) in inclusion of amphibian data. The table below summarizes all models run and the variables for which a significant trend was detected. A star indicates a trend that was not detected in the original analyses presented in the manuscript. The model_id corresponds to the model_id in the CSV of sensitivity model results.
 
