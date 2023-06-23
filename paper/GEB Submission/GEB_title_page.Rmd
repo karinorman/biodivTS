@@ -24,9 +24,10 @@ abstract: |
   
   Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of a species' functional role to reconstruct time series of functional diversity metrics. Using generalized linear mixed models we estimated general trends in those metrics and trends for individual studies.
   
-  Results: We found no overall trend in any functional diversity metric, despite data replicating species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness. At the study-level, we identified four prevailing scenarios of species and functional change, which showed links to the duration of the observation window.
+  Results: We found no overall trend in any functional diversity metric, despite data replicating species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however the majority of studies showed a shift in a species or functional metric. 
   
-  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevalant than the other across many taxa, biomes, and realms. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however the majority of studies showed a shift in a species or functional metric. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
+  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevalant than the other across many taxa, biomes, and realms. At the study-level, we identified four prevailing scenarios of species and functional change, which showed links to the duration of the observation window. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
+  
 journal: "Ecology Letters"
 date: "`r Sys.Date()`"
 bibliography: refs.bib

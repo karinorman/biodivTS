@@ -13,7 +13,7 @@
 \usepackage{microtype}      % microtypography
 \usepackage{graphicx}
 
-\title{Prevailing scenarios of functional change in anthropocene bird
+\title{Prevailing scenarios of functional change in Anthropocene bird
 and mammal communities}
 
 \author{
@@ -94,25 +94,26 @@ Major taxa studied: Mammals, Birds
 Methods: We paired thousands of bird and mammal assemblage time series
 from the BioTIME database with existing trait data representative of a
 species' functional role to reconstruct time series of functional
-diversity metrics. Using generalized linear mixed models we estimated
+diversity metrics. Using generalized linear mixed models, we estimated
 general trends in those metrics and trends for individual studies.
 
 Results: We found no overall trend in any functional diversity metric,
 despite data replicating species-based patterns of constant richness
 with increasing turnover. The lack of trend held even after correcting
-for changes in species richness. At the study-level, we identified four
-prevailing scenarios of species and functional change, which showed
-links to the duration of the observation window.
+for changes in species richness. At the study-level, there were also a
+substantial number of time series exhibiting no species or functional
+change, however most studies showed a shift in a species or functional
+metric.
 
 Main Conclusions: General trends indicate that on the aggregate one type
-of functional shift is not more prevelant than the other across many
-taxa, biomes, and realms. At the study-level, there were also a
-substantial number of time series exhibiting no species or functional
-change, however the majority of studies showed a shift in a species or
-functional metric. With no one prevailing scenario of change, it will be
-critical to link change scenarios to drivers of change, particularly to
-identify communities with capacity to resist drivers from those not
-experiencing substantial pressure from a driver.
+of functional shift is not more prevalant than the other across many
+taxa, biomes, and realms. At the study-level, we identified four
+prevailing scenarios of species and functional change, which showed
+links to the duration of the observation window. With no one prevailing
+scenario of change, it will be critical to link change scenarios to
+drivers of change, particularly to identify communities with capacity to
+resist drivers from those not experiencing substantial pressure from a
+driver.
 \end{abstract}
 
 \keywords{
@@ -144,7 +145,7 @@ approaches do not fully capture the nature of that change.
 The meaning of general trends derived from limited data, and their
 relevance for conservation, is a topic of on going debate. Global
 analyses have been heavily criticized for geographic biases, lack of
-data in the most heavily impacted areas, and not taking into account the
+data in the most heavily impacted areas, and not considering the
 ecological context of individual studies (10--12). Many of these
 criticisms reflect limitations of ecological data on the whole, and
 proponents argue we must make the best of the imperfect data available
@@ -216,7 +217,7 @@ impacted by anthropogenic change. While examining trends in plants,
 invertebrates, and other vertebrate species is of equal interest, trait
 data for those taxa raise additional challenges such as limited and
 biased species coverage (45), a lack of accepted species-level means,
-and differences in the types of traits collected. In order to ensure
+and differences in the types of traits collected. To ensure
 comparability across taxa in trait type and data quality we therefore
 focus on mammals and birds. Traits were intentionally selected to be
 representative of a species' Eltonian niche, thereby summarizing the
@@ -230,13 +231,10 @@ change, both in observed metrics and in metrics corrected for changes in
 species richness. We further assess the prevailing modes of change
 occurring at the study level to determine how functional change is
 related to species patterns, and which kinds of species and functional
-change are most common across communities. We distinguish between three
-possible scenarios of functional change: 1) significant functional
-change accompanied by changes in species-based metrics, 2) maintenance
-of functional structure despite significant species changes, 3)
-maintenance of functional and species metrics. Based on expectation due
-to human impacts, we expect to find significant functional changes,
-often accompanied by species change.
+change are most common across communities. We expect to find significant
+functional changes happening alongside and independent of species
+richness changes as a result of ongoing anthropogenic impacts and global
+change drivers.
 
 \hypertarget{material-and-methods}{%
 \section{Material and Methods}\label{material-and-methods}}
@@ -245,7 +243,7 @@ often accompanied by species change.
 \subsection{Data}\label{data}}
 
 We obtained mammal and bird time series from the BioTIME database, a
-global repository of high quality assemblage time series. All studies
+global repository of high-quality assemblage time series. All studies
 included in the database follow consistent sampling protocols and
 represent full assemblages rather than populations of single species
 (36). All time series include abundance of observed species. Following
@@ -336,9 +334,9 @@ traits were z-score scaled to give each trait equal weight in the trait
 space (52, 53). The number of trait axes was limited to the maximum
 number of traits that fulfills the criteria \(s >= 2^t\), where \(s\) is
 the number of species and \emph{t} is the number of traits. This
-restriction allows for a sufficient number of axes to capture the trait
-space while maintaining computational feasibility (54). Metrics
-incorporated weighting based on species abundance.
+restriction allows for enough axes to capture the trait space while
+maintaining computational feasibility (54). Metrics incorporated
+weighting based on species abundance.
 
 \hypertarget{null-models}{%
 \subsection{Null Models}\label{null-models}}
@@ -386,9 +384,7 @@ predictor to the original model structure. We estimated within-level
 slopes and calculated between-level contrasts using the \emph{emmeans}
 package (v1.8.2, 56). We assessed the impact of time series duration and
 start year on study-level trends using linear models with duration and
-start year as predictors. We also assessed the impact of potential
-study-level outliers on general trends. Details on that process can be
-found in the supplement. All models in our analysis were fit using the
+start year as predictors. All models in our analysis were fit using the
 \emph{lme4} (v1.1-30) package in R (v4.2.3) and p-values were calculated
 by Satterthwaite's degrees of freedom method using the \emph{lmerTest}
 (v3.1-3) package with a significance level of \(\alpha = 0.05\)
@@ -514,7 +510,7 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 \end{table}
 
 We did find significant differences between taxa, realms, and climate
-for Jaccard similarity and some of the \emph{CWM's}. For example while
+for Jaccard similarity and some of the \emph{CWM's}. For example, while
 Jaccard similarity was decreasing in the general trend and there were
 significant within group slopes for Mammals, Birds, and Terrestrial
 communities, there was no significant slope for the marine realm,
@@ -625,11 +621,12 @@ At the study level, biodiversity change fell into four dominant
 scenarios of change based on trends in richness, turnover, and
 functional metrics: no change, only functional change, richness and
 functional change with turnover, and richness and functional change
-without turnover (Table \ref{tab:changeScenarios}). Around a quarter of
-studies experienced no trend in richness, turnover, or functional
-metrics. These studies spanned the distribution of study durations
-excluding only the very longest running studies, with the longest no
-change time series lasting 23 years.
+without turnover (Table \ref{tab:changeScenarios}). In contrast to our
+expectation based on anthropogenic impacts, around a quarter of studies
+experienced no trend in richness, turnover, or functional metrics. These
+studies spanned the distribution of study durations excluding only the
+very longest running studies, with the longest no change time series
+lasting 23 years.
 
 Another quarter of the studies showed no trend in richness or turnover,
 but did show a significant shift in at least one summary functional
@@ -640,7 +637,7 @@ negative trends in all three functional metrics). Studies in the
 scenario of only functional change were heavily skewed toward shorter
 running time series, indicating that they may represent a limited
 snapshot of communities that on longer time scales would be exhibiting
-significant change in species based metrics, particularly as species
+significant change in species-based metrics, particularly as species
 replacement continued adding to turnover. Communities in this scenario,
 and the previous scenario of no functional change are consistent with
 hypotheses that species richness may be strongly regulated through time
@@ -696,10 +693,10 @@ directional change in the functional space. Species are not therefore
 being replaced by exact functional counter parts. The fact that we
 observed both increases and decreases in corrected functional richness
 accompanying turnover is a reminder that replacements are not always an
-indication of functional loss, but can also lead to increased functional
+indication of functional loss but can also lead to increased functional
 richness. While shifts in functional space may be the result of
 environmental pressure, we cannot distinguish between directional change
-and shifts due to the unavailability of an analog species in the species
+and shifts due to the inavailability of an analog species in the species
 pool.
 
 \begin{figure}
@@ -709,7 +706,7 @@ pool.
 Still, some results stand in contrast to predictions for trait shifts
 under global change. For example, mean body size is predicted to
 decrease as a result of climate change impacts and megafaunal loss (67),
-a phenomena which has already been well documented empirically and
+a phenomenon which has already been well documented empirically and
 experimentally in multiple taxa (68--71). While the species-level trait
 means used here are not appropriate for assessing intraspecific body
 size shifts, we would expect to see shifts in community-wide means due
@@ -811,21 +808,21 @@ concern (31, 82, 83).
 \subsection{Future Work}\label{future-work}}
 
 We present here four prevailing scenarios of change experienced in bird
-and mammal communities. While we offer an first discussion of which
-kinds of change are most common and why, assessing the true global
-prevalence will require continued efforts to fill data gaps, a well
-recognized challenge in ecology (6, 12, 77). Still, a ``scenarios of
-change'' framework can provide structure for future work addressing
-functional shifts, particularly as we reconcile results from broad-scale
-syntheses with in-depth single system studies. It will be particularly
-critical to link forms of change to individual drivers to assess which
-drivers may impact species and functional diversity differently.
-Understanding those links will help identify where directly measuring
-functional structure instead of just species change is necessary for
-understand impacts on a given system. In addition, direct links to
-drivers will improve our ability to distinguish between communities
-experiencing no change due to a lack of perturbation from communities
-with high resilience in the face of disturbance.
+and mammal communities. While we offer a first discussion of which kinds
+of change are most common and why, assessing the true global prevalence
+will require continued efforts to fill data gaps, a well recognized
+challenge in ecology (6, 12, 77). Still, a ``scenarios of change''
+framework can provide structure for future work addressing functional
+shifts, particularly as we reconcile results from broad-scale syntheses
+with in-depth single system studies. It will be particularly critical to
+link forms of change to individual drivers to assess which drivers may
+impact species and functional diversity differently. Understanding those
+links will help identify where directly measuring functional structure
+instead of just species change is necessary for understand impacts on a
+given system. In addition, direct links to drivers will improve our
+ability to distinguish between communities experiencing no change due to
+a lack of perturbation from communities with high resilience in the face
+of disturbance.
 
 Here we identify trends that are statistically significant, however they
 may not necessarily be ecologically significant. While it is common to
