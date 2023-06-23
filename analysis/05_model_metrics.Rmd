@@ -529,16 +529,19 @@ bad_indv_models2 <- bad_indv_results %>%
 #Fit with a different algorithm
 bad_indv_results2 <- pmap_dfr(bad_indv_models2 %>% select(-warning), get_model, data = model_data, control = lmerControl(optimizer = "bobyqa")) %>%
   mutate(REML = TRUE, bobyqa = TRUE)
+```
 
-# There are 12 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
-# tofit_mods <- bad_indv_results2 %>% filter(!is.na(warning)) %>% select(metric, study_id, formula) %>% distinct()
-# 
-# missing_indv_studies <- pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>%
-#          filter(metric_name == metric, study_id == filter_study_id) %>%
-#         mutate(n = n(), nrarefyID = n_distinct(rarefyID)) %>%
-#         select(metric, study_id, nrarefyID, n) %>%
-#         distinct()})
+There are 12 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
+```{r}
+tofit_mods <- bad_indv_results2 %>% filter(!is.na(warning)) %>% select(metric, study_id, formula) %>% distinct()
 
+missing_indv_studies <- pmap_df(tofit_mods %>% select(metric_name = metric, filter_study_id = study_id), function(metric_name, filter_study_id) {model_data %>%
+         filter(metric_name == metric, study_id == filter_study_id) %>%
+        mutate(n = n(), nrarefyID = n_distinct(rarefyID)) %>%
+        select(metric, study_id, nrarefyID, n) %>%
+        distinct()})
+
+readr::write_csv(missing_indv_studies, here::here("paper/missing_indv_studies.csv"))
 ```
 
 Fit Jaccard Mixed models to see which will fit
