@@ -1,5 +1,5 @@
 ---
-title: Prevailing scenarios of functional change in anthropocene bird and mammal communities
+title: Prevailing scenarios of functional change in Anthropocene bird and mammal communities
 abstract: |
   Aim: Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing species turnover but no overall trend in species diversity through time at the local scale. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to mechanisms of ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time.
   
@@ -13,7 +13,7 @@ abstract: |
   
   Results: We found no overall trend in any functional diversity metric, despite data replicating species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness. At the study-level, we identified four prevailing scenarios of species and functional change, which showed links to the duration of the observation window.
   
-  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevelant than the other across many taxa, biomes, and realms. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however the majority of studies showed a shift in a species or functional metric. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
+  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevalant than the other across many taxa, biomes, and realms. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however the majority of studies showed a shift in a species or functional metric. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
   
 journal: "Ecology Letters"
 date: "`r Sys.Date()`"
@@ -188,8 +188,6 @@ Where appropriate, response variables were $log$ or $log(x+1)$ transformed to be
 To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those factors added as a predictor to the original model structure.
 We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.8.2, @lenth2022].
 We assessed the impact of time series duration and start year on study-level trends using linear models with duration and start year as predictors.
-We also assessed the impact of potential study-level outliers on general trends.
-Details on that process can be found in the supplement.
 All models in our analysis were fit using the *lme4* (v1.1-30) package in R (v4.2.3) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
 
 # Results
