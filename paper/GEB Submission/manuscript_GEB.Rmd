@@ -1,5 +1,5 @@
 ---
-title: Prevailing scenarios of functional change in anthropocene bird and mammal communities
+title: Prevailing scenarios of functional change in Anthropocene bird and mammal communities
 abstract: |
   Aim: Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing species turnover but no overall trend in species diversity through time at the local scale. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to mechanisms of ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time.
   
@@ -9,11 +9,11 @@ abstract: |
   
   Major taxa studied: Mammals, Birds
   
-  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of a species' functional role to reconstruct time series of functional diversity metrics. Using generalized linear mixed models we estimated general trends in those metrics and trends for individual studies.
+  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of a species' functional role to reconstruct time series of functional diversity metrics. Using generalized linear mixed models, we estimated general trends in those metrics and trends for individual studies.
   
-  Results: We found no overall trend in any functional diversity metric, despite data replicating species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness. At the study-level, we identified four prevailing scenarios of species and functional change, which showed links to the duration of the observation window.
+  Results: We found no overall trend in any functional diversity metric, despite data replicating species-based patterns of constant richness with increasing turnover. The lack of trend held even after correcting for changes in species richness. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however most studies showed a shift in a species or functional metric. 
   
-  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevelant than the other across many taxa, biomes, and realms. At the study-level, there were also a substantial number of time series exhibiting no species or functional change, however the majority of studies showed a shift in a species or functional metric. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
+  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevalant than the other across many taxa, biomes, and realms. At the study-level, we identified four prevailing scenarios of species and functional change, which showed links to the duration of the observation window. With no one prevailing scenario of change, it will be critical to link change scenarios to drivers of change, particularly to identify communities with capacity to resist drivers from those not experiencing substantial pressure from a driver.
   
 journal: "Ecology Letters"
 date: "`r Sys.Date()`"
@@ -64,7 +64,7 @@ Recent syntheses of local trends in biodiversity over time have found no net cha
 While communities are clearly changing, our most common species-based approaches do not fully capture the nature of that change.
 
 The meaning of general trends derived from limited data, and their relevance for conservation, is a topic of on going debate.
-Global analyses have been heavily criticized for geographic biases, lack of data in the most heavily impacted areas, and not taking into account the ecological context of individual studies [@cardinale2014; @cardinale2018; @gonzalez2016].
+Global analyses have been heavily criticized for geographic biases, lack of data in the most heavily impacted areas, and not considering the ecological context of individual studies [@cardinale2014; @cardinale2018; @gonzalez2016].
 Many of these criticisms reflect limitations of ecological data on the whole, and proponents argue we must make the best of the imperfect data available [@primack2018].
 Still, there is general consensus on a few local-scale patterns that seem to be characteristic of the anthropocene, including the prevalence of species turnover across communities and patterns of both richness increase and decrease in different taxa and biomes [@dornelas2023].
 Understanding the implications of change in species assemblage for ecosystem stability and function is a critical next step in moving forward the biodiversity change conversation.
@@ -95,20 +95,19 @@ However, to date there has been no cross-taxa assessment of temporal functional 
 Here we perform the first multi-taxa, multi-realm assessment of functional diversity change through time.
 We focus on mammal and bird species as a significant subset of the world's biodiversity heavily impacted by anthropogenic change.
 While examining trends in plants, invertebrates, and other vertebrate species is of equal interest, trait data for those taxa raise additional challenges such as limited and biased species coverage [@fitzjohn2014], a lack of accepted species-level means, and differences in the types of traits collected.
-In order to ensure comparability across taxa in trait type and data quality we therefore focus on mammals and birds.
+To ensure comparability across taxa in trait type and data quality we therefore focus on mammals and birds.
 Traits were intentionally selected to be representative of a species' Eltonian niche, thereby summarizing the functional role they play in the community [@wilman2014].
 An initial assessment of amphibian trends is included in the supplement, but excluded from general trend assessment here due to limited geographic coverage.
 
 We assess thousands of mammal and bird functional diversity time series to determine whether or not there is a general trend of functional change, both in observed metrics and in metrics corrected for changes in species richness.
 We further assess the prevailing modes of change occurring at the study level to determine how functional change is related to species patterns, and which kinds of species and functional change are most common across communities.
-We distinguish between three possible scenarios of functional change: 1) significant functional change accompanied by changes in species-based metrics, 2) maintenance of functional structure despite significant species changes, 3) maintenance of functional and species metrics.
-Based on expectation due to human impacts, we expect to find significant functional changes, often accompanied by species change.
+We expect to find significant functional changes happening alongside and independent of species richness changes as a result of ongoing anthropogenic impacts and global change drivers.
 
 # Material and Methods
 
 ## Data
 
-We obtained mammal and bird time series from the BioTIME database, a global repository of high quality assemblage time series.
+We obtained mammal and bird time series from the BioTIME database, a global repository of high-quality assemblage time series.
 All studies included in the database follow consistent sampling protocols and represent full assemblages rather than populations of single species [@dornelas2018].
 All time series include abundance of observed species.
 Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale.
@@ -159,7 +158,7 @@ All available trait data for each study were included in functional diversity ca
 For variables with multiple levels each level was included as a separate trait axis.
 Continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
 The number of trait axes was limited to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
-This restriction allows for a sufficient number of axes to capture the trait space while maintaining computational feasibility [@blonder2018].
+This restriction allows for enough axes to capture the trait space while maintaining computational feasibility [@blonder2018].
 Metrics incorporated weighting based on species abundance.
 
 ## Null Models
@@ -188,8 +187,6 @@ Where appropriate, response variables were $log$ or $log(x+1)$ transformed to be
 To test for trends within and between different levels of taxa, biome, and realm we fit separate models with each of those factors added as a predictor to the original model structure.
 We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.8.2, @lenth2022].
 We assessed the impact of time series duration and start year on study-level trends using linear models with duration and start year as predictors.
-We also assessed the impact of potential study-level outliers on general trends.
-Details on that process can be found in the supplement.
 All models in our analysis were fit using the *lme4* (v1.1-30) package in R (v4.2.3) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
 
 # Results
@@ -236,11 +233,12 @@ read_csv(here::here("figures/man_model_table.csv")) %>%
   column_spec(3, width = "2cm") %>%
   collapse_rows(columns = 1:3, valign = "middle") %>%
   kable_paper() %>%
-  kable_styling(latex_options= c("scale_down", "hold_position"))
+  kable_styling(latex_options= c("scale_down", "hold_position")) %>%
+  save_kable(here::here("figures/tables/results_table.jpeg"))
 ```
 
 We did find significant differences between taxa, realms, and climate for Jaccard similarity and some of the *CWM's*.
-For example while Jaccard similarity was decreasing in the general trend and there were significant within group slopes for Mammals, Birds, and Terrestrial communities, there was no significant slope for the marine realm, indicating that the general trend is mostly driven by turnover in terrestrial communities.
+For example, while Jaccard similarity was decreasing in the general trend and there were significant within group slopes for Mammals, Birds, and Terrestrial communities, there was no significant slope for the marine realm, indicating that the general trend is mostly driven by turnover in terrestrial communities.
 For bird communities, we also found within group trends and between group differences for trends in foraging behavior.
 We found a significant increasing trend in utilization of the canopy in Tropical communities that was significantly different from the trends for Polar/Temperate and Temperate communities.
 There was a significant decrease in utilization of the understory for Terrestrial communities and significant increase in foraging below the water surface for global studies (but see the previous limitations of Global data).
@@ -274,7 +272,8 @@ indv_mod_table %>%
         col.names = c("", "S", "Jaccard Similarity", "FRic", "FEve", "FDiv", "SES FRic", "SES FEve", "SES FDiv"),
         caption = "Number of studies that experienced a significant trend in each calculated metric out of 50 total studies.", 
         booktabs = TRUE, align = "c", escape = FALSE) %>%
-  kable_styling("striped")
+  kable_styling("striped")%>%
+  save_kable(here::here("figures/tables/trend_table.jpeg"))
 
 ```
 
@@ -302,12 +301,12 @@ Reduction in utilization of understory foraging for terrestrial communities coul
 Other shifts in diet for both Birds and Mammals, including increasing fruit, seed, and vertebrate consumption and decreasing seed consumption in some climates point to important areas for further exploration.
 
 At the study level, biodiversity change fell into four dominant scenarios of change based on trends in richness, turnover, and functional metrics: no change, only functional change, richness and functional change with turnover, and richness and functional change without turnover (Table \ref{tab:changeScenarios}).
-Around a quarter of studies experienced no trend in richness, turnover, or functional metrics.
+In contrast to our expectation based on anthropogenic impacts, around a quarter of studies experienced no trend in richness, turnover, or functional metrics.
 These studies spanned the distribution of study durations excluding only the very longest running studies, with the longest no change time series lasting 23 years.
 
 Another quarter of the studies showed no trend in richness or turnover, but did show a significant shift in at least one summary functional metric.
 These communities are best aligned with scenarios of species replacement where only a few functional outliers replaced functionally indistinct species or vice versa (there were studies with positive and negative trends in all three functional metrics).
-Studies in the scenario of only functional change were heavily skewed toward shorter running time series, indicating that they may represent a limited snapshot of communities that on longer time scales would be exhibiting significant change in species based metrics, particularly as species replacement continued adding to turnover.
+Studies in the scenario of only functional change were heavily skewed toward shorter running time series, indicating that they may represent a limited snapshot of communities that on longer time scales would be exhibiting significant change in species-based metrics, particularly as species replacement continued adding to turnover.
 Communities in this scenario, and the previous scenario of no functional change are consistent with hypotheses that species richness may be strongly regulated through time [@brown2001; @gotelli2017], and emphasize that maintenance of functional structure can be divorced from those processes.
 
 About 10 percent of studies, but the majority of time series in our dataset, exhibited richness and functional change but no turnover.
@@ -329,10 +328,10 @@ Our results are consistent with ecological expectations that community dissimila
 While we do not address how observed rates differ from background expectation here, we can make some assertions about the implication of turnover for functional change.
 Where turnover is occurring, it is almost always accompanied by a directional change in the functional space.
 Species are not therefore being replaced by exact functional counter parts.
-The fact that we observed both increases and decreases in corrected functional richness accompanying turnover is a reminder that replacements are not always an indication of functional loss, but can also lead to increased functional richness.
-While shifts in functional space may be the result of environmental pressure, we cannot distinguish between directional change and shifts due to the unavailability of an analog species in the species pool.
+The fact that we observed both increases and decreases in corrected functional richness accompanying turnover is a reminder that replacements are not always an indication of functional loss but can also lead to increased functional richness.
+While shifts in functional space may be the result of environmental pressure, we cannot distinguish between directional change and shifts due to the inavailability of an analog species in the species pool.
 
-```{r changeScenarios, echo = FALSE, message = FALSE, fig.show = 'hold', fig.cap= "Comparision of the distribution of time series durations from each type of change to the overall distribution of time series durations, with no richness change or turnover and functional change in yellow, no turnover but richness and functional change in green, no change in blue, and turnover, richness and functional change studies in orange."}
+```{r changeScenarios, echo = FALSE, message = FALSE, fig.show = 'hold', fig.cap= "Comparison of the distribution of time series durations from each type of change to the overall distribution of time series durations, with no richness change or turnover and functional change in yellow, no turnover but richness and functional change in green, no change in blue, and turnover, richness and functional change studies in orange."}
 
 knitr::include_graphics(here::here("figures/duration_hist.jpeg"))
 
@@ -340,7 +339,7 @@ knitr::include_graphics(here::here("figures/functional_change_table.png"))
 ```
 
 Still, some results stand in contrast to predictions for trait shifts under global change.
-For example, mean body size is predicted to decrease as a result of climate change impacts and megafaunal loss [@sheridan2011], a phenomena which has already been well documented empirically and experimentally in multiple taxa [@caruso2014; @forster2012; @huss2019; @tseng2018].
+For example, mean body size is predicted to decrease as a result of climate change impacts and megafaunal loss [@sheridan2011], a phenomenon which has already been well documented empirically and experimentally in multiple taxa [@caruso2014; @forster2012; @huss2019; @tseng2018].
 While the species-level trait means used here are not appropriate for assessing intraspecific body size shifts, we would expect to see shifts in community-wide means due to local losses of large-bodied species.
 Instead, we found no evidence of a trend in *CWM* body size, with the exception of a single study of marine mammals in the Bahamas which showed a significant increase.
 Still, many of the studies in our dataset draw from areas that may have experienced significant loss of large-bodied species before the observation window, with contemporary loss rates slowing [@fritz2009].
@@ -385,7 +384,7 @@ While the majority of studies in our dataset did not experience a significant fu
 ## Future Work
 
 We present here four prevailing scenarios of change experienced in bird and mammal communities.
-While we offer an first discussion of which kinds of change are most common and why, assessing the true global prevalence will require continued efforts to fill data gaps, a well recognized challenge in ecology [@gonzalez2016; @hughes2021; @vellend2017].
+While we offer a first discussion of which kinds of change are most common and why, assessing the true global prevalence will require continued efforts to fill data gaps, a well recognized challenge in ecology [@gonzalez2016; @hughes2021; @vellend2017].
 Still, a "scenarios of change" framework can provide structure for future work addressing functional shifts, particularly as we reconcile results from broad-scale syntheses with in-depth single system studies.
 It will be particularly critical to link forms of change to individual drivers to assess which drivers may impact species and functional diversity differently.
 Understanding those links will help identify where directly measuring functional structure instead of just species change is necessary for understand impacts on a given system.

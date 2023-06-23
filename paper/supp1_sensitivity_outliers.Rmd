@@ -1,8 +1,8 @@
 ---
 title: "Supplement 1"
 output:
-  pdf_document: default
-  html_document: default
+  #pdf_document: default
+  word_document: default
 ---
 
 # Sensitivity Analysis 
@@ -24,10 +24,66 @@ tibble(sensitivity_test = c(rep("duration", 3), rep("trait coverage", 2), "amphi
        sig_metrics = c("CWM seed diet*, CWM canopy foraging*, CWM aerial foraging, Jaccard", 
        "CWM seed diet*, CWM canopy foraging*, FRic*, Jaccard", 
        "CWM seed diet*, CWM canopy foraging*, Jaccard", rep("Jaccard", 3))
-) %>% kable(format = "latex") %>%
+) %>% 
+  #kable(format = "latex", caption = "Summary of the results for the sensitivity analyses, including those for duration of time series, trait coverage, and amphibian inclusion.") %>%
+  kable(format = "latex") %>%
   column_spec(3:4, width = "3cm") %>%
   collapse_rows(columns = 1, valign = "middle") %>%
   kable_paper() %>%
-  kable_styling(latex_options= c("hold_position"))
+  kable_styling(latex_options= c("hold_position")) %>%
+  save_kable(here::here("figures/tables/sensitivity_table.jpeg"))
+```
+
+# Amphibian Trends
+
+There were 3 amphibian studies comprised of 11 time series in the bioTIME database with sufficient trait coverage to be included in the analysis. With such limited data, we excluded amphibians from the main results, but present preliminary trends here. Models fit with amphibian, mammal, and bird data combined showed qualitatively similar trend results to those reported in the manuscript that did not include amphibians. For models fit with only amphibian data, no general trends were detected for any metric. Table 2 gives model estimates for species-based and species corrected metrics.
+
+```{r resultsTab, echo=FALSE, message = FALSE, warning = FALSE}
+readr::read_csv(here::here("figures/amph_model_table.csv")) %>%
+  select(metric, everything(), -REML, -bobyqa) %>%
+  select(-c(n_ts, formula, model)) %>%
+  filter(group != "Residual" | is.na(group), metric %in% c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")) %>%
+  mutate(metric = ifelse(metric == "Jaccard_base", "log(Jaccard + 1)", metric),
+         metric = ifelse(metric == "S", "log(Species Richness)", metric),
+         effect = ifelse(effect == "ran_pars", "random", effect),
+         group = case_when(
+           group == "rarefyID:study_id" ~ "time series within study",
+           group == "study_id" ~ "study",
+           group == "Residual" ~ "residual",
+           TRUE ~ group),
+         term = case_when(
+           term == "(Intercept)" ~ "Intercept",
+           term == "year_scaled" ~ "Year",
+           term == "sd__(Intercept)" ~ "SD Intercept",
+           term == "cor__(Intercept).year_scaled" ~ "Corr(Intercept, Year)",
+           term == "sd__year_scaled" ~ "SD Year",
+           term == "sd__Observation" ~ "SD Observation",
+           TRUE ~ term
+         )) %>%
+  mutate(across(c(estimate, std.error, p.value), round, 2),
+         p.value = ifelse(p.value == 0, "<0.001", p.value)) %>%
+  arrange(metric != "Species Richness", metric, !is.na(group), group, term == "Corr(Intercept, Year)", term) %>%
+  dplyr::rename(grouping = group) %>%
+  #kable(format = "latex", caption = "Model estimates and statistics for general trend models for species richness, Jaccard similarity, and standardized functional diversity metrics for Amphibian time series.") %>%
+  kable(format = "latex") %>%
+  column_spec(3, width = "2cm") %>%
+  collapse_rows(columns = 1:3, valign = "middle") %>%
+  kable_paper() %>%
+  kable_styling(latex_options= c("scale_down", "hold_position")) %>%
+  save_kable(here::here("figures/tables/amph_table.jpeg"))
+```
+
+# Missing Individual Study Models
+
+We fit models separately for each study and metric to estimate study-level trends. 11 models could not be fit because there were to many time series relative to the number of observations, and therefore not enough data to fit the appropriate mixed effects model structure. The missing models are in Table 3. 
+
+```{r missingTab, echo=FALSE, message = FALSE, warning = FALSE}
+readr::read_csv(here::here("paper/missing_indv_studies.csv")) %>%
+  rename(`n time series` = nrarefyID, `n observations` = n) %>%
+  #kable(format = "latex", caption = "Model estimates and statistics for general trend models for species richness, Jaccard similarity, and standardized functional diversity metrics for Amphibian time series.") %>%
+  kable(format = "latex") %>%
+  kable_paper() %>%
+  kable_styling(latex_options= c("scale_down", "hold_position")) %>%
+  save_kable(here::here("figures/tables/missing_models_table.jpeg"))
 ```
 
