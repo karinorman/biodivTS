@@ -60,4 +60,4 @@ Support for this work was provided by U.S. Department of Energy through the Comp
 
 # Biosketch
 
-Kari Norman’s research is generally focused on understanding the impacts of anthropogenic change on biodiversity. She brings together existing data sources to understand broadscale change and develops software tools to facilitate robust synthesis workflows. 
+Kari Norman’s research is generally focused on understanding the impacts of anthropogenic change on biodiversity. She brings together existing data sources to understand broad scale change and develops software tools to facilitate robust synthesis workflows. 

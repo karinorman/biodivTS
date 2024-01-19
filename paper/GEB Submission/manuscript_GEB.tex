@@ -180,8 +180,8 @@ picture of potential trends in critical ecosystem processes.
 
 It is critical to establish whether or not functional loss is prevalent
 across communities. While functional loss is frequently cited as one of
-the most pressing concerns of the anthropocene (23--25), local-scale
-loss is not necessarily inevitable even in scenarios of species loss
+the most pressing concerns of the anthropocene (23--25), functional
+diversity may be maintained even when species are lost from a community
 (26, 27). Forecasts of functional loss range from negligible (28) to
 dire (29, 30). And while some observed trends show significant
 functional loss (31) others document no loss even in some of the most
@@ -331,12 +331,13 @@ diversity calculations with the exception of traits that were the same
 value for all observed species in the study. For variables with multiple
 levels each level was included as a separate trait axis. Continuous
 traits were z-score scaled to give each trait equal weight in the trait
-space (52, 53). The number of trait axes was limited to the maximum
-number of traits that fulfills the criteria \(s >= 2^t\), where \(s\) is
-the number of species and \emph{t} is the number of traits. This
-restriction allows for enough axes to capture the trait space while
-maintaining computational feasibility (54). Metrics incorporated
-weighting based on species abundance.
+space (52,
+53).\textcolor{blue}{Before calculating diversity metrics, dbFD reduces the dimensionality of the trait space by performing PCoA. We limited the number of included PCoA axes to}
+the maximum number of traits that fulfills the criteria \(s >= 2^t\),
+where \(s\) is the number of species and \emph{t} is the number of
+traits. This restriction allows for enough axes to capture the trait
+space while maintaining computational feasibility (54). Metrics
+incorporated weighting based on species abundance.
 
 \hypertarget{null-models}{%
 \subsection{Null Models}\label{null-models}}
@@ -417,98 +418,6 @@ composition.
 \includegraphics[width=\textwidth]{../../figures/3met_long} \caption{Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES}\label{fig:timeseriesPlot}
 \end{figure}
 
-\begin{table}[!h]
-
-\caption{\label{tab:resultsTab}Model estimates and statistics for general trend models for species richness, Jaccard similarity, and standardized functional diversity metrics. Additional model estimates, including CWM models, can be found in the supplement.}
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tabular}[t]{l|l|>{\raggedright\arraybackslash}p{2cm}|l|r|r|l}
-\hline
-metric & effect & grouping & term & estimate & std.error & p.value\\
-\hline
- &  &  & Intercept & -0.25 & 0.11 & 0.03\\
-\cline{4-7}
- & \multirow{-2}{*}{\raggedright\arraybackslash fixed} & \multirow{-2}{2cm}{\raggedright\arraybackslash } & Year & 0.00 & 0.04 & 0.96\\
-\cline{2-7}
- &  &  & SD Intercept & 0.60 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.11 &  & \\
-\cline{4-7}
- &  & \multirow{-3}{2cm}{\raggedright\arraybackslash study} & Corr(Intercept, Year) & -0.16 &  & \\
-\cline{3-7}
- &  &  & SD Intercept & 0.60 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.23 &  & \\
-\cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash SES\_FDiv} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & -0.01 &  & \\
-\cline{1-7}
- &  &  & Intercept & 0.09 & 0.16 & 0.59\\
-\cline{4-7}
- & \multirow{-2}{*}{\raggedright\arraybackslash fixed} & \multirow{-2}{2cm}{\raggedright\arraybackslash } & Year & 0.00 & 0.01 & 0.73\\
-\cline{2-7}
- &  &  & SD Intercept & 1.04 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.02 &  & \\
-\cline{4-7}
- &  & \multirow{-3}{2cm}{\raggedright\arraybackslash study} & Corr(Intercept, Year) & 1.00 &  & \\
-\cline{3-7}
- &  &  & SD Intercept & 0.40 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.17 &  & \\
-\cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash SES\_FEve} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & -0.21 &  & \\
-\cline{1-7}
- &  &  & Intercept & -0.26 & 0.07 & <0.001\\
-\cline{4-7}
- & \multirow{-2}{*}{\raggedright\arraybackslash fixed} & \multirow{-2}{2cm}{\raggedright\arraybackslash } & Year & 0.04 & 0.04 & 0.35\\
-\cline{2-7}
- &  &  & SD Intercept & 0.29 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.11 &  & \\
-\cline{4-7}
- &  & \multirow{-3}{2cm}{\raggedright\arraybackslash study} & Corr(Intercept, Year) & -0.27 &  & \\
-\cline{3-7}
- &  &  & SD Intercept & 0.54 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.18 &  & \\
-\cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash SES\_FRic} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.06 &  & \\
-\cline{1-7}
- &  &  & Intercept & 0.46 & 0.02 & <0.001\\
-\cline{4-7}
- & \multirow{-2}{*}{\raggedright\arraybackslash fixed} & \multirow{-2}{2cm}{\raggedright\arraybackslash } & Year & -0.03 & 0.01 & <0.001\\
-\cline{2-7}
- &  &  & SD Intercept & 0.09 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.02 &  & \\
-\cline{4-7}
- &  & \multirow{-3}{2cm}{\raggedright\arraybackslash study} & Corr(Intercept, Year) & -0.35 &  & \\
-\cline{3-7}
- &  &  & SD Intercept & 0.08 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.02 &  & \\
-\cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash log(Jaccard + 1)} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.05 &  & \\
-\cline{1-7}
- &  &  & Intercept & 2.40 & 0.10 & <0.001\\
-\cline{4-7}
- & \multirow{-2}{*}{\raggedright\arraybackslash fixed} & \multirow{-2}{2cm}{\raggedright\arraybackslash } & Year & -0.06 & 0.05 & 0.17\\
-\cline{2-7}
- &  &  & SD Intercept & 0.64 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.27 &  & \\
-\cline{4-7}
- &  & \multirow{-3}{2cm}{\raggedright\arraybackslash study} & Corr(Intercept, Year) & -0.70 &  & \\
-\cline{3-7}
- &  &  & SD Intercept & 0.21 &  & \\
-\cline{4-7}
- &  &  & SD Year & 0.09 &  & \\
-\cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash log(Species Richness)} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.34 &  & \\
-\hline
-\end{tabular}}
-\end{table}
-
 We did find significant differences between taxa, realms, and climate
 for Jaccard similarity and some of the \emph{CWM's}. For example, while
 Jaccard similarity was decreasing in the general trend and there were
@@ -550,20 +459,6 @@ some trends identified as significant are therefore potentially
 spurious. Rather than interpreting changes in specific studies, we
 present these results as a general picture of the kinds of trends
 experienced by communities.
-
-\begin{table}
-
-\caption{\label{tab:trendTab}Number of studies that experienced a significant trend in each calculated metric out of 50 total studies.}
-\centering
-\begin{tabular}[t]{ccccccccc}
-\toprule
- & S & Jaccard Similarity & FRic & FEve & FDiv & SES FRic & SES FEve & SES FDiv\\
-\midrule
-+ & 7 & 0 & 7 & 5 & 3 & 4 & 4 & 3\\
-- & 8 & 11 & 8 & 6 & 5 & 2 & 6 & 2\\
-\bottomrule
-\end{tabular}
-\end{table}
 
 Study-level slopes for summary functional metrics were significantly
 related to start year of the time series for Jaccard similarity and
@@ -700,7 +595,7 @@ and shifts due to the inavailability of an analog species in the species
 pool.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../../figures/duration_hist} \includegraphics[width=\textwidth]{../../figures/functional_change_table} \caption{Comparision of the distribution of time series durations from each type of change to the overall distribution of time series durations, with no richness change or turnover and functional change in yellow, no turnover but richness and functional change in green, no change in blue, and turnover, richness and functional change studies in orange.}\label{fig:changeScenarios}
+\includegraphics[width=\textwidth]{../../figures/duration_hist} \includegraphics[width=\textwidth]{../../figures/functional_change_table} \caption{Comparison of the distribution of time series durations from each type of change to the overall distribution of time series durations, with no richness change or turnover and functional change in yellow, no turnover but richness and functional change in green, no change in blue, and turnover, richness and functional change studies in orange.}\label{fig:changeScenarios}
 \end{figure}
 
 Still, some results stand in contrast to predictions for trait shifts
