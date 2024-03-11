@@ -17,6 +17,39 @@ library(countrycode)
 library(taxadb)
 ```
 
+Try with the USDA master list of invasive species
+```{r}
+invasive <- read.csv(here::here("inst/extdata/USRIISv2csvFormat/USRIISv2_MasterList.csv"))
+load(here::here("bt_traitfiltered.rda"))
+
+# all invasive species have GBIF id's so let's match on that
+ids <- bt_traitfiltered %>%
+  select(species) %>% 
+  distinct() %>%
+  mutate(sciName = taxadb::get_names(species),
+         gbif = taxadb::get_ids(sciName, provider = "gbif"))
+
+included_invasives <- invasive %>%
+  filter(locality == "L48") %>% 
+  select(GBIF_taxonKey, establishmentMeans, degreeOfEstablishment) %>%
+  distinct() %>% 
+  mutate(gbif = paste0("GBIF:", GBIF_taxonKey)) %>%
+  inner_join(ids)
+```
+Get a count of invasives for each study %>%
+```{r}
+invasive_count <- bt_traitfiltered %>%
+  select(species, study_id, rarefyid, year) %>%
+  left_join(included_invasives %>% select(species) %>%
+              mutate(invasive = 1)) %>%
+  select(-species) %>%
+  distinct() %>%
+  group_by(study_id, rarefyid, year) %>%
+  summarize(invasive_count = sum(invasive, na.rm = TRUE))
+  
+```
+
+
 Get GBIF data
 ```{r}
 #get all the datasets from the Invasive Species Specialist Group

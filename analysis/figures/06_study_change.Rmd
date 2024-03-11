@@ -157,3 +157,47 @@ fun_change_table %>%
 
 ```
 
+Let's look at more specific combinations
+```{r}
+load(here::here("data/meta.rda"))
+
+change_groups <- wide_table %>% 
+  select(study_id, S, Jaccard_base, starts_with("SES")) %>%
+  mutate(across(!study_id, ~case_when(
+    . > 0 ~ "pos",
+    . < 0 ~ "neg",
+    .default = "0"
+  ))) 
+
+change_group_count <- change_groups %>%
+  select(-study_id) %>%
+  group_by(across(everything())) %>%
+  count() 
+
+no_change <- change_groups %>% 
+  mutate(study_id = as.integer(study_id)) %>%
+  filter(across(!study_id, ~. == 0)) %>%
+  left_join(meta)
+
+redundancy <- change_groups %>% 
+  mutate(study_id = as.integer(study_id)) %>%
+  filter(S == "neg", SES_FRic == "0", SES_FDiv == "0", SES_FEve == "0") %>%
+  left_join(meta)
+
+redundancy_gain <- change_groups %>% 
+  mutate(study_id = as.integer(study_id)) %>%
+  filter(S == "pos", SES_FRic == "0", SES_FDiv == "0", SES_FEve == "0") %>%
+  left_join(meta)
+
+  
+evenness <- change_groups %>% 
+  mutate(study_id = as.integer(study_id)) %>%
+  filter(across(!study_id & !SES_FEve, ~. == 0)) %>%
+  left_join(meta)
+
+increase <- change_groups %>% 
+  mutate(study_id = as.integer(study_id)) %>%
+  filter(Jaccard_base == "neg", S == "pos", SES_FRic == "pos", SES_FDiv == "0", SES_FEve == "0") %>%
+  left_join(meta)
+```
+
