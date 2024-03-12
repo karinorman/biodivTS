@@ -189,7 +189,8 @@ get_model <- function(metric_name, formula, model_id, data, filter_study_id, bob
       
       group_slopes <- as_tibble(slopes$emtrends) %>%
         mutate(effect = "group_slope", group = model_id) %>%
-        rename(std.error = SE, estimate = year_scaled.trend, term = model_id)
+        rename(std.error = SE, estimate = year_scaled.trend, term = model_id) %>%
+        mutate(term = as.character(term))
       
       slope_constrasts <- as_tibble(slopes$contrasts) %>%
         mutate(effect = "contrast", group = model_id) %>%
@@ -289,8 +290,9 @@ raw_value_mods <- tibble(metric_name = raw_metrics,
                          base = "value ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "value ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "value ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
-                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
-  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula") %>%
+                         climate = "value ~ year_scaled * climate + (year_scaled|study_id/rarefyID)",
+                         protected_area = "value ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate, protected_area), names_to = "model_id", values_to = "formula") %>%
   #don't fit the CWM_litter_size_min_n and climate model, not enough data
   filter(metric_name != "CWM_litter_size_min_n" | model_id != "climate")
 
@@ -298,15 +300,17 @@ log_mods <- tibble(metric_name = log_metrics,
                          base = "log(value) ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "log(value) ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "log(value) ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
-                         climate = "log(value) ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
-  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+                         climate = "log(value) ~ year_scaled * climate + (year_scaled|study_id/rarefyID)",
+                   protected_area = "value ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate, protected_area), names_to = "model_id", values_to = "formula")
 
 logone_mods <- tibble(metric_name = logone_metrics, 
                          base = "logvalue ~ year_scaled + (year_scaled|study_id/rarefyID)",
                          taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
-                         climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)") %>%
-  pivot_longer(cols = c(base, taxa, realm, climate), names_to = "model_id", values_to = "formula")
+                         climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)",
+                      protected_area = "value ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
+  pivot_longer(cols = c(base, taxa, realm, climate, protected_area), names_to = "model_id", values_to = "formula")
 
 mods <- bind_rows(raw_value_mods, log_mods, logone_mods) %>% 
   select(metric_name, formula, model_id)
