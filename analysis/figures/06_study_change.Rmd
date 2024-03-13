@@ -159,7 +159,7 @@ fun_change_table %>%
 
 Let's look at more specific combinations
 ```{r}
-load(here::here("data/meta.rda"))
+load(here::here("data/meta_clean.rda"))
 
 change_groups <- wide_table %>% 
   select(study_id, S, Jaccard_base, starts_with("SES")) %>%
@@ -177,27 +177,27 @@ change_group_count <- change_groups %>%
 no_change <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(across(!study_id, ~. == 0)) %>%
-  left_join(meta)
+  left_join(meta_clean)
 
 redundancy <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(S == "neg", SES_FRic == "0", SES_FDiv == "0", SES_FEve == "0") %>%
-  left_join(meta)
+  left_join(meta_clean)
 
 redundancy_gain <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(S == "pos", SES_FRic == "0", SES_FDiv == "0", SES_FEve == "0") %>%
-  left_join(meta)
+  left_join(meta_clean)
 
   
 evenness <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(across(!study_id & !SES_FEve, ~. == 0)) %>%
-  left_join(meta)
+  left_join(meta_clean)
 
 increase <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(Jaccard_base == "neg", S == "pos", SES_FRic == "pos", SES_FDiv == "0", SES_FEve == "0") %>%
-  left_join(meta)
+  left_join(meta_clean)
 ```
 

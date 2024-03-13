@@ -22,13 +22,30 @@ Get data and put it in long form
 load(here::here("data/meta.rda"))
 load(here::here("data/bt_traitfiltered.rda"))
 load(here::here("data/rarefied_metrics.rda"))
+load(here::here("data/rarefyID_cell_centre.rda"))
 
-meta <- meta %>%
-  select(study_id, realm, climate, habitat, protected_area, biome_map)
+source(here::here("R/coords2continent.R"))
 
-meta <- bt_traitfiltered %>% 
+meta_clean <- meta %>%
+  select(study_id, realm, climate, general_treat, treatment, treat_comments, treat_date, habitat, protected_area, biome_map)
+
+
+meta_clean <- bt_traitfiltered %>% 
   select(study_id, rarefyid, taxa) %>% distinct() %>%
-  left_join(meta)
+  left_join(meta_clean) %>%
+  mutate(rarefyid_join = stringr::str_extract(rarefyid, "[^_]*_[^_]*")) %>%
+  left_join(rarefyID_cell_centre %>% select(-STUDY_ID), by = c("rarefyid_join" = "rarefyID")) %>%
+  mutate(country = coords2continent(tibble(rarefyID_x = .$rarefyID_x, rarefyID_y = .$rarefyID_y))) %>%
+  select(-c(rarefyid_join, cell_extent, rarefyID_x, rarefyID_y, rarefyid)) %>%
+  distinct()
+
+#remove NA entries if another country was assigned
+na_studies <- meta_clean %>% 
+  group_by(study_id) %>% 
+  filter(n() > 1, is.na(country)) 
+           
+meta_clean <- setdiff(meta_clean, na_studies)
+
 
 rm(bt_traitfiltered) 
 
@@ -76,6 +93,7 @@ model_data <- metrics %>%
   select(-new_taxa)
 
 usethis::use_data(model_data)
+usethis::use_data(meta_clean)
 ```
 
 Write out file with all necessary metadata for the supplement.
