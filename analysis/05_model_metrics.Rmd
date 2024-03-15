@@ -36,16 +36,8 @@ meta_clean <- bt_traitfiltered %>%
   mutate(rarefyid_join = stringr::str_extract(rarefyid, "[^_]*_[^_]*")) %>%
   left_join(rarefyID_cell_centre %>% select(-STUDY_ID), by = c("rarefyid_join" = "rarefyID")) %>%
   mutate(country = coords2continent(tibble(rarefyID_x = .$rarefyID_x, rarefyID_y = .$rarefyID_y))) %>%
-  select(-c(rarefyid_join, cell_extent, rarefyID_x, rarefyID_y, rarefyid)) %>%
+  select(-c(rarefyid_join, cell_extent, rarefyID_x, rarefyID_y)) %>%
   distinct()
-
-#remove NA entries if another country was assigned
-na_studies <- meta_clean %>% 
-  group_by(study_id) %>% 
-  filter(n() > 1, is.na(country)) 
-           
-meta_clean <- setdiff(meta_clean, na_studies)
-
 
 rm(bt_traitfiltered) 
 
@@ -53,7 +45,7 @@ rm(bt_traitfiltered)
 metrics <- rarefied_metrics %>%
   rename_with(tolower, .cols = setdiff(everything(), one_of("rarefyID")))  %>%
   mutate(logvalue = log(value + 1)) %>% # create a column for log transformation that adds the absolute value integer closest to the most negative value to create all positive values
-  left_join(meta, c("rarefyID" = "rarefyid"))
+  left_join(meta_clean, c("rarefyID" = "rarefyid"))
 
 ## Now the data that actually makes it into the model ##
 
@@ -661,9 +653,9 @@ study_slope_data <- indv_mod_table %>%
 
 duration_slope <- study_slope_data %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~glm(estimate ~ duration, 
+  mutate(model = purrr::map(data, ~glm(estimate ~ duration, 
                                  data = .x)),
-           coef = map(model, tidy),
+           coef = purrr::map(model, tidy),
            ) %>% 
   dplyr::select(metric, coef) %>%
   unnest(cols = c(coef)) %>%
@@ -671,9 +663,9 @@ duration_slope <- study_slope_data %>%
 
 startyear_slope <- study_slope_data %>%
   group_nest(metric) %>%
-  mutate(model = map(data, ~glm(estimate ~ startyear, 
+  mutate(model = purrr::map(data, ~glm(estimate ~ startyear, 
                                  data = .x)),
-           coef = map(model, tidy),
+           coef = purrr::map(model, tidy),
            ) %>% 
   dplyr::select(metric, coef) %>%
   unnest(cols = c(coef)) %>%

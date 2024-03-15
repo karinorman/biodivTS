@@ -161,6 +161,17 @@ Let's look at more specific combinations
 ```{r}
 load(here::here("data/meta_clean.rda"))
 
+study_meta <- meta_clean %>% 
+  select(-rarefyid) %>%
+  distinct()
+
+#remove NA entries if another country was assigned
+na_studies <- study_meta %>% 
+  group_by(study_id) %>% 
+  filter(n() > 1, is.na(country)) 
+           
+study_meta <- setdiff(study_meta, na_studies)
+
 change_groups <- wide_table %>% 
   select(study_id, S, Jaccard_base, starts_with("SES")) %>%
   mutate(across(!study_id, ~case_when(
