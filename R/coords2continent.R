@@ -2,16 +2,16 @@
 #   - column 1 contains the longitude in degrees
 #   - column 2 contains the latitude in degrees
 coords2continent = function(points){
-  countriesSP <- getMap(resolution='low')
+  countriesSP <- rworldmap::getMap(resolution='low')
   #countriesSP <- getMap(resolution='high') #you could use high res map from rworldxtra if you were concerned about detail
 
   # converting points to a SpatialPoints object
   # setting CRS directly to that from rworldmap
-  pointsSP = SpatialPoints(points, proj4string=CRS(proj4string(countriesSP)))
+  pointsSP = sp::SpatialPoints(points, proj4string = sp::CRS(sp::proj4string(countriesSP)))
 
 
   # use 'over' to get indices of the Polygons object containing each point
-  indices = over(pointsSP, countriesSP)
+  indices = sp::over(pointsSP, countriesSP)
 
   #indices$continent   # returns the continent (6 continent model)
   #indices$REGION   # returns the continent (7 continent model)
