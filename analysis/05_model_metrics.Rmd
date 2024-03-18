@@ -545,7 +545,7 @@ bad_indv_results2 <- pmap_dfr(bad_indv_models2 %>% select(-warning), get_model, 
   mutate(REML = TRUE, bobyqa = TRUE)
 ```
 
-There are 12 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
+There are 13 study/metric combos that can't be fit due to data limitations (too many rarefyID's )
 ```{r}
 tofit_mods <- bad_indv_results2 %>% filter(!is.na(warning)) %>% select(metric, study_id, formula) %>% distinct()
 
@@ -607,7 +607,7 @@ metric_model_table %>%
 
 #supplement of complete model output
 bind_rows(metric_model_table, indv_mod_table) %>%
-    select(-c(model_id, n_ts, warning, lower.CL, upper.CL, significant, REML, bobyqa)) %>%
+    select(-c(n_ts, warning, lower.CL, upper.CL, significant, REML, bobyqa)) %>%
   readr::write_csv(here::here("paper", "model_estimates_supp.csv"))
   
 ```
