@@ -560,14 +560,16 @@ readr::write_csv(missing_indv_studies, here::here("paper/missing_indv_studies.cs
 
 Fit Jaccard Mixed models to see which will fit
 ```{r}
-mixed_jacc_mod_results <- pmap_dfr(mixed_indv_model_df %>% filter(metric_name == "Jaccard_base"), possibly(get_model, otherwise = tibble()), data = model_data)
+mixed_jacc_mod_results <- pmap_dfr(mixed_indv_model_df %>% filter(metric_name == "Jaccard_base"), 
+                                   possibly(get_model, otherwise = tibble()), data = model_data)
 
-non_conv_study <- mixed_jacc_mod_results %>% filter(!is.na(warning)) %>% pull(study_id) %>% unique()
+non_conv_study <- mixed_jacc_mod_results %>% 
+  filter(!is.na(warning)) %>% pull(study_id) %>% unique()
 
-mixed_jacc_mod_results2 <- pmap_dfr(mixed_indv_model_df %>% filter(metric_name == "Jaccard_base", filter_study_id == non_conv_study), 
+mixed_jacc_mod_results2 <- pmap_dfr(mixed_indv_model_df %>% filter(metric_name == "Jaccard_base", filter_study_id %in% non_conv_study), 
                                     possibly(get_model, otherwise = tibble()), data = model_data, bobyqa = TRUE)
 
-mixed_jacc_mod_results <- bind_rows(mixed_jacc_mod_results %>% filter(study_id != non_conv_study),
+mixed_jacc_mod_results_fin <- bind_rows(mixed_jacc_mod_results %>% filter(!study_id %in% non_conv_study),
                                     mixed_jacc_mod_results2)
 ```
 
@@ -590,7 +592,7 @@ indv_mod_results <- bind_rows(mixed_indv_mod_results %>% filter(is.na(warning)),
           bad_indv_results %>% filter(is.na(warning)),
           bad_indv_results2 %>% filter(is.na(warning)),
           glm_indv_mod_results,
-          mixed_jacc_mod_results
+          mixed_jacc_mod_results_fin
           )
 
 indv_mod_table <- indv_mod_results %>% select(-model)
