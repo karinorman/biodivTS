@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.6.21)  14 MAR 2024 13:10
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.6.21)  25 MAR 2024 14:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -637,7 +637,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 
 
 {/Users/karinorman/Library/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}] [2]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 233.
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 234.
 (/Users/karinorman/Library/TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
@@ -648,242 +648,205 @@ Package microtype Info: Loading generic protrusion settings for font family
 <../../figures/study_map_hist.jpeg, id=86, 2107.875pt x 2107.875pt>
 File: ../../figures/study_map_hist.jpeg Graphic file (type jpg)
 <use ../../figures/study_map_hist.jpeg>
-Package pdftex.def Info: ../../figures/study_map_hist.jpeg  used on input line 263.
+Package pdftex.def Info: ../../figures/study_map_hist.jpeg  used on input line 264.
 (pdftex.def)             Requested size: 469.75499pt x 469.74852pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-[3{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}] [4
+[3] [4
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.334 
+l.311 
        <../../figures/study_map_hist.jpeg>]
 
-LaTeX Warning: Reference `tab:resultsTab' on page 5 undefined on input line 375.
+LaTeX Warning: Reference `tab:resultsTab' on page 5 undefined on input line 385.
 
-<../../figures/3met_long.jpeg, id=103, 2107.875pt x 2107.875pt>
+<../../figures/3met_long.jpeg, id=99, 2107.875pt x 2107.875pt>
 File: ../../figures/3met_long.jpeg Graphic file (type jpg)
 <use ../../figures/3met_long.jpeg>
-Package pdftex.def Info: ../../figures/3met_long.jpeg  used on input line 392.
+Package pdftex.def Info: ../../figures/3met_long.jpeg  used on input line 398.
 (pdftex.def)             Requested size: 469.75499pt x 469.74852pt.
-[5] [6
+[5{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}] [6
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.414 
+l.417 
        <../../figures/3met_long.jpeg>]
 
-LaTeX Warning: Reference `tab:trendTab' on page 7 undefined on input line 430.
+LaTeX Warning: Reference `tab:trendTab' on page 7 undefined on input line 423.
 
 
 Package hyperref Warning: Difference (2) between bookmark levels is greater 
-(hyperref)                than one, level fixed on input line 471.
+(hyperref)                than one, level fixed on input line 460.
 
-[7]
-Underfull \vbox (badness 1546) has occurred while \output is active []
+[7] [8]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[8]
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 616.
-(/Users/karinorman/Library/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
-File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [9{/Users/karinorman/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}]
-Underfull \hbox (badness 10000) in paragraph at lines 692--697
+[9]
+Underfull \hbox (badness 10000) in paragraph at lines 703--708
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 698--704
+Underfull \hbox (badness 10000) in paragraph at lines 709--715
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 705--711
+Underfull \hbox (badness 10000) in paragraph at lines 716--722
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 712--718
+Underfull \hbox (badness 10000) in paragraph at lines 723--729
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 719--726
+Underfull \hbox (badness 10000) in paragraph at lines 730--737
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 727--732
+Underfull \hbox (badness 10000) in paragraph at lines 738--743
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 733--739
+Underfull \hbox (badness 10000) in paragraph at lines 744--750
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 740--745
+Underfull \hbox (badness 10000) in paragraph at lines 751--756
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 746--752
+Underfull \hbox (badness 10000) in paragraph at lines 757--763
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 753--758
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 759--766
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 767--773
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 774--781
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 782--788
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 789--796
+Underfull \hbox (badness 10000) in paragraph at lines 764--769
 
  []
 
 [10]
-Underfull \hbox (badness 10000) in paragraph at lines 797--803
+Underfull \hbox (badness 10000) in paragraph at lines 770--777
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 804--811
+Underfull \hbox (badness 10000) in paragraph at lines 778--784
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 812--817
+Underfull \hbox (badness 10000) in paragraph at lines 785--792
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 818--823
+Underfull \hbox (badness 10000) in paragraph at lines 793--799
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 824--830
+Underfull \hbox (badness 10000) in paragraph at lines 800--807
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 831--837
+Underfull \hbox (badness 10000) in paragraph at lines 808--814
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 838--844
+Underfull \hbox (badness 10000) in paragraph at lines 815--822
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 845--851
+Underfull \hbox (badness 10000) in paragraph at lines 823--828
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 852--858
+Underfull \hbox (badness 10000) in paragraph at lines 829--834
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 859--865
+Underfull \hbox (badness 10000) in paragraph at lines 835--841
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 866--872
+Underfull \hbox (badness 10000) in paragraph at lines 842--848
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 873--879
+Underfull \hbox (badness 10000) in paragraph at lines 849--855
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 880--886
+Underfull \hbox (badness 10000) in paragraph at lines 856--862
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 887--894
+Underfull \hbox (badness 10000) in paragraph at lines 863--869
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 895--902
+Underfull \hbox (badness 10000) in paragraph at lines 870--876
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 903--909
+Underfull \hbox (badness 10000) in paragraph at lines 877--883
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 910--916
+Underfull \hbox (badness 10000) in paragraph at lines 884--890
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 917--924
+Underfull \hbox (badness 10000) in paragraph at lines 891--897
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 925--932
+Underfull \hbox (badness 10000) in paragraph at lines 898--905
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 933--938
+Underfull \hbox (badness 10000) in paragraph at lines 906--913
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 939--945
+Underfull \hbox (badness 10000) in paragraph at lines 914--920
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 946--952
+Underfull \hbox (badness 10000) in paragraph at lines 921--927
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 953--959
+Underfull \hbox (badness 10000) in paragraph at lines 928--935
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 960--965
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 966--972
+Underfull \hbox (badness 10000) in paragraph at lines 936--943
 
  []
 
@@ -891,122 +854,122 @@ Underfull \hbox (badness 10000) in paragraph at lines 966--972
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [11]
-Underfull \hbox (badness 10000) in paragraph at lines 973--979
+Underfull \hbox (badness 10000) in paragraph at lines 944--949
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 980--987
+Underfull \hbox (badness 10000) in paragraph at lines 950--956
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 988--993
+Underfull \hbox (badness 10000) in paragraph at lines 957--963
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 994--999
+Underfull \hbox (badness 10000) in paragraph at lines 964--970
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1000--1005
+Underfull \hbox (badness 10000) in paragraph at lines 971--976
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1006--1012
+Underfull \hbox (badness 10000) in paragraph at lines 977--983
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1013--1018
+Underfull \hbox (badness 10000) in paragraph at lines 984--990
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1019--1025
+Underfull \hbox (badness 10000) in paragraph at lines 991--998
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1026--1032
+Underfull \hbox (badness 10000) in paragraph at lines 999--1004
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1033--1038
+Underfull \hbox (badness 10000) in paragraph at lines 1005--1010
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1039--1045
+Underfull \hbox (badness 10000) in paragraph at lines 1011--1016
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1046--1052
+Underfull \hbox (badness 10000) in paragraph at lines 1017--1023
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1053--1059
+Underfull \hbox (badness 10000) in paragraph at lines 1024--1029
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1060--1067
+Underfull \hbox (badness 10000) in paragraph at lines 1030--1036
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1068--1074
+Underfull \hbox (badness 10000) in paragraph at lines 1037--1043
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1075--1082
+Underfull \hbox (badness 10000) in paragraph at lines 1044--1049
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1083--1089
+Underfull \hbox (badness 10000) in paragraph at lines 1050--1056
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1090--1096
+Underfull \hbox (badness 10000) in paragraph at lines 1057--1063
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1097--1103
+Underfull \hbox (badness 10000) in paragraph at lines 1064--1070
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1104--1109
+Underfull \hbox (badness 10000) in paragraph at lines 1071--1077
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1110--1116
+Underfull \hbox (badness 10000) in paragraph at lines 1078--1084
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1117--1123
+Underfull \hbox (badness 10000) in paragraph at lines 1085--1092
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1124--1130
+Underfull \hbox (badness 10000) in paragraph at lines 1093--1100
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1131--1138
+Underfull \hbox (badness 10000) in paragraph at lines 1101--1107
 
  []
 
@@ -1014,127 +977,122 @@ Underfull \hbox (badness 10000) in paragraph at lines 1131--1138
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [12]
-Underfull \hbox (badness 10000) in paragraph at lines 1139--1146
+Underfull \hbox (badness 10000) in paragraph at lines 1108--1115
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1147--1153
+Underfull \hbox (badness 10000) in paragraph at lines 1116--1122
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1154--1160
+Underfull \hbox (badness 10000) in paragraph at lines 1123--1129
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1161--1167
+Underfull \hbox (badness 10000) in paragraph at lines 1130--1136
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1168--1174
+Underfull \hbox (badness 10000) in paragraph at lines 1137--1142
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1175--1182
+Underfull \hbox (badness 10000) in paragraph at lines 1143--1149
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1183--1189
+Underfull \hbox (badness 10000) in paragraph at lines 1150--1157
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1190--1196
+Underfull \hbox (badness 10000) in paragraph at lines 1158--1164
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1197--1202
+Underfull \hbox (badness 10000) in paragraph at lines 1165--1171
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1203--1209
+Underfull \hbox (badness 10000) in paragraph at lines 1172--1178
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1210--1216
+Underfull \hbox (badness 10000) in paragraph at lines 1179--1185
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1217--1221
+Underfull \hbox (badness 10000) in paragraph at lines 1186--1193
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1222--1225
+Underfull \hbox (badness 10000) in paragraph at lines 1194--1200
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1226--1230
+Underfull \hbox (badness 10000) in paragraph at lines 1201--1207
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1231--1236
+Underfull \hbox (badness 10000) in paragraph at lines 1208--1214
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1237--1243
+Underfull \hbox (badness 10000) in paragraph at lines 1215--1220
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1244--1248
+Underfull \hbox (badness 10000) in paragraph at lines 1221--1227
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1249--1256
+Underfull \hbox (badness 10000) in paragraph at lines 1228--1234
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1261--1261
-[]\T1/lmr/m/n/10 (+20) Gido K (2019) CFP01 Fish pop-u-la-tion on se-lected wa-ter-sheds at Konza Prairie.
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1257--1262
+Underfull \hbox (badness 10000) in paragraph at lines 1235--1241
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1263--1269
+Underfull \hbox (badness 10000) in paragraph at lines 1242--1248
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1270--1276
+Underfull \hbox (badness 10000) in paragraph at lines 1249--1253
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1277--1282
+Underfull \hbox (badness 10000) in paragraph at lines 1254--1257
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1283--1286
+Underfull \hbox (badness 10000) in paragraph at lines 1258--1262
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1287--1292
+Underfull \hbox (badness 10000) in paragraph at lines 1263--1268
 
  []
 
@@ -1142,22 +1100,47 @@ Underfull \hbox (badness 10000) in paragraph at lines 1287--1292
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [13]
-Underfull \hbox (badness 10000) in paragraph at lines 1293--1299
+Underfull \hbox (badness 10000) in paragraph at lines 1269--1275
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1300--1306
+Underfull \hbox (badness 10000) in paragraph at lines 1276--1280
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1307--1312
+Underfull \hbox (badness 10000) in paragraph at lines 1281--1288
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1313--1318
+Underfull \hbox (badness 10000) in paragraph at lines 1293--1293
+[]\T1/lmr/m/n/10 (+20) Gido K (2019) CFP01 Fish pop-u-la-tion on se-lected wa-ter-sheds at Konza Prairie.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1289--1294
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1295--1301
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1302--1308
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1309--1314
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1315--1318
 
  []
 
@@ -1167,23 +1150,18 @@ Underfull \hbox (badness 10000) in paragraph at lines 1319--1324
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1325--1332
+Underfull \hbox (badness 10000) in paragraph at lines 1325--1331
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1333--1339
+Underfull \hbox (badness 10000) in paragraph at lines 1332--1338
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1340--1344
+Underfull \hbox (badness 10000) in paragraph at lines 1339--1344
 
- []
-
-
-Underfull \hbox (badness 3148) in paragraph at lines 1349--1349
-[]\T1/lmr/m/n/10 (+20) Vermont Cen-ter For Ecos-tud-ies, Lam-bert JD, Hart J (2015) Moun-tain Bird-watch 1.0.
  []
 
 
@@ -1197,72 +1175,62 @@ Underfull \hbox (badness 10000) in paragraph at lines 1351--1356
  []
 
 
-Overfull \hbox (30.55565pt too wide) in paragraph at lines 1360--1360
+Underfull \hbox (badness 10000) in paragraph at lines 1357--1364
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1365--1371
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1372--1376
+
+ []
+
+
+Underfull \hbox (badness 3148) in paragraph at lines 1381--1381
+[]\T1/lmr/m/n/10 (+20) Vermont Cen-ter For Ecos-tud-ies, Lam-bert JD, Hart J (2015) Moun-tain Bird-watch 1.0.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1377--1382
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1383--1388
+
+ []
+
+
+Overfull \hbox (30.55565pt too wide) in paragraph at lines 1392--1392
 []\T1/lmr/m/n/10 (-20) Waide R (2017) Bird abun-dance - point counts. doi:[]10.6073/PASTA/91E6302E743BAC1E3E32781B869CE3D9[]. 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1357--1361
+Underfull \hbox (badness 10000) in paragraph at lines 1389--1393
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1362--1367
+Underfull \hbox (badness 10000) in paragraph at lines 1394--1399
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1368--1373
+Underfull \hbox (badness 10000) in paragraph at lines 1400--1405
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1374--1379
+Underfull \hbox (badness 10000) in paragraph at lines 1406--1411
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1380--1384
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1385--1389
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1390--1397
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1398--1405
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1406--1410
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1411--1416
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1417--1424
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1425--1430
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1431--1437
+Underfull \hbox (badness 10000) in paragraph at lines 1412--1416
 
  []
 
@@ -1270,52 +1238,92 @@ Underfull \hbox (badness 10000) in paragraph at lines 1431--1437
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [14]
-Overfull \hbox (89.89973pt too wide) in paragraph at lines 1443--1443
+Underfull \hbox (badness 10000) in paragraph at lines 1417--1421
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1422--1429
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1430--1437
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1438--1442
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1443--1448
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1449--1456
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1457--1462
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1463--1469
+
+ []
+
+
+Overfull \hbox (89.89973pt too wide) in paragraph at lines 1475--1475
 []\T1/lmr/m/n/10 (-20) http://jornada.nmsu.edu/sites/jornada.nmsu.edu/files/data_files/JornadaStudy_086_smes_rodent_trapping_data_0.csv,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1438--1444
+Underfull \hbox (badness 10000) in paragraph at lines 1470--1476
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1445--1449
+Underfull \hbox (badness 10000) in paragraph at lines 1477--1481
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1450--1457
+Underfull \hbox (badness 10000) in paragraph at lines 1482--1489
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1458--1463
+Underfull \hbox (badness 10000) in paragraph at lines 1490--1495
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1464--1470
+Underfull \hbox (badness 10000) in paragraph at lines 1496--1502
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1471--1478
+Underfull \hbox (badness 10000) in paragraph at lines 1503--1510
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1479--1485
+Underfull \hbox (badness 10000) in paragraph at lines 1511--1517
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1486--1491
+Underfull \hbox (badness 10000) in paragraph at lines 1518--1523
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1492--1497
+Underfull \hbox (badness 10000) in paragraph at lines 1524--1529
 
  []
 
@@ -1335,18 +1343,18 @@ Package rerunfilecheck Info: File `manuscript_GEB.out' has not changed.
 (rerunfilecheck)             Checksum: 95DEDC45119B9AB9E3D66B4344C50919;1871.
  ) 
 Here is how much of TeX's memory you used:
- 14319 strings out of 477683
- 230612 string characters out of 5829976
+ 14275 strings out of 477683
+ 229541 string characters out of 5829976
  1880769 words of memory out of 5000000
- 34224 multiletter control sequences out of 15000+600000
- 570849 words of font info for 148 fonts, out of 8000000 for 9000
+ 34190 multiletter control sequences out of 15000+600000
+ 570094 words of font info for 143 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 75i,11n,79p,1318b,492s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,79p,1336b,492s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbxi10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmcsc10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi5.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmss8.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/karinorman/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on manuscript_GEB.pdf (15 pages, 1660656 bytes).
+Output written on manuscript_GEB.pdf (15 pages, 1661133 bytes).
 PDF statistics:
- 567 PDF objects out of 1000 (max. 8388607)
- 514 compressed objects within 6 object streams
- 169 named destinations out of 1000 (max. 500000)
- 31363 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 572 PDF objects out of 1000 (max. 8388607)
+ 520 compressed objects within 6 object streams
+ 172 named destinations out of 1000 (max. 500000)
+ 29315 words of extra memory for PDF output out of 29859 (max. 10000000)
 

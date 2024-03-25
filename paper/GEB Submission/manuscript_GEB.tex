@@ -77,9 +77,9 @@ change in bird and mammal communities}
 
 \begin{abstract}
 Aim: Despite unprecedented environmental change due to anthropogenic
-pressure, recent work has found increasing species turnover but no
-overall trend in species diversity through time at the local scale.
-Functional diversity provides a potentially powerful alternative
+pressure, recent work has found increasing dissimilarity due to turnover
+but no overall trend in species diversity through time at the local
+scale. Functional diversity provides a potentially powerful alternative
 approach for understanding community composition by linking shifts in
 species identity to mechanisms of ecosystem processes. Here we present
 the first multi-taxa, multi-system analysis of functional change through
@@ -98,22 +98,21 @@ diversity metrics. Using generalized linear mixed models, we estimated
 general trends in those metrics and trends for individual studies.
 
 Results: We found no overall trend in any functional diversity metric,
-despite data replicating species-based patterns of constant richness
-with increasing turnover. The lack of trend held even after correcting
-for changes in species richness. At the study-level, there were also a
-substantial number of time series exhibiting no species or functional
-change, however most studies showed a shift in a species or functional
-metric.
+which held even after correcting for changes in species richness. At the
+study-level, there was substantial heterogeneity in the direction and
+type of functional change exhibited. None of the included study
+characteristics such as taxa, realm, biome, or protection status were
+significantly related to the type of change exhibited by a community.
 
 Main Conclusions: General trends indicate that on the aggregate one type
 of functional shift is not more prevalant than the other across many
-taxa, biomes, and realms. At the study-level, we identified four
-prevailing scenarios of species and functional change, which showed
-links to the duration of the observation window. With no one prevailing
-scenario of change, it will be critical to link change scenarios to
-drivers of change, particularly to identify communities with capacity to
-resist drivers from those not experiencing substantial pressure from a
-driver.
+taxa, biomes, and realms. At the study-level, the majority group of
+studies showed no species or functional trends, but other types of
+change were manifest for multiple studies, including studies
+experiencing changes in functional redundancy, increased species and
+functional richness, or loss of functional richness. With no one
+prevailing scenario of change, it will be critical to link change
+scenarios to ecological context.
 \end{abstract}
 
 \keywords{
@@ -142,10 +141,9 @@ composition underlying consistent species richness (7--9). While
 communities are clearly changing, our most common species-based
 approaches do not fully capture the nature of that change.
 
-The meaning of general trends derived from limited data, and their
-relevance for conservation, is a topic of on going debate. Global
-analyses have been heavily criticized for geographic biases, lack of
-data in the most heavily impacted areas, and exclusion of individual
+\textcolor{blue}{Using general trends derived from limited data as a diagnostic for the state of biodiversity or directing conservation is a topic of ongoing debate.}
+Global analyses have been heavily criticized for geographic biases, lack
+of data in the most heavily impacted areas, and exclusion of individual
 studies' ecological context (10--12). Many of these criticisms reflect
 limitations of ecological data on the whole,
 \textcolor{blue}{leading to a call for additional data not only to fill geographic and temporal gaps, but to flesh out key characteristics of communities}
@@ -162,34 +160,36 @@ diversity metrics
 \textcolor{blue}{may therefore illuminate joint responses from functionally similar species or communities undetectible by looking at species identity alone.}
 
 \textcolor{blue}{The expectation for functional change across communities is not obvious from past work, and may or may not follow taxonomic trends}
-(13). While functional loss is frequently cited as one of the most
-pressing concerns of the anthropocene (18--20),
+(13). While \textcolor{blue}{loss of functional diversity} is frequently
+cited as one of the most pressing concerns of the anthropocene (18--20),
 \textcolor{blue}{functional diversity may be maintained even when species are lost from a community}
 (21, 22). Forecasts of functional loss range from negligible (23) to
 dire (24, 25). And while some observed trends show significant
 functional loss (26) others document no loss even in some of the most
 heavily impacted communities (27--29). On paleoecological time scales,
-functional composition shows mixed responses to environmental change and
-extinction events (30, 31), with significant impacts of species
-extinctions on functional diversity in some taxa and not others (32).
-For some time periods, functional structure appears to be maintained for
-substantial portions of geological time (33).
+\textcolor{blue}{the functional space} shows mixed responses to
+environmental change and extinction events (30, 31), with significant
+impacts of species extinctions on functional diversity in some taxa and
+not others (32). For some time periods, functional diversity appears to
+be maintained for substantial portions of geological time (33).
 \textcolor{blue}{Contemporary, broad-scale examinations of functional change are limited to only a few taxa-focused studies, but show for example functional richness increases for both North American birds [@barnagaud2017; @jarzyna2016] and ray-finned fishes, sharks, and rays}
 (34).
+\textcolor{blue}{Additionally, these taxa have been the subject of substantial conservation investment and policy action, so are not necessarily representative of trends for other taxa or the same taxa in different locations.}
 
 Here we
 \textcolor{blue}{leverage ongoing efforts to assemble functional trait data and recent computational advances to}
 perform the first multi-taxa, multi-realm assessment of functional
-diversity change through time. We focus on mammal and bird species as a
-significant subset of the world's biodiversity heavily impacted by
-anthropogenic change. While examining trends in plants, invertebrates,
-and other vertebrate species is of equal interest, trait data for those
-taxa raise additional challenges such as limited and biased species
-coverage (35), a lack of accepted species-level means, and differences
-in the types of traits collected. To ensure comparability across taxa in
-trait type and data quality we therefore focus on mammals and birds.
-Traits were intentionally selected to be representative of a species'
-Eltonian niche, thereby summarizing the functional role they play in the
+diversity change through time. We focus on mammal and bird species as
+\textcolor{blue}{a subset of the world's biodiversity of particular conservation concern that is heavily impacted by anthropogenic change.}While
+examining trends in plants, invertebrates, and other vertebrate species
+is of equal interest, trait data for those taxa raise additional
+challenges such as limited and biased species coverage (35), a lack of
+accepted species-level means, and differences in the types of traits
+collected. To ensure comparability across taxa in trait type and data
+quality we therefore focus on mammals and birds.
+\textcolor{blue}{We include body mass, foraging and dietary traits} that
+were intentionally selected to be representative of a species' Eltonian
+niche, thereby summarizing the functional role they play in the
 community (36). An initial assessment of amphibian trends is included in
 the supplement, but excluded from general trend assessment here due to
 limited geographic coverage.
@@ -205,12 +205,13 @@ to determine whether or not
 \subsection{Data}\label{data}}
 
 We obtained mammal and bird time series from the BioTIME database, a
-global repository of high-quality assemblage time series. All studies
-included in the database follow consistent sampling protocols and
-represent full assemblages rather than populations of single species
-(31). All time series include abundance of observed species. Following
-best practices for the database (37), studies with multiple sample
-locations were split into individual time series following a
+global repository of high-quality assemblage time series
+\textcolor{blue}{collected from the literature and ongoing monitoring efforts}.
+\textcolor{blue}{Data is structured such that a study encompass all data collected following consistent sampling protocols and may contain multiple time series from separate locations. }
+Time series represent full assemblages rather than populations of single
+species (31), and all time series include abundance of observed species.
+Following best practices for the database (37), studies with multiple
+sample locations were split into individual time series following a
 standardized spatial scale. Scale was set by a global grid with cell
 size determined based on the sample extent of studies with only a single
 location (see 31 for details on how sample extents were defined), with
@@ -248,7 +249,7 @@ based on the smallest number of samples in a year for that time series.
 
 Our final dataset included 2,432 time series from 50 studies in 21
 countries and 12 biomes and 6 different traits (Fig \ref{fig:taxaMap}).
-Data came from both terrestrial and marine realms and five climates
+Data came from both terrestrial and marine realms and five biomes
 (Global, Polar/Temperate, Temperate, Temperate/Tropical, Tropical). The
 earliest sample was in 1923 and the most recent was in 2014.
 \textcolor{blue}{While it is not possible with this data to directly assess the level of human impact occurring for each study, we include binary protection status as a coarse indicator of impact level. However, protected areas were almost exclusively from temperate terrestrial studies (with one tropical study), so results are confounded by multiple other study characteristics.}
@@ -271,10 +272,10 @@ each time series. Species-based metrics include species richness
 (\emph{S}) and Jaccard similarity (\emph{J}) as a measure of turnover.
 Jaccard similarity was calculated relative to the first observed year
 for a time series. A negative trend in \emph{J} would therefore indicate
-increasing turnover. We did not impose a correction for unobserved
-species as non-parametric estimators do not assign species identities to
-corrected richness values, and therefore could not be propagated to the
-functional diversity metrics.
+\textcolor{blue}{decreasing similiarity}. We did not impose a correction
+for unobserved species as non-parametric estimators do not assign
+species identities to corrected richness values, and therefore could not
+be propagated to the functional diversity metrics.
 
 Functional diversity metrics were calculated using the \emph{dbFD}
 function from the \emph{FD} R package (40). Here we report functional
@@ -331,6 +332,7 @@ rarefaction samples for a time series. SES estimates can be interpreted
 as how much of the functional characteristic (richness, evenness,
 divergence) was observed beyond what was expected by chance for a
 community of that species richness.
+\textcolor{blue}{This approach will be less accurate for shorter time series, as we likley will not have captured all available species in the true species pool, but it is impossible to know whether the mean estimate from the null model is an over or under estimate without knowing the functional characteristics of the missing species.}
 
 \hypertarget{analysis}{%
 \subsection{Analysis}\label{analysis}}
@@ -338,126 +340,113 @@ community of that species richness.
 We estimated general trends
 \textcolor{blue}{across bird and mammals communities} for each diversity
 metric using a linear mixed effects model with a random slope and
-intercept for each study and each time series nested within the study.
-We fit 18 individual \emph{CWM} models. All time series with data for a
-given trait were included in the corresponding \emph{CWM} model. We
-estimated study level trends using individual linear models. For studies
-with more than one times series we fit a random slope and intercept for
-time series. Some study-level models could not be fit for five studies
-for at least one metric due to data limitations, but those studies were
-still included in the general models. They represented 12 of 1350
-study-level models fit for each metric. For further details see the
-supplement. Where appropriate, response variables were \(log\) or
-\(log(x+1)\) transformed to better fit model assumptions of residual
-normality.
+intercept for each study and each time series nested within the study,
+\textcolor{blue}{methods which deal well with the inherent imbalances in our data.}
+We fit 18 individual \emph{CWM} models,
+\textcolor{blue}{one for each trait included in the analsysis}. All time
+series with data for a given trait were included in the corresponding
+\emph{CWM} model. We estimated study level trends using individual
+linear models. For studies with more than one times series we fit a
+random slope and intercept for time series. Some study-level models
+could not be fit for five studies for at least one metric due to data
+limitations, but those studies were still included in the general
+models. They represented 12 of 1350 study-level models fit for each
+metric. For further details see the supplement. Where appropriate,
+response variables were \(log\) or \(log(x+1)\) transformed to better
+fit model assumptions of residual normality.
 
 To test for trends within and between different levels of taxa, biome,
 realm, and protection status we fit separate models with each of those
 factors added as a predictor interacting with time to the original model
 structure. We estimated within-level slopes and calculated between-level
-contrasts using the \emph{emmeans} package (v1.8.2, 47). We assessed the
-impact of time series duration and start year on study-level trends
-using linear models with duration and start year as predictors. All
-models in our analysis were fit using the \emph{lme4} (v1.1-30) package
-in R (v4.2.3) and p-values were calculated by Satterthwaite's degrees of
-freedom method using the \emph{lmerTest} (v3.1-3) package with a
-significance level of \(\alpha = 0.05\) (48--50).
+contrasts using the \emph{emmeans} package (v1.8.2, 47).
+\textcolor{blue}{For some levels of the categorical variables we did not have a sufficient number of studies to estimate a general trend, we therefore refrained from interpreting results for levels where there were fewer than three studies.}
+We assessed the impact of time series duration and start year on
+study-level trends using linear models with duration and start year as
+predictors. All models in our analysis were fit using the \emph{lme4}
+(v1.1-30) package in R (v4.2.3) and p-values were calculated by
+Satterthwaite's degrees of freedom method using the \emph{lmerTest}
+(v3.1-3) package with a significance level of \(\alpha = 0.05\)
+(48--50).
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
-We found no significant overall trend in species richness or functional
-diversity metrics (observed or \textcolor{blue}{corrected}) (Fig
+We found no significant overall \textcolor{blue}{temporal} trend in
+species richness or functional diversity metrics
+\textcolor{blue}{including functional richness, evenness, or divergence}
+(observed or \textcolor{blue}{corrected}) (Fig
 \ref{fig:timeseriesPlot}). We did find a significant overall decrease in
 Jaccard similarity, indicating accumulating changes in species
-composition. Non-significant overall trends indicate that although some
-studies experience increasing or decreasing trends, the average trend
-across studies was plausibly 0 (Table \ref{tab:resultsTab}).
-\textcolor{blue}{Within-group} trends for different taxa, biomes,
-realms, or protection statuses were also non-significant for richness
-and functional diversity metrics, with the exception of a significantly
-increasing trend for functional evenness of global studies
-(characterized by having samples on multiple continents), and a
-significantly decreasing functional richness slope for
-temperate/tropical studies and mammal studies. However, trends were not
-exhibited for the \textcolor{blue}{corrected} metric indicating that
-differences \textcolor{blue}{in functional diversity metrics} were
-largely due to changes in species richness. Further, with only two
-global studies, the trend should not be considered truly general. The
-general trends for \emph{CWM} models were similarly not significant,
-with a significant positive trend for only percentage of fish in diet
-composition.
+composition. Non-significant overall \textcolor{blue}{temporal}trends
+indicate that although some studies experience increasing or decreasing
+trends, the average trend across studies
+\textcolor{blue}{was not significantly different from zero}` (Table
+\ref{tab:resultsTab}). \textcolor{blue}{Within-group} trends for
+different taxa, biomes, realms, or protection statuses were also
+non-significant for richness and functional diversity metrics, with the
+exception of a significantly increasing trend for functional evenness of
+marine studies, and a significantly decreasing functional richness slope
+for mammal studies. However, trends were not exhibited for the
+\textcolor{blue}{corrected} metric indicating that differences
+\textcolor{blue}{in functional diversity metrics} were largely due to
+changes in species richness. The general trends for \emph{CWM} models
+were similarly not significant, with a significant positive trend for
+only percentage of fish in diet composition.
 
 \begin{figure}
-\includegraphics[width=\textwidth]{../../figures/3met_long} \caption{Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall metric mean in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES}\label{fig:timeseriesPlot}
+\includegraphics[width=\textwidth]{../../figures/3met_long} \caption{Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall mean slope for a metric in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES}\label{fig:timeseriesPlot}
 \end{figure}
 
-We did find significant differences between taxa, realms, and climate
-for Jaccard similarity and some of the \emph{CWM's}. For example, while
+We did find significant differences between taxa, realms, and biomes for
+Jaccard similarity and some of the \emph{CWM's}. For example, while
 Jaccard similarity was decreasing in the general trend and there were
-significant within group slopes for Mammals, Birds, and Terrestrial
-communities, there was no significant slope for the marine realm,
-indicating that the general trend is mostly driven by turnover in
-terrestrial communities. We also found a significant decrease in Jaccard
-similarity in unprotected areas only, with no trend for protected areas.
-For bird communities, we also found within group trends and between
-group differences for trends in foraging behavior. We found a
-significant increasing trend in utilization of the canopy in Tropical
-communities that was significantly different from the trends for
-Polar/Temperate and Temperate communities. There was a significant
-decrease in utilization of the understory for Terrestrial communities
-and significant increase in foraging below the water surface for global
-studies (but see the previous limitations of Global data). There was
-also a significant positive slope for \emph{CWM} body mass for the
-single Temperate/Tropical study (with three time series) which were
-marine mammal communities.
+significant within group slopes for Mammals, Birds, Terrestrial,
+Temperate, and Tropical communities, there was no significant slope for
+the marine realm, indicating that the general trend is mostly driven by
+turnover in terrestrial communities. We also found a significant
+decrease in Jaccard similarity in unprotected areas only, with no trend
+for protected areas. We found significant dietary shifts across
+communities, with a significant general trend of increasing fish
+consumption, which was also reflected in increasing fish consumption
+trends for Bird studies and Temperate studies. We found a significantly
+increasing trend in nectar consumption for Temperate studies but a
+significantly decreasing tend for Tropical studies. We found
+significantly decreasing trend for vertebrate consumption in Marine
+studies and Tropical studies.
 
-We found significant dietary shifts across communities, with a
-significant increase in fruit consumption in Terrestrial communities and
-a significant decrease in nectar consumption in Tropical communities, a
-trend significantly different than that for Terrestrial communities.
-There was a significant increase in seed consumption in bird species,
-which was significantly different from the trend for Mammal communities.
-There was a significant increase in fish consumption for the two Global
-studies. Vertebrate consumption significantly decreased for Marine
-studies and for studies of Global and Tropical communities.
-\textcolor{blue}{There was also a significant increase in fish and fruit consumption for unprotected areas, but not protected.}
+At the study level, 16 of 50 studies exhibited a significant trend in
+species richness and 11 exhibited significant turnover. For uncorrected
+functional diversity metrics, 25 of 50 studies exhibited a trend in a
+least one metric, and 15 of 50 studies exhibited a significant trend for
+at least one \textcolor{blue}{corrected} metric (Table
+\ref{tab:trendTab}). In general, there were more significant trends for
+uncorrected metrics, with some disappearing after correction, indicating
+that those trends were likely due to changes in the number of species.
+Hypothesis testing for study-level trends is likely affected by multiple
+testing issues and some trends identified as significant are therefore
+potentially spurious. Rather than interpreting changes in specific
+studies, we present these results as a general picture of the kinds of
+trends experienced by communities.
 
-At the study level, 15 of 50 studies exhibited a significant trend in
-species richness and 11 exhibited significant turnover. For observed
-functional metrics, 25 of 50 studies exhibited a trend in a least one
-metric, and 15 of 50 studies exhibited a significant trend for at least
-one \textcolor{blue}{corrected} metric (Table \ref{tab:trendTab}). In
-general, there were more significant trends for uncorrected metrics,
-with some disappearing after correction, indicating that those trends
-were likely due to changes in the number of species. Hypothesis testing
-for study-level trends is likely affected by multiple testing issues and
-some trends identified as significant are therefore potentially
-spurious. Rather than interpreting changes in specific studies, we
-present these results as a general picture of the kinds of trends
-experienced by communities.
-
-Study-level slopes for functional diversity metrics were significantly
-related to start year of the time series for Jaccard similarity and
-functional evenness, both of which had significantly more negative
-slopes with more recent start year. No functional diversity metrics were
-significantly related to the start year of the time series.
+Study-level slopes were significantly related to start year of the time
+series for Jaccard similarity and functional evenness models, both of
+which had significantly more negative slopes with more recent start
+year. No functional diversity metrics were significantly related to the
+duration of the time series.
 
 We assessed the sensitivity of general trend results to major data
 processing decision by rerunning models with increasingly conservative
-subsets of the data. After excluding time series with less than two,
-three, and four year durations, we found that the general trend for
-increase in CWM aerial foraging disappeared, but two other trends in
-CWM's appeared. After excluding time series two years long, a general
-trend appeared for increased CWM use of the forest canopy, and decreased
-CWM of seed consumption. These two trends remained as increasingly
-shorter time series were excluded suggesting the increase in aerial
-foraging was an erroneous finding while the other two trends were more
-robust. Percentage of species in a community with trait data did not
-appear to have an affect on general trend results, as general trends
-were unchanged with increasing cut offs for percentage of species with
-trait data. A complete list of models run in the sensitivity analysis
-and their results can be found in the supplement.
+subsets of the data. Trends for Jaccard similarity and fish consumption
+were not sensitive to either time series duration or trait coverage.
+After excluding time series with less than three years we found an
+increasing trend for body mass that remained after excluding time series
+of less than four and five years. We also found a decreasing trend in
+functional richness for models with a minimum of three years and a
+minimum of five years. A decreasing functional richness trend was found
+for models with a min of 85\% trait coverage, but not the other two
+coverage levels. A complete list of models run in the sensitivity
+analysis and their results can be found in the supplement.
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -471,37 +460,66 @@ and local trends in functional diversity in mammal and bird communities.
 \subsubsection{Evidence of consensus}\label{evidence-of-consensus}}
 
 \textcolor{blue}{The most stark area of consensus was the lack of general trend aggregating across communities.}
-We did not detect an overall trend in any functional diversity metrics.
-As with previous species-based syntheses, we also found no overall trend
-in species richness accompanied by increasing turnover through time
-(31), indicating that non-significant trends in functional metrics are
-consistent with similar well-documented species derived trends. We found
-no trend in functional change for almost all realms, biomes, and
-taxonomic groups.
-\textcolor{blue}{The one exception was a consensus trend indicating}
-functional richness loss for mammal studies. These results are
-consistent with multiple studies linking anthropogenic drivers to loss
-of functional diversity in mammal communities (51--53).
+We did not detect an overall trend in any functional diversity metric,
+\textcolor{blue}{corrected or uncorrected}. As with previous
+species-based syntheses, we also found no overall trend in species
+richness accompanied by \textcolor{blue}{increasing dissimilarity}
+through time (31), indicating that non-significant trends in functional
+metrics are consistent with similar well-documented species derived
+trends. We found significant turnover for all biomes, realm, and taxa
+except for marine studies, which stands in contrast to other global
+estimates of biodiversity change that found higher turnover in marine
+systems than terrestrial (37). However, previous global estimates are
+dominated by fish communities which we exclude here and may be driving
+the overall trend while disguising relative stasis in marine bird and
+mammal communities.
 
-Despite a lack of general trends in functional diversity metrics, we did
-find evidence of compositional shifts in the trait space with multiple
-\texttt{significant} trends in \emph{CWM}'s for studies coming from the
-same taxa, realms, climates, or protection statuses,
-\texttt{indicating\ areas\ of\ consensus\ change\ across\ communities}.
-Some of those trends are consistent with existing work in those
-contexts. For example, the decrease in insect consumption for tropical
-communities reflects well documented declines in tropical insectivorous
-birds (54). Reduction in utilization of understory foraging for
-terrestrial communities could be the result of disturbance like human
-recreation or increased predation from introduced species. Other shifts
-in diet for both Birds and Mammals, including increasing fruit, seed,
-and vertebrate consumption and decreasing seed consumption in some
-climates point to important areas for further exploration.
+We found evidence of functional richness loss in mammal studies, with a
+loss trend significantly different from zero and significantly different
+from the trend for birds, indicating a potential loss of functional
+capacity in these communities. This result is consistent with previous
+work linking anthropogenic drivers such as habitat loss, poaching, and
+human modification and development to loss of functional diversity in
+mammal communities across the globe (51--53). However we did not find
+trends outside the random expectation for species loss, in contrast to
+expectations for multiple continents based on IUCN risk categories (51).
+In general, functional capacity of mammals shows greater declines that
+bird communities.
+
+We also found evidence of increasing evenness for Marine studies. The
+empirical link between changes in evenness and ecosystem process is the
+most poorly studied of the metrics, however theory indicates that
+increased evenness improves function and stability (54). If one or a few
+species become largely dominant in a community, function will be the
+result of only those species rather than spread out across a wealth of
+species responding independently to environmental change (42, 55).
+Further, there is some evidence that maintaining evenness is important
+for supporting multifunctionality in communities (56). The majority of
+marine studies are of seabird communities (7 of 9), so the general trend
+may be an early indicator of pay off from investments in sea bird
+recovery, which is also indicated in recent species-based work (57).
+
+Compositional shifts shown by significant trends in \emph{CWM'}s were
+restricted to dietary traits, with no evidence of a trend in foraging
+traits or body mass. Increases in fish consumption for bird and
+temperate studies my be the product of increased availability of easy
+fish from commercial fishing operations as fish are processed or
+stocking of inland waterways for sport fishing. However, fisheries also
+have negative impacts on waterbirds through competition for fish or bird
+mortality due to by catch. Decreases in nectar consumption for tropical
+studies is likely due declines in bat species, as 4 of the 5 tropical
+studies are for mammal and bats were the only nectar consuming mammals
+sampled in our data. Interpretation of the increases for temperate
+studies is less clear, as temperate studies included many bird
+communities with a variety of nectar consumers. Similarly, decreasing
+trends for vertebrate consumption in marine and tropical studies are not
+obviously consistent with known changes in those contexts and warrant
+further examination.
 
 \hypertarget{study-heterogeneity}{%
 \subsubsection{Study heterogeneity}\label{study-heterogeneity}}
 
-\textcolor{blue}{At the study-level, our results run contrary to our hope for a clearer picture of biodiversity change through a functional lens. The lack of general trend in functional diversity metrics belies a huge range of positive and negative trends at the study-level. In order to simplify discussion, we will talk about the implications for ecosystem process and vulnerability for communities grouped by their concurrent change in functional diversity metrics, species richness and turnover split into positive, negative or no trend. While there are over 150 possible combinations of change direction (or no change) in the 5 metrics, we discuss here the six scenarios that occurred in more than one study: no change, species loss or gain only, loss of functional evenness, richness loss with species turnover, and increase in species and functional richness accompanied by significant turnover. We focus on these scenarios to combat potential spurious results due to multiple testing, as it is unlikely all observations of the same scenario are due to false positives. We include a break down of the number of studies in each scenario to illustrate relative number of studies in each group, but emphasize that the absolute number is likely impacted by multiple testing.}
+\textcolor{blue}{At the study-level, our results run contrary to our hope for a clearer picture of biodiversity change through a functional lens. The lack of general trend in functional diversity metrics belies a huge range of positive and negative trends at the study-level. In order to simplify discussion, we will talk about the implications for ecosystem process and vulnerability for communities grouped by their concurrent change in corrected functional diversity metrics, species richness and turnover split into positive, negative or no trend. While there are over 150 possible combinations of change direction (or no change) in the 5 metrics, we discuss here the six scenarios that occurred in more than one study: no change, species loss or gain only, loss of functional evenness, species richness loss with species turnover, and increase in species and functional richness accompanied by significant turnover. We focus on these scenarios to combat potential spurious results due to multiple testing, as it is unlikely all observations of the same scenario are due to false positives. We include a break down of the number of studies in each scenario to illustrate relative number of studies in each group, but emphasize that the absolute number is likely impacted by multiple testing.}
 
 The majority group of studies exhibited no trend in any species or
 functional diversity metric. Contrary to the expectation due to
@@ -517,7 +535,7 @@ communities most insulated from human impact.
 The lack of trend could be the result of multiple possible scenarios.
 First, these may be communities resisting perturbations or simply not
 experiencing significant perturbations. Given the studies in this group
-come from all possible taxa, realms, climates, and protection statuses,
+come from all possible taxa, realms, biomes, and protection statuses,
 evidence points to communities resisting perturbation, offering some
 hope that there are areas of the globe where communities are fairing
 well for now. Alternatively, these may be communities that have
@@ -528,25 +546,26 @@ trophic downgrading and megafaunal losses occurred hundreds of years ago
 {[}citation{]}. Third, these communities may be experiencing directional
 shifts undetectable by available data. For example, species-level trait
 data does not capture intraspecific shifts in the trait space, which can
-represent significant changes in overall functional composition and
-impact maintenance of ecological processes {[}citation{]}.
+represent significant changes in the functional
+\textcolor{blue}{space as a whole} and impact maintenance of ecological
+processes.
 
 Three of the groups fit under the broad umbrella of changes in
 redundancy. By definition, if a community gains or loses species while
 functional metrics are unchanged, those species represent an increase or
 decrease in redundancy, so we include communities exhibiting gains or
 losses in species richness with no change in functional metrics or
-turnover and richness loss with significant turnover in this umbrella.
-For communities exhibiting loss of redundancy (declining species
-richness), ecological processes are likely being maintained, but
-capacity to respond to future stressors is reduced (55). These
+turnover and species richness loss with significant turnover in this
+umbrella. For communities exhibiting loss of redundancy (declining
+species richness), ecological processes are likely being maintained, but
+capacity to respond to future stressors is reduced (58). These
 communities are actually fairing better than expected looking at
 species-based metrics alone, but are also in a precarious position for
-maintaining ecological function into the future (56). Conversely,
+maintaining ecological function into the future (59). Conversely,
 communities exhibiting a increase in redundancy (via an increase in
 species richness) are becoming better positioned to respond to future
 stressors, but are not actually expanding their functional capacity as
-may be assumed by looking at species gains alone (57).
+may be assumed by looking at species gains alone (60).
 
 The next group of studies exhibit an increase in species richness and
 functional richness with significant turnover. While these communities
@@ -564,21 +583,18 @@ investment in conservation over the last few decades (United States,
 Canada, Sweden). Our results are consistent with other functional work
 in these regions, showing increases in species richness and functional
 diversity for North American breeding birds over the last few decades
-after a period of decline(58), and loss of common, functionally general
+after a period of decline(61), and loss of common, functionally general
 species even as rare species are increasing in North America and Europe
-(59--61).
+(62--64).
 
-The final group exhibits decreasing functional evenness. The empirical
-link between changes in evenness and ecosystem process is the most
-poorly studied of the metrics, however theory indicates that increased
-evenness improves function and stability (62). If one or a few species
-become largely dominant in a community, function will be the result of
-only those species rather than spread out across a wealth of species
-responding independently to environmental change (42, 63). Further,
-there is some evidence that maintaining evenness is important for
-supporting multifunctionality in communities (64). These communities are
-therefore of particular concern, especially considering evidence
-evenness is more sensitive to environmental change that richness (62).
+The final group exhibits decreasing functional evenness. These
+communities are of particular concern not just because of the role
+evenness plays in maintaining functionality, but because of increasing
+evidence evenness is more sensitive to environmental change than species
+richness (54). Formal tests of evenness changes as an early warning
+signal of more catastrophic shifts in functional diversity will be
+critical next step for understanding the full implication of evenness
+loss for ecosystem processes.
 
 While the majority of studies fell into one of the groups discussed in
 detail above, 25\% of the studies exhibited some different combination
@@ -594,31 +610,38 @@ functional trait data may not be available. While it is tempting to draw
 a one to one line between the degree of human impact and loss of
 functional integrity (in the form of functional redundancy and
 richness), that relationship is not borne out by our rough metric of
-human impact or previous taxa-specific or single community work, which
-is largely mixed (26, 65--67).
+human impact (protection status) or previous taxa-specific or single
+community work, which is largely mixed (26, 65--67).
 
 \hypertarget{areas-of-incongruence}{%
 \subsubsection{Areas of incongruence}\label{areas-of-incongruence}}
 
-\textcolor{blue}{The addition of functional trait illuminated a few other key areas where a synthesis approach is incongruous with system-specific studies or expectations based on anthropegenic impacts.}
-For example, mean body size is predicted to decrease as a result of
-climate change impacts and megafaunal loss (68), a phenomenon which has
-already been well documented empirically and experimentally in multiple
-taxa (69--72). However, we found no evidence of a trend in \emph{CWM}
-body size, with the exception of a single study of marine mammals in the
-Bahamas which showed a significant increase.
-\textcolor{blue}{While the lack of trend could be explained at least in part by data limitations such as shortened observation windows or missing intraspecific data, the fact that only one of the 41 studies for which study-level models were fit showed a change in mean body size, and in the opposite direction of the expectation, is suprising and warrants further reconciliation.}
+\textcolor{blue}{The addition of functional trait illuminated a few key areas where a synthesis approach is incongruous with system-specific studies or expectations based on anthropegenic impacts.}
+For example, we found no evidence of general trends in \emph{CWM} body
+mass or for studies aggregated by their characteristics despite
+predicitions that mean body mass is decreasing as a result of climate
+change impacts and megafaunal loss (68). This phenomenon has also been
+well documented empirically and experimentally in multiple taxa
+(69--72). Still, climate change impacts are predicted to be most extreme
+for ectotherms and impact intraspecific traits first before species are
+lost, neither of which are represented by our data. Further, many of the
+studies in our dataset draw from areas that may have experienced
+significant loss of large-bodied species before the observation window,
+with contemporary loss rates slowing (73). Trends could be significantly
+different for the same time periods in regions of sub-Saharan Africa,
+for example, which has poor representation in our dataset but where
+megafauna exist on the landscape and are increasingly threatened (74).
 
-Results for protected areas were also surprising given
-
-\begin{itemize}
-\item
-  changes in diet
-\item
-  turnover outside protected areas, not inside ( though might be driven
-  by the fact that there's generally less turnover in terrestrial and
-  temperate studies) (37)
-\end{itemize}
+Results for protected areas were also surprising given the hope that
+protection insulates communities from functional degradation. The only
+difference we found between protected and unprotected areas was
+significant turnover occurring outside protected areas and no
+significant turnover inside protected areas. While this is an indicator
+things are generally more static within protect areas, protection has no
+bearing on whether not there is change in the functional space and the
+nature of that change. Looking at individual studies, there is a mix of
+both losses and gains in almost all functional diversity and composition
+metrics across communities found in protected areas.
 
 \hypertarget{policy-implications}{%
 \subsection{Policy Implications}\label{policy-implications}}
@@ -628,50 +651,38 @@ should not be interpreted as an indication that the ongoing biodiversity
 crisis is less severe than previously described, or that there is no
 concern for functional change as a result of anthropogenic impact. In
 fact, study-level trends indicate quite the opposite, that functional
-shifts with unknown implications for ecosystem processes may be going
-undetected by common species-based approaches, particularly for short
-observation time windows. While the majority of studies in our dataset
-did not experience a significant functional loss, a substantial body of
-work links functional degradation to species losses as a result of
-direct human intervention in the form of land use change and
-intensification or habitat fragmentation, indicating that those studies
-are simply not representative of the kinds of impacts of greatest policy
-concern (67).
+shifts with negative or yet unknown implications for ecosystem processes
+may be going undetected by common species-based approaches. For example,
+loss of evenness in communities with constant species richness may be an
+first sign of a community being impacted by environmental change, with
+negative implications for stability and function.
+
+One of the biggest threats to biodiversity is the wholesale conversion
+of natural areas to urban or human-dominated landscapes (75). Typical
+long term monitoring such as those included in our study stops before
+this conversion occurs, leaving the resultant precipitous declines in
+biodiversity unrecorded (10). This is a known issue with the culture of
+long term monitoring, and our results should not be removed from that
+context. Rather, this studies captures communities that are likely
+experiencing a degree of human intervention, but are still largely
+nature-dominated.
 
 \hypertarget{future-work}{%
 \subsection{Future Work}\label{future-work}}
 
-We present here four prevailing scenarios of change experienced in bird
-and mammal communities. While we offer a first discussion of which kinds
-of change are most common and why, assessing the true global prevalence
-will require continued efforts to fill data gaps, a well recognized
-challenge in ecology (6, 12, 73). Still, a ``scenarios of change''
-framework can provide structure for future work addressing functional
-shifts, particularly as we reconcile results from broad-scale syntheses
-with in-depth single system studies. It will be particularly critical to
-link forms of change to individual drivers to assess which drivers may
-impact species and functional diversity differently. Understanding those
-links will help identify where directly measuring functional structure
-instead of just species change is necessary for understand impacts on a
-given system. In addition, direct links to drivers will improve our
-ability to distinguish between communities experiencing no change due to
-a lack of perturbation from communities with high resilience in the face
-of disturbance.
-
-Here we identify trends that are statistically significant, however they
-may not necessarily be ecologically significant. While it is common to
-link changes in functional metrics to changes in ecosystem processes,
-those changes are less frequently discussed in terms of the size
-necessary for ecological impact. The degree of change in a process
-considered ecological meaningful is somewhat subjective and a function
-of the system and management context, making identifying the ecological
-meaning of broad-scale aggregate shifts even more challenging. It is
-further hampered by the use of species-level trait data, as the traits
-most closely linked to a process of interest may not be available (74).
-Future trait collection that explicitly considers existing frameworks
-for linking traits to processes (e.g.~the response and effect framework
-15) would facilitate improved ecological interpretation of potential
-functional changes.
+The addition of functional trait data to the biodiversity change
+conversation is yet another illustration of how critical context is for
+understanding ecological patterns (76, 77). Here we assessed how key
+community characteristics such as biome, realm, taxa, and protection
+status may partition variation in the functional trends exhibited and
+found that none of those characteristics seem to make the picture of
+change clearer. Further work linking specific ecological contexts to
+types of functional change will be critical for identifying new areas of
+concern, especially when those communities may not otherwise be showing
+significant changes in species richness. The identification of contexts
+where functional change is most likely occurring will be a significant
+asset in directing the future collection of trait data, a main barrier
+for taking a functional approach to biodiversity change.
 
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
@@ -1057,23 +1068,45 @@ erosion of mammalian functional diversity across the diel cycle}.
 change in nocturnal behavior of mammals under anthropogenic
 disturbance}. \emph{Conservation Biology} 36(3):e13839.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-sherry2021}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-filstrup2019}{}}%
 \CSLLeftMargin{54. }%
-\CSLRightInline{Sherry TW (2021) Sensitivity of tropical insectivorous
-birds to the anthropocene: A review of multiple mechanisms and
-conservation implications. \emph{Frontiers in Ecology and Evolution} 9.
-Available at:
-\url{https://www.frontiersin.org/articles/10.3389/fevo.2021.662873}.}
+\CSLRightInline{Filstrup CT, King KBS, McCullough IM (2019)
+\href{https://doi.org/10.1111/ele.13407}{Evenness effects mask richness
+effects on ecosystem functioning at macro-scales in lakes}.
+\emph{Ecology Letters} 22(12):2120--2129.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-hillebrand2008}{}}%
+\CSLLeftMargin{55. }%
+\CSLRightInline{Hillebrand H, Bennett DM, Cadotte MW (2008)
+\href{https://doi.org/10.1890/07-1053.1}{Consequences of Dominance: A
+Review of Evenness Effects on Local and Regional Ecosystem Processes}.
+\emph{Ecology} 89(6):1510--1520.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-bagousse-pinguet2019}{}}%
+\CSLLeftMargin{56. }%
+\CSLRightInline{Bagousse-Pinguet YL, et al. (2019)
+\href{https://doi.org/10.1073/pnas.1815727116}{Phylogenetic, functional,
+and taxonomic richness have both positive and negative effects on
+ecosystem multifunctionality}. \emph{Proceedings of the National Academy
+of Sciences} 116(17):8419--8424.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-spatz2023}{}}%
+\CSLLeftMargin{57. }%
+\CSLRightInline{Spatz DR, et al. (2023)
+\href{https://doi.org/10.1073/pnas.2214574120}{Tracking the global
+application of conservation translocation and social attraction to
+reverse seabird declines}. \emph{Proceedings of the National Academy of
+Sciences} 120(16):e2214574120.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-reich2012}{}}%
-\CSLLeftMargin{55. }%
+\CSLLeftMargin{58. }%
 \CSLRightInline{Reich PB, et al. (2012)
 \href{https://doi.org/10.1126/science.1217909}{Impacts of biodiversity
 loss escalate through time as redundancy fades}. \emph{Science (New
 York, NY)} 336(6081):589--592.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-pimiento2020a}{}}%
-\CSLLeftMargin{56. }%
+\CSLLeftMargin{59. }%
 \CSLRightInline{Pimiento C, et al. (2020)
 \href{https://doi.org/10.1098/rspb.2020.1162}{Selective extinction
 against redundant species buffers functional diversity}.
@@ -1081,60 +1114,38 @@ against redundant species buffers functional diversity}.
 287(1931):20201162.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-biggs2020}{}}%
-\CSLLeftMargin{57. }%
+\CSLLeftMargin{60. }%
 \CSLRightInline{Biggs CR, et al. (2020)
 \href{https://doi.org/10.1002/ecs2.3184}{Does functional redundancy
 affect ecological stability and resilience? A review and meta-analysis}.
 \emph{Ecosphere} 11(7):e03184.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-jarzyna2016}{}}%
-\CSLLeftMargin{58. }%
+\CSLLeftMargin{61. }%
 \CSLRightInline{Jarzyna MA, Jetz W (2016)
 \href{https://doi.org/10.1111/gcb.13571}{A near half-century of temporal
 change in different facets of avian diversity}. \emph{Global Change
 Biology} 23(8):2999--3011.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-inger2015}{}}%
-\CSLLeftMargin{59. }%
+\CSLLeftMargin{62. }%
 \CSLRightInline{Inger R, et al. (2015)
 \href{https://doi.org/10.1111/ele.12387}{Common European birds are
 declining rapidly while less abundant species' numbers are rising}.
 \emph{Ecology Letters} 18(1):28--36.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-rosenberg2019}{}}%
-\CSLLeftMargin{60. }%
+\CSLLeftMargin{63. }%
 \CSLRightInline{Rosenberg KV, et al. (2019) Decline of the North
 American avifauna. \emph{Science}. Available at:
 \url{https://www.science.org/doi/abs/10.1126/science.aaw1313}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-schipper2016}{}}%
-\CSLLeftMargin{61. }%
+\CSLLeftMargin{64. }%
 \CSLRightInline{Schipper AM, et al. (2016)
 \href{https://doi.org/10.1111/gcb.13292}{Contrasting changes in the
 abundance and diversity of North American bird assemblages from 1971 to
 2010}. \emph{Global Change Biology} 22(12):3948--3959.}
-
-\leavevmode\vadjust pre{\hypertarget{ref-filstrup2019}{}}%
-\CSLLeftMargin{62. }%
-\CSLRightInline{Filstrup CT, King KBS, McCullough IM (2019)
-\href{https://doi.org/10.1111/ele.13407}{Evenness effects mask richness
-effects on ecosystem functioning at macro-scales in lakes}.
-\emph{Ecology Letters} 22(12):2120--2129.}
-
-\leavevmode\vadjust pre{\hypertarget{ref-hillebrand2008}{}}%
-\CSLLeftMargin{63. }%
-\CSLRightInline{Hillebrand H, Bennett DM, Cadotte MW (2008)
-\href{https://doi.org/10.1890/07-1053.1}{Consequences of Dominance: A
-Review of Evenness Effects on Local and Regional Ecosystem Processes}.
-\emph{Ecology} 89(6):1510--1520.}
-
-\leavevmode\vadjust pre{\hypertarget{ref-bagousse-pinguet2019}{}}%
-\CSLLeftMargin{64. }%
-\CSLRightInline{Bagousse-Pinguet YL, et al. (2019)
-\href{https://doi.org/10.1073/pnas.1815727116}{Phylogenetic, functional,
-and taxonomic richness have both positive and negative effects on
-ecosystem multifunctionality}. \emph{Proceedings of the National Academy
-of Sciences} 116(17):8419--8424.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-luck2013}{}}%
 \CSLLeftMargin{65. }%
@@ -1194,60 +1205,81 @@ response to warming}. \emph{Global Change Biology} 25(7):2285--2295.}
 size linked to climate change and warming temperatures}. \emph{Journal
 of Animal Ecology} 87(3):647--659.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-hughes2021}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-fritz2009}{}}%
 \CSLLeftMargin{73. }%
-\CSLRightInline{Hughes AC, et al. (2021)
-\href{https://doi.org/10.1111/ecog.05926}{Sampling biases shape our view
-of the natural world}. \emph{Ecography} 44(9):1259--1269.}
+\CSLRightInline{Fritz SA, Bininda-Emonds ORP, Purvis A (2009)
+\href{https://doi.org/10.1111/j.1461-0248.2009.01307.x}{Geographical
+variation in predictors of mammalian extinction risk: big is bad, but
+only in the tropics}. \emph{Ecology Letters} 12(6):538--549.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-zhu2017}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-ripple2015}{}}%
 \CSLLeftMargin{74. }%
-\CSLRightInline{Zhu L, et al. (2017)
-\href{https://doi.org/10.1038/s41598-017-03812-8}{Trait choice
-profoundly affected the ecological conclusions drawn from functional
-diversity measures}. \emph{Scientific Reports} 7(1):3643.}
+\CSLRightInline{Ripple WJ, et al. (2015)
+\href{https://doi.org/10.1126/sciadv.1400103}{Collapse of the world{'}s
+largest herbivores}. \emph{Science Advances} 1(4):e1400103.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-tilman2017}{}}%
+\CSLLeftMargin{75. }%
+\CSLRightInline{Tilman D, et al. (2017)
+\href{https://doi.org/10.1038/nature22900}{Future threats to
+biodiversity and pathways to their prevention}. \emph{Nature}
+546(7656):73--81.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-catford2022}{}}%
+\CSLLeftMargin{76. }%
+\CSLRightInline{Catford JA, Wilson JRU, Pyšek P, Hulme PE, Duncan RP
+(2022) \href{https://doi.org/10.1016/j.tree.2021.09.007}{Addressing
+context dependence in ecology}. \emph{Trends in Ecology \& Evolution}
+37(2):158--170.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-spake2023}{}}%
+\CSLLeftMargin{77. }%
+\CSLRightInline{Spake R, et al. (2023)
+\href{https://doi.org/10.1111/brv.12939}{Understanding {`}it depends{'}
+in ecology: a guide to hypothesising, visualising and interpreting
+statistical interactions}. \emph{Biological Reviews} 98(4):983--1002.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-pardieck2020}{}}%
-\CSLLeftMargin{75. }%
+\CSLLeftMargin{78. }%
 \CSLRightInline{Pardieck KL, David ZJ, Lutmerding M, Aponte V, Hudson
 M-AR (2020) North american breeding bird survey dataset 1966 - 2019,
 version 2019.0.
 doi:\href{https://doi.org/10.5066/P9J6QUF6}{10.5066/P9J6QUF6}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-piropno}{}}%
-\CSLLeftMargin{76. }%
+\CSLLeftMargin{79. }%
 \CSLRightInline{PIROP northwest atlantic 1965{\textendash}1992 - OBIS
 SEAMAP Available at: \url{http://www.iobis.org/mapper/?dataset=2245}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-silva}{}}%
-\CSLLeftMargin{77. }%
+\CSLLeftMargin{80. }%
 \CSLRightInline{Silva FR da Brazil dataset 1.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-scott}{}}%
-\CSLLeftMargin{78. }%
+\CSLLeftMargin{81. }%
 \CSLRightInline{Scott D, Metts B, Lance S The rainbow bay long-term
 study. Available at: \url{http://srelherp.uga.edu/projects/rbay.htm}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-rossaferes1997}{}}%
-\CSLLeftMargin{79. }%
+\CSLLeftMargin{82. }%
 \CSLRightInline{Rossa-Feres D de C (1997) Community ecology of anura
 amphibia at northwest region of sao paulo state, brazil: Microhabitat,
 seasonality, diet and multidimensional niche. PhD thesis.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-bakker1990}{}}%
-\CSLLeftMargin{80. }%
+\CSLLeftMargin{83. }%
 \CSLRightInline{Bakker C, Herman PMJ (1990) Phytoplankton in the
 oosterschelde before, during and after the storm-surge barrier
 (1982{\textendash}1990). Available at:
 \url{http://www.iobis.org/mapper/?dataset=505}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-berezovikovn.n.2004}{}}%
-\CSLLeftMargin{81. }%
+\CSLLeftMargin{84. }%
 \CSLRightInline{Berezovikov, N.N. (2004) The birds of settlements in
 markakol depression (southern altai). (249):3--15.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-enemar2004}{}}%
-\CSLLeftMargin{82. }%
+\CSLLeftMargin{85. }%
 \CSLRightInline{Enemar A, Sjöstrand B, Andersson G, Von Proschwitz T
 (2004) \href{https://doi.org/10.34080/os.v14.20236}{The 37-year dynamics
 of a subalpine passerine bird community, with special emphasis on the
@@ -1255,75 +1287,75 @@ influence of environmental temperature and epirrita autumnata cycles}.
 \emph{Ornis Svecica} 14(3):63--106.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-gido2019}{}}%
-\CSLLeftMargin{83. }%
+\CSLLeftMargin{86. }%
 \CSLRightInline{Gido K (2019) CFP01 Fish population on selected
 watersheds at Konza Prairie.
 doi:\href{https://doi.org/10.6073/PASTA/BE5AD393AF83F9602AAE96423A280875}{10.6073/PASTA/BE5AD393AF83F9602AAE96423A280875}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-hogstad1993}{}}%
-\CSLLeftMargin{84. }%
+\CSLLeftMargin{87. }%
 \CSLRightInline{Hogstad O (1993)
 \href{https://www.jstor.org/stable/23735355}{Structure and dynamics of a
 passerine bird community in a spruce-dominated boreal forest. A 12-year
 study}. \emph{Annales Zoologici Fennici} 30(1):43--54.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-holmes1986}{}}%
-\CSLLeftMargin{85. }%
+\CSLLeftMargin{88. }%
 \CSLRightInline{Holmes RT, Sherry TW, Sturges FW (1986)
 \href{https://doi.org/10.2307/2937074}{Bird Community Dynamics in a
 Temperate Deciduous Forest: Long-Term Trends at Hubbard Brook}.
 \emph{Ecological Monographs} 56(3):201--220.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-jahncke2006}{}}%
-\CSLLeftMargin{86. }%
+\CSLLeftMargin{89. }%
 \CSLRightInline{Jahncke J, Rintoul C (2006) CalCOFI and NMFS seabird and
 marine mammal observation data, 1987{\textendash}2006. Available at:
 \url{http://www.iobis.org}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-krivenkov.g.1991}{}}%
-\CSLLeftMargin{87. }%
+\CSLLeftMargin{90. }%
 \CSLRightInline{Krivenko, V.G. (1991) Waterfowl and their protection.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-melnikovy.i.2000}{}}%
-\CSLLeftMargin{88. }%
+\CSLLeftMargin{91. }%
 \CSLRightInline{Melnikov, Y.I., Melnikova, N., Pronkevich, V.V. (2000)
 Migration of birds of prey in the mouth of the river irkut.
 (108):3--17.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-monitoringsite1000projectbiodiversitycenterministryofenvironmentofjapan2013}{}}%
-\CSLLeftMargin{89. }%
+\CSLLeftMargin{92. }%
 \CSLRightInline{Monitoring Site 1000 Project, Biodiversity Center,
 Ministry of Environment of Japan (2013) Monitoring site 1000 shorebird
 survey. Available at:
 \url{http://www.biodic.go.jp/moni1000/findings/data/index.html}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-monitoringsite1000projectbiodiversitycenterministryofenvironmentofjapan2014}{}}%
-\CSLLeftMargin{90. }%
+\CSLLeftMargin{93. }%
 \CSLRightInline{Monitoring Site 1000 Project, Biodiversity Center,
 Ministry of Environment of Japan (2014) Monitoring site 1000 village
 survey - bird survey data (2005{\textendash}2012). Available at:
 \url{http://www.biodic.go.jp/moni1000/findings/data/index.html)}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-monitori2014}{}}%
-\CSLLeftMargin{91. }%
+\CSLLeftMargin{94. }%
 \CSLRightInline{Monitoring site 1000 village survey - medium and large
 mammal survey data (2006{\textendash}2012) (2014) Available at:
 \url{http://www.biodic.go.jp/moni1000/findings/data/index.html}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-preston1960}{}}%
-\CSLLeftMargin{92. }%
+\CSLLeftMargin{95. }%
 \CSLRightInline{Preston FW (1960)
 \href{https://doi.org/10.2307/1931793}{Time and space and the variation
 of species}. \emph{Ecology} 41(4):612--627.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-svensson2006}{}}%
-\CSLLeftMargin{93. }%
+\CSLLeftMargin{96. }%
 \CSLRightInline{Svensson S (2006) Species composition and population
 fluctuations of alpine bird communities during 38 years in the
 scandinavian mountain range. \emph{Ornis Svecica} 16:183--210.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-svensson2010}{}}%
-\CSLLeftMargin{94. }%
+\CSLLeftMargin{97. }%
 \CSLRightInline{Svensson S, Thorner AM, Nyholm NEI (2010) Species
 trends, turnover and composition of a woodland bird community in
 southern sweden during a period of fifty-seven years. \emph{Ornis
@@ -1331,64 +1363,64 @@ Svecica} 20(1).
 doi:\href{https://doi.org/10.34080/os.v20.22641}{10.34080/os.v20.22641}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-thorn2016changes}{}}%
-\CSLLeftMargin{95. }%
+\CSLLeftMargin{98. }%
 \CSLRightInline{Thorn S, et al. (2016)
 \href{https://doi.org/10.1111/ele.12548}{Changes in the dominant
 assembly mechanism drive species loss caused by declining resources}.
 \emph{Ecology Letters} 19(2):163--170.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-usfs}{}}%
-\CSLLeftMargin{96. }%
+\CSLLeftMargin{99. }%
 \CSLRightInline{USFS Landbird monitoring program (UMT-LBMP). Available
 at: \url{http://www.avianknowledge.net/}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-vermontcenterforecostudies2015}{}}%
-\CSLLeftMargin{97. }%
+\CSLLeftMargin{100. }%
 \CSLRightInline{Vermont Center For Ecostudies, Lambert JD, Hart J (2015)
 Mountain Birdwatch 1.0.
 doi:\href{https://doi.org/10.5063/F1DN430G}{10.5063/F1DN430G}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-vickery1984}{}}%
-\CSLLeftMargin{98. }%
+\CSLLeftMargin{101. }%
 \CSLRightInline{Vickery WL, Nudds TD (1984)
 \href{https://doi.org/10.2307/1939462}{Detection of Density-Dependent
 Effects in Annual Duck Censuses}. \emph{Ecology} 65(1):96--104.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-waide2017}{}}%
-\CSLLeftMargin{99. }%
+\CSLLeftMargin{102. }%
 \CSLRightInline{Waide R (2017) Bird abundance - point counts.
 doi:\href{https://doi.org/10.6073/PASTA/91E6302E743BAC1E3E32781B869CE3D9}{10.6073/PASTA/91E6302E743BAC1E3E32781B869CE3D9}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-williamson1983}{}}%
-\CSLLeftMargin{100. }%
+\CSLLeftMargin{103. }%
 \CSLRightInline{Williamson M (1983)
 \href{https://doi.org/10.2307/3544096}{The land-bird community of
 skokholm: Ordination and turnover}. \emph{Oikos} 41(3):378--384.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-zakharovv.d.1998}{}}%
-\CSLLeftMargin{101. }%
+\CSLLeftMargin{104. }%
 \CSLRightInline{Zakharov, V.D. (1998) Biodiversity of bird population of
 terrestrial habitats in southern ural. Miass: IGZ. Available at:
 \url{http://ashipunov.info/shipunov/school/books/zakharov1998_biorazn_nasel_ptits_mazemn_mestoob_juzhn_urala.pdf}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-meditss2011}{}}%
-\CSLLeftMargin{102. }%
+\CSLLeftMargin{105. }%
 \CSLRightInline{MEDITS seabird surveys 1999 / 2000 / 2002 (2011)
 Available at:
 \url{http://www.emodnet-biology.eu/component/imis/?module=dataset\&dasid=1979}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-animald}{}}%
-\CSLLeftMargin{103. }%
+\CSLLeftMargin{106. }%
 \CSLRightInline{Animal demography unit - coordinated waterbird counts
 (CWAC) - AfrOBIS Available at: \url{http://www.iobis.org/}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-baltics}{}}%
-\CSLLeftMargin{104. }%
+\CSLLeftMargin{107. }%
 \CSLRightInline{Baltic seabirds transect surveys Available at:
 \url{http://www.emodnet-biology.eu/component/imis/?module=dataset\&dasid=1971}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-thorn2016response}{}}%
-\CSLLeftMargin{105. }%
+\CSLLeftMargin{108. }%
 \CSLRightInline{Thorn S, et al. (2016)
 \href{https://doi.org/10.1016/j.ecolind.2015.06.033}{Response of bird
 assemblages to windstorm and salvage logging {\textemdash} Insights from
@@ -1396,7 +1428,7 @@ analyses of functional guild and indicator species}. \emph{Ecological
 Indicators} 65:142--148.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-ernest2009}{}}%
-\CSLLeftMargin{106. }%
+\CSLLeftMargin{109. }%
 \CSLRightInline{Ernest SKM, Valone TJ, Brown JH (2009)
 \href{https://doi.org/10.1890/08-1222.1}{Long-term monitoring and
 experimental manipulation of a Chihuahuan Desert ecosystem near Portal,
@@ -1404,18 +1436,18 @@ Arizona, USA: {\emph{Ecological Archives}} E090-118}. \emph{Ecology}
 90(6):1708--1708.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-friggens2008}{}}%
-\CSLLeftMargin{107. }%
+\CSLLeftMargin{110. }%
 \CSLRightInline{Friggens M (2008) Sevilleta LTER small mammal population
 data. Available at: \url{http://sev.lternet.edu/data/sev-8}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-jalilova.b.2014}{}}%
-\CSLLeftMargin{108. }%
+\CSLLeftMargin{111. }%
 \CSLRightInline{Jalilov, A. B., Andreychev, A. V., Kuznetsov, V. A.
 (2014) Monitoring and conservation of medium and large mammals in
 chamzinsky district of the republic of mordovia.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-kartzinel2014}{}}%
-\CSLLeftMargin{109. }%
+\CSLLeftMargin{112. }%
 \CSLRightInline{Kartzinel TR, et al. (2014)
 \href{https://doi.org/10.1890/13-1023R.1}{Plant and small-mammal
 responses to large-herbivore exclusion in an African savanna: five years
@@ -1423,32 +1455,32 @@ of the UHURU experiment: {\emph{Ecological Archives}} E095-064}.
 \emph{Ecology} 95(3):787--787.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-kaufman2019}{}}%
-\CSLLeftMargin{110. }%
+\CSLLeftMargin{113. }%
 \CSLRightInline{Kaufman D (2019) CSM01 Seasonal Summary of Numbers of
 Small Mammals on 14 LTER Traplines in Prairie Habitats at Konza Prairie.
 doi:\href{https://doi.org/10.6073/PASTA/9735A16A0018D85FF5EFB8B74FD100F4}{10.6073/PASTA/9735A16A0018D85FF5EFB8B74FD100F4}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-krefting1974}{}}%
-\CSLLeftMargin{111. }%
+\CSLLeftMargin{114. }%
 \CSLRightInline{Krefting LW, Ahlgren CE (1974)
 \href{https://doi.org/10.2307/1935467}{Small Mammals and Vegetation
 Changes After Fire in a Mixed Conifer-Hardwood Forest}. \emph{Ecology}
 55(6):1391--1398.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-lightfoot}{}}%
-\CSLLeftMargin{112. }%
+\CSLLeftMargin{115. }%
 \CSLRightInline{Lightfoot D, Schooley RL SMES rodent trapping data,
 small mammal exclosure study. Available at:
 \href{http://jornada.nmsu.edu/sites/jornada.nmsu.edu/files/data_files/JornadaStudy_086_smes_rodent_trapping_data_0.csv,\%20accessed\%202016.}{http://jornada.nmsu.edu/sites/jornada.nmsu.edu/files/data\_files/JornadaStudy\_086\_smes\_rodent\_trapping\_data\_0.csv,
 accessed 2016.}}
 
 \leavevmode\vadjust pre{\hypertarget{ref-malyshevy.s.2011}{}}%
-\CSLLeftMargin{113. }%
+\CSLLeftMargin{116. }%
 \CSLRightInline{Malyshev, Y. S. (2011) On the diagnostic techniques of
 ranks of the number dynamics cycles of small mammals. 1(6):92--106.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-meyer2008}{}}%
-\CSLLeftMargin{114. }%
+\CSLLeftMargin{117. }%
 \CSLRightInline{Meyer CFJ, Kalko EKV (2008)
 \href{https://doi.org/10.1111/j.1365-2699.2008.01916.x}{Assemblage-level
 responses of phyllostomid bats to tropical forest fragmentation:
@@ -1456,20 +1488,20 @@ land-bridge islands as a model system}. \emph{Journal of Biogeography}
 35(9):1711--1726.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-nedosekinv.y.2015}{}}%
-\CSLLeftMargin{115. }%
+\CSLLeftMargin{118. }%
 \CSLRightInline{Nedosekin, V. Y. (2015) Long-term dynamics of the
 population and the quantity of small mammals under conditions of the
 reserve {"}galichya gora{"}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-prins1990}{}}%
-\CSLLeftMargin{116. }%
+\CSLLeftMargin{119. }%
 \CSLRightInline{Prins HHT, Douglas-Hamilton I (1990)
 \href{https://doi.org/10.1007/BF00317566}{Stability in a multi-species
 assemblage of large herbivores in East Africa}. \emph{Oecologia}
 83(3):392--400.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-rocha2017}{}}%
-\CSLLeftMargin{117. }%
+\CSLLeftMargin{120. }%
 \CSLRightInline{Rocha R, et al. (2017)
 \href{https://doi.org/10.1007/s10980-016-0425-3}{Consequences of a
 large-scale fragmentation experiment for Neotropical bats: disentangling
@@ -1477,20 +1509,20 @@ the relative importance of local and landscape-scale effects}.
 \emph{Landscape Ecology} 32(1):31--45.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-stapp2014}{}}%
-\CSLLeftMargin{118. }%
+\CSLLeftMargin{121. }%
 \CSLRightInline{Stapp P (2014) SGS-LTER long-term monitoring project:
 Small mammals on trapping webs on the central plains experimental range,
 nunn, colorado, USA 1994 -2006, ARS study number 118.
 doi:\href{https://doi.org/10.6073/PASTA/2E311B4E40FEA38E573890F473807BA9}{10.6073/PASTA/2E311B4E40FEA38E573890F473807BA9}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-bahamas}{}}%
-\CSLLeftMargin{119. }%
+\CSLLeftMargin{122. }%
 \CSLRightInline{Bahamas marine mammal research organisation
 opportunistic sightings - OBIS SEAMAP Available at:
 \url{http://www.iobis.org}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-popacet}{}}%
-\CSLLeftMargin{120. }%
+\CSLLeftMargin{123. }%
 \CSLRightInline{POPA cetacean, seabird, and sea turtle sightings in the
 azores area 1998{\textendash}2009 - OBIS SEAMAP Available at:
 \url{http://www.iobis.org/mapper/?dataset=4257}.}
