@@ -9,6 +9,8 @@ This script reads in all the rarefacation sample files, gets the median value fo
 library(dplyr)
 library(tibble)
 library(stringr)
+library(furrr)
+library(tidyr)
 ```
 
 Read in files
