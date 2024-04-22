@@ -598,6 +598,59 @@ indv_mod_results <- bind_rows(mixed_indv_mod_results %>% filter(is.na(warning)),
 indv_mod_table <- indv_mod_results %>% select(-model)
 usethis::use_data(indv_mod_table)
 ```
+Perform p-value correction
+```{r}
+# Let's get a dataframe of p-values for the models we actually used
+
+# base models for all metrics
+
+base <- metric_model_table %>%
+  filter(model_id == "base", term == "year_scaled")
+  
+  
+# within group and between group trends for all metrics
+
+contrast <- metric_model_table %>%
+  filter(model_id != "base", effect == "contrast")
+
+group_slope <-  metric_model_table %>%
+  filter(model_id != "base", effect == "group_slope") %>%
+  mutate(tval = estimate/std.error,
+         p.value = 2*pt(-abs(tval), df))
+
+# study-level trends for species and functional diversity metrics
+
+study_trend <- indv_mod_table %>%
+  filter(term == "year_scaled")
+
+
+pval_df <- bind_rows(base, contrast, group_slope, study_trend) %>%
+  filter(metric != "Jaccard_next")
+
+adj.p <- p.adjust(pval_df$p.value, method = "BH")
+
+pval_df <- bind_cols(pval_df, p.adjust = adj.p)
+
+# # Which of the general model trends are likely spurious
+# pval_df %>% 
+#   filter(p.value < 0.05, p.adjust > 0.05) %>% 
+#   filter(is.na(study_id)) %>% 
+#   View()
+# 
+# # Which of the study-level trends are likely spurious
+# pval_df %>% 
+#   filter(p.value < 0.05, p.adjust > 0.05) %>% 
+#   filter(!is.na(study_id)) %>% 
+#   View()
+
+# add adjusted p value to model table
+
+model_output <- bind_rows(metric_model_table, indv_mod_table) %>%
+  left_join(pval_df) %>%
+  select(-significant, -tval)
+
+usethis::use_data(model_output)
+```
 
 Write out table of model estimates for manuscript
 ```{r}
@@ -608,8 +661,8 @@ metric_model_table %>%
   readr::write_csv(here::here("figures", "man_model_table.csv"))
 
 #supplement of complete model output
-bind_rows(metric_model_table, indv_mod_table) %>%
-    select(-c(n_ts, warning, lower.CL, upper.CL, significant, REML, bobyqa)) %>%
+model_output %>%
+    select(-c(n_ts, warning, lower.CL, upper.CL, REML, bobyqa)) %>%
   readr::write_csv(here::here("paper", "model_estimates_supp.csv"))
   
 ```
@@ -617,7 +670,8 @@ bind_rows(metric_model_table, indv_mod_table) %>%
 Summaries of study slopes
 ```{r}
 #First - how many studies had a significant trend for each metric? 
-indv_mod_table %>% 
+model_output %>% 
+  filter(!is.na(study_id)) %>%
   filter(term == "year_scaled", p.value < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   mutate(positive = ifelse(estimate > 0, TRUE, FALSE)) %>%
@@ -626,14 +680,16 @@ indv_mod_table %>%
   pivot_wider(names_from = "metric", values_from = "n_study_id")
 
 #And which studies were they?
-indv_mod_table %>% 
+model_output %>% 
+  filter(!is.na(study_id)) %>%
   filter(term == "year_scaled", p.value < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   select(study_id, metric) %>%
   distinct()
 
 #Which were significant for multiple metrics?
-indv_mod_table %>% 
+model_output %>% 
+  filter(!is.na(study_id)) %>%
   filter(term == "year_scaled", p.value < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
   group_by(study_id) %>%

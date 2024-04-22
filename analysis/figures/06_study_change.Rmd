@@ -17,19 +17,20 @@ library(ggplot2)
 ```
 
 ```{r}
-load(here::here("data/indv_mod_table.rda"))
+load(here::here("data/model_output.rda"))
 load(here::here("data/model_data.rda"))
 ```
 
 # Types of Biodiversity Change
 
 ```{r}
-wide_table <- indv_mod_table %>% 
-  filter(p.value < 0.05, term == "year_scaled", model_id == "base") %>% 
+wide_table <- model_output %>%
+  filter(!is.na(study_id)) %>%
+  filter(p.adjust < 0.05, term == "year_scaled", model_id == "base") %>% 
   dplyr::select(study_id, metric, estimate) %>% 
   pivot_wider(names_from = "metric", values_from = "estimate") %>% 
   dplyr::select(., -starts_with("CWM_")) %>% 
-  dplyr::select(study_id, S, Jaccard_base, everything(), -Jaccard_next) %>%
+  dplyr::select(study_id, S, Jaccard_base, everything()) %>%
   left_join(model_data %>% 
               dplyr::select(study_id, duration) %>%
               distinct() %>%
@@ -172,8 +173,16 @@ na_studies <- study_meta %>%
            
 study_meta <- setdiff(study_meta, na_studies)
 
+# change_groups <- wide_table %>% 
+#   select(study_id, S, Jaccard_base, starts_with("SES")) %>%
+#   mutate(across(!study_id, ~case_when(
+#     . > 0 ~ "pos",
+#     . < 0 ~ "neg",
+#     .default = "0"
+#   ))) 
+
 change_groups <- wide_table %>% 
-  select(study_id, S, Jaccard_base, starts_with("SES")) %>%
+  select(study_id, S, Jaccard_base, FRic, FEve, FDiv) %>%
   mutate(across(!study_id, ~case_when(
     . > 0 ~ "pos",
     . < 0 ~ "neg",

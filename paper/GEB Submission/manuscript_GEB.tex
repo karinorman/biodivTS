@@ -445,7 +445,7 @@ realm, and protection status we fit separate models with each of those
 factors added as a predictor interacting with time to the original model
 structure. We estimated within-level slopes and calculated between-level
 contrasts using the \emph{emmeans} package (v1.8.2, 62).
-\textcolor{blue}{For some levels of the categorical variables we did not have a sufficient number of studies to estimate a general trend, we therefore refrained from interpreting results for levels where there were fewer than three studies.}
+\textcolor{blue}{For some levels of the categorical variables we did not have a sufficient number of studies to estimate a general trend, we therefore only interpret results for levels with more than three studies.}
 We assessed the impact of time series duration and start year on
 study-level trends using linear models with duration and start year as
 predictors. All models in our analysis were fit using the \emph{lme4}
@@ -469,15 +469,10 @@ trends, the average trend across studies
 \textcolor{blue}{was not significantly different from zero} (Table
 \ref{tab:resultsTab}). \textcolor{blue}{Within-group} trends for
 different taxa, biomes, realms, or protection statuses were also
-non-significant for richness and functional diversity metrics, with the
-exception of a significantly increasing trend for functional evenness of
-marine studies, and a significantly decreasing functional richness slope
-for mammal studies. However, trends were not exhibited for the
-\textcolor{blue}{corrected} metric indicating that differences
-\textcolor{blue}{in functional diversity metrics} were largely due to
-changes in species richness. The general trends for \emph{CWM} models
-were similarly not significant, with a significant positive trend for
-only percentage of fish in diet composition.
+non-significant for richness and functional diversity metrics. The
+general trends for \emph{CWM} models were similarly not significant,
+with a significant positive trend for only percentage of fish in diet
+composition.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../../figures/3met_long} \caption{Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall mean slope for a metric in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES}\label{fig:timeseriesPlot}
@@ -578,33 +573,27 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 We did find significant differences between taxa, realms, and biomes for
 Jaccard similarity and some of the \emph{CWM's}. For example, while
 Jaccard similarity was decreasing in the general trend and there were
-significant within group slopes for Mammals, Birds, Terrestrial,
-Temperate, and Tropical communities, there was no significant slope for
-the marine realm, indicating that the general trend is mostly driven by
-turnover in terrestrial communities. We also found a significant
-decrease in Jaccard similarity in unprotected areas only, with no trend
-for protected areas. We found significant dietary shifts across
-communities, with a significant general trend of increasing fish
-consumption, which was also reflected in increasing fish consumption
-trends for Bird studies and Temperate studies. We found a significantly
-increasing trend in nectar consumption for Temperate studies but a
-significantly decreasing tend for Tropical studies. We found
-significantly decreasing trend for vertebrate consumption in Marine
-studies and Tropical studies.
+significant within group slopes for birds, terrestrial, and temperate
+studies, there was no significant slope for marine, mammal, or tropical
+studies. We also found a significant decrease in Jaccard similarity in
+unprotected areas only, with no trend for protected areas. We found
+significant dietary shifts across communities, with a significant
+general trend of increasing fish consumption, which was also reflected
+in increasing fish consumption trends for bird studies and temperate
+studies. We found significantly decreasing trend for vertebrate
+consumption in Marine studies and Tropical studies. The trend for marine
+vertebrate consumption was significantly more negative than for
+terrestrial studies and the temperate trend was significantly more
+negative than tropical studies.
 
-At the study level, 16 of 50 studies exhibited a significant trend in
+At the study level, 12 of 50 studies exhibited a significant trend in
 species richness and 11 exhibited significant turnover. For uncorrected
-functional diversity metrics, 25 of 50 studies exhibited a trend in a
-least one metric, and 15 of 50 studies exhibited a significant trend for
+functional diversity metrics, 11 of 50 studies exhibited a trend in a
+least one metric, and 7 of 50 studies exhibited a significant trend for
 at least one \textcolor{blue}{corrected} metric (Table
 \ref{tab:trendTab}). In general, there were more significant trends for
 uncorrected metrics, with some disappearing after correction, indicating
 that those trends were likely due to changes in the number of species.
-Hypothesis testing for study-level trends is likely affected by multiple
-testing issues and some trends identified as significant are therefore
-potentially spurious. Rather than interpreting changes in specific
-studies, we present these results as a general picture of the kinds of
-trends experienced by communities.
 
 \begin{table}
 
@@ -614,8 +603,8 @@ trends experienced by communities.
 \toprule
  & S & Jaccard Similarity & FRic & FEve & FDiv & SES FRic & SES FEve & SES FDiv\\
 \midrule
-+ & 7 & 0 & 7 & 5 & 3 & 4 & 4 & 3\\
-- & 9 & 11 & 8 & 6 & 5 & 2 & 6 & 2\\
++ & 2 & 0 & 5 & 3 & 1 & 4 & 0 & 1\\
+- & 9 & 12 & 2 & 0 & 3 & 1 & 1 & 2\\
 \bottomrule
 \end{tabular}
 \end{table}

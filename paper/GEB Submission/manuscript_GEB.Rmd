@@ -1,7 +1,7 @@
 ---
 title: Functional traits complicate the picture of temporal biodiversity change in bird and mammal communities
 abstract: |
-  Aim: Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing dissimilarity due to turnover but no overall trend in species diversity through time at the local scale. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to the characteristics that confer ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time.
+  Aim: Despite unprecedented environmental change due to anthropogenic pressure, recent work has found increasing dissimilarity due to turnover but no overall trend in species diversity through time at the local scale. Functional diversity provides a potentially powerful alternative approach for understanding community composition by linking shifts in species identity to the characteristics that underpin ecosystem processes. Here we present the first multi-taxa, multi-system analysis of functional change through time.
   
   Location: Global, with a North American focus
   
@@ -9,11 +9,11 @@ abstract: |
   
   Major taxa studied: Mammals, Birds
   
-  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of a species' functional role to reconstruct time series of functional diversity and composition metrics. Using generalized linear mixed models, we estimated general trends in those metrics and trends for individual studies.
+  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of species' functional roles to reconstruct time series of functional diversity and composition metrics. Using generalized linear mixed models, we estimated general trends in those metrics and trends for individual studies.
   
-  Results: We found evidence of decreasing functional richeness for mammal communities and increasing functional evenness in marine communities, but otherwise no overall trends in functional diversity metrics, which held even after correcting for changes in species richness. With the exception of those two trends, study characteristics such as taxa, realm, biome, or protection status did not distinguish between types of change exhibited by communities. At the study-level, there was substantial heterogeneity in the direction and type of functional change exhibited.  We further did not find evidence to support multiple predictions for inidividual traits, including decreasing body size, dietary shifts, or changes in foraging strata. 
+  Results: We found no overall trends in functional diversity metrics. Study characteristics such as taxa, realm, biome, or protection status did not distinguish between types of change exhibited by communities. At the study-level, there was substantial heterogeneity in the direction and type of functional change exhibited.  We further did not find evidence to support multiple predictions for specific traits, including decreasing body size, dietary shifts, or changes in foraging strata. 
   
-  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevalant than the other across many taxa, biomes, and realms. Loss of functional richness in mammal communities indicates that they are on average faring worse than bird communities. At the study-level, the majority group of studies showed no species or functional trends, but other types of change were found for multiple studies, including studies experiencing changes in functional redundancy, increased species and functional richness, or loss of functional richness. With no one prevailing scenario of change, it will be critical to link change scenarios to ecological context.
+  Main Conclusions: General trends indicate that on the aggregate one type of functional shift is not more prevalant than the other across many taxa, biomes, and realms. At the study-level, the majority of studies showed no species or functional trends, but other types of change were found for multiple studies, including changes in functional redundancy, increased species and functional richness, or loss of functional richness. With no prevailing scenario of change, it will be critical to link types of change to ecological context.
   
 journal: "Ecology Letters"
 date: "`r Sys.Date()`"
@@ -66,8 +66,8 @@ colorize <- function(x, color) {
 
 # Introduction
 
-Ecological communities are experiencing unprecedented change as a result of anthropogenic pressures such as climate change, land use change, and invasive species.
-Impacts of these pressures are well documented at a global scale by an accelerating global extinction rate [@barnosky2011], and fundamental changes in some of the most well-studied systems [e.g. coral bleaching, @sully2019].
+Ecological communities are experiencing unprecedented changes as a result of anthropogenic pressures such as climate change, land use change, and invasive species.
+Impacts of these pressures are well documented at a global scale by an accelerating global extinction rate [@barnosky2011] and fundamental changes in some of the most well-studied systems [e.g. coral bleaching, @sully2019].
 At the local scale however, species diversity tells a different story.
 Recent syntheses of local trends in biodiversity over time have found no net change in local species diversity despite ongoing turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017] and evidence of significant shifts in community composition underlying consistent species richness [@brose2016; @gotelli2017; @li2020].
 While communities are clearly changing, our most common species-based approaches do not fully capture the nature of that change.
@@ -79,7 +79,7 @@ Functional diversity offers a potentially powerful addition to species-based app
 By describing the functional trait space, functional diversity metrics capture the disproportionate impact of losses or gains of functionally unique species.
 Functional diversity metrics `r colorize("may therefore illuminate joint responses from functionally similar species or communities undetectible by looking at species identity alone.", "blue")`
 
-`r colorize("The expectation for functional diversity change across communities is not obvious from past work, and may or may not follow taxonomic trends", "blue")` [@dornelas2023].
+`r colorize("The expectation for functional diversity change across communities is not obvious from past work, and may or may not follow species richness trends", "blue")` [@dornelas2023].
 While `r colorize("loss of functional diversity", "blue")` is frequently cited as one of the most pressing concerns of the anthropocene [@cardinale2012; @dirzo2014; @young2016], `r colorize("functional diversity may be maintained even when species are lost from a community", "blue")` [@daz2001; @petchey2009].
 Forecasts of functional loss range from negligible [@gallagher2013] to dire [@petchey2002; @pimiento2020].
 And while some observed trends show significant functional loss [@flynn2009] others document no loss even in some of the most heavily impacted communities [@edwards2013; @larsen2018; @matuoka2020].
@@ -88,7 +88,9 @@ For some time periods, functional diversity appears to be maintained for substan
 `r colorize("Contemporary, broad-scale examinations of functional change are limited to only a few taxa-focused studies, but show for example functional richness increases for both North American birds", "blue")` [@barnagaud2017; @jarzyna2016] `r colorize("and ray-finned fishes, sharks, and rays", "blue")` [@trindade-santos2020].
 
 `r colorize("We have stronger expectations for changes in the prevalence of some individual traits. For example, animal body size is expected to decrease as a result of climate change, a phenomena that has been documented in multiple taxa empirically and experimentally", "blue")` [@caruso2014; @forster2012; @huss2019; @sheridan2011; @tseng2018].
-`r colorize("There is some evidence that this holds true for birds ", "blue")`[@vanbuskirk2010]`r colorize(", but the picture is likely more complicated for mammals, where urbanization may actually lead to larger body sizes due to novel food sources", "blue")` [@hantak2021]`r colorize(", even as megafaunal loss leads to on average smaller community body size. For dietary traits, recent work documenting insect declines (citation) points to potentially significant negative impacts on insectivorous animals", "blue")` [@canaday1996; @sekercioglu2002; @tallamy2021]. `r colorize("Predicted extinctions based on species-level vulnerability point to further dietary shifts, favoring increases in invertivorous species ", "blue")`[@cooke2019]. `r colorize("Some systems also show significant shifts in the prevalence of different kinds of foragers in birds, for example loss of arboreal foragers in agricultural systems", "blue")` [@bain2020]`r colorize(", and loss of neotropical understory foragers even in protect areas", "blue")` [@pollock2022].
+`r colorize("There is some evidence that this holds true for birds ", "blue")`[@vanbuskirk2010]`r colorize(", but the picture is likely more complicated for mammals, where urbanization may actually lead to larger body sizes due to novel food sources", "blue")` [@hantak2021]`` r colorize(", even as megafaunal loss leads to on average smaller community body size. For dietary traits, recent work documenting insect declines", "blue")` ``[@wagner2021]`` `r colorize("points to potentially significant negative impacts on insectivorous animals", "blue") `` [@canaday1996; @sekercioglu2002; @tallamy2021].
+`r colorize("Predicted extinctions based on species-level vulnerability point to further dietary shifts, favoring increases in invertivorous species ", "blue")`[@cooke2019].
+`r colorize("Some systems also show significant shifts in the prevalence of different kinds of foragers in birds, for example loss of arboreal foragers in agricultural systems", "blue")` [@bain2020]`r colorize(", and loss of neotropical understory foragers even in protect areas", "blue")` [@pollock2022].
 
 Here we `r colorize("leverage ongoing efforts to assemble functional trait data and recent computational advances to", "blue")` perform the first multi-taxa, multi-realm assessment of functional diversity and composition change through time.
 We focus on mammal and bird species as `r colorize("a subset of the world's biodiversity of particular conservation concern that is heavily impacted by anthropogenic change.", "blue")`While examining trends in plants, invertebrates, and other vertebrate species is of equal interest, trait data for those taxa raise additional challenges such as limited and biased species coverage [@fitzjohn2014], a lack of accepted species-level means, and differences in the types of traits collected.
@@ -205,8 +207,7 @@ All models in our analysis were fit using the *lme4* (v1.1-30) package in R (v4.
 We found no significant overall `r colorize("temporal", "blue")` trend in species richness or functional diversity metrics `r colorize("including functional richness, evenness, or divergence", "blue")` (observed or `r colorize("corrected", "blue")`) (Fig \ref{fig:timeseriesPlot}).
 We did find a significant overall decrease in Jaccard similarity, indicating accumulating changes in species composition.
 Non-significant overall `r colorize("temporal", "blue")` trends indicate that although some studies experience increasing or decreasing trends, the average trend across studies `r colorize("was not significantly different from zero", "blue")` (Table \ref{tab:resultsTab}).
-`r colorize("Within-group", "blue")` trends for different taxa, biomes, realms, or protection statuses were also non-significant for richness and functional diversity metrics, with the exception of a significantly increasing trend for functional evenness of marine studies, and a significantly decreasing functional richness slope for mammal studies.
-However, trends were not exhibited for the `r colorize("corrected", "blue")` metric indicating that differences `r colorize("in functional diversity metrics", "blue")` were largely due to changes in species richness.
+`r colorize("Within-group", "blue")` trends for different taxa, biomes, realms, or protection statuses were also non-significant for richness and functional diversity metrics.
 The general trends for *CWM* models were similarly not significant, with a significant positive trend for only percentage of fish in diet composition.
 
 ```{r timeseriesPlot, fig.cap="Plots of time series-level trends with line color corresponding to climatic region, with data points in grey and the overall mean slope for a metric in black for A) log species richness, B) Jaccard similarity, C) Functional Richness SES, D) Functional Divergence SES, and E) Functional Evenness SES", echo=FALSE}
@@ -248,25 +249,23 @@ read_csv(here::here("figures/man_model_table.csv")) %>%
 ```
 
 We did find significant differences between taxa, realms, and biomes for Jaccard similarity and some of the *CWM's*.
-For example, while Jaccard similarity was decreasing in the general trend and there were significant within group slopes for Mammals, Birds, Terrestrial, Temperate, and Tropical communities, there was no significant slope for the marine realm, indicating that the general trend is mostly driven by turnover in terrestrial communities.
+For example, while Jaccard similarity was decreasing in the general trend and there were significant within group slopes for birds, terrestrial, and temperate studies, there was no significant slope for marine, mammal, or tropical studies.
 We also found a significant decrease in Jaccard similarity in unprotected areas only, with no trend for protected areas.
-We found significant dietary shifts across communities, with a significant general trend of increasing fish consumption, which was also reflected in increasing fish consumption trends for Bird studies and Temperate studies.
-We found a significantly increasing trend in nectar consumption for Temperate studies but a significantly decreasing tend for Tropical studies.
+We found significant dietary shifts across communities, with a significant general trend of increasing fish consumption, which was also reflected in increasing fish consumption trends for bird studies and temperate studies.
 We found significantly decreasing trend for vertebrate consumption in Marine studies and Tropical studies.
+The trend for marine vertebrate consumption was significantly more negative than for terrestrial studies and the temperate trend was significantly more negative than tropical studies.
 
-At the study level, 16 of 50 studies exhibited a significant trend in species richness and 11 exhibited significant turnover.
-For uncorrected functional diversity metrics, 25 of 50 studies exhibited a trend in a least one metric, and 15 of 50 studies exhibited a significant trend for at least one `r colorize("corrected", "blue")` metric (Table \ref{tab:trendTab}).
+At the study level, 12 of 50 studies exhibited a significant trend in species richness and 11 exhibited significant turnover.
+For uncorrected functional diversity metrics, 11 of 50 studies exhibited a trend in a least one metric, and 7 of 50 studies exhibited a significant trend for at least one `r colorize("corrected", "blue")` metric (Table \ref{tab:trendTab}).
 In general, there were more significant trends for uncorrected metrics, with some disappearing after correction, indicating that those trends were likely due to changes in the number of species.
-Hypothesis testing for study-level trends is likely affected by multiple testing issues and some trends identified as significant are therefore potentially spurious.
-Rather than interpreting changes in specific studies, we present these results as a general picture of the kinds of trends experienced by communities.
 
 ```{r trendTab, echo = FALSE}
 library(tidyverse)
 
-load(here::here("data/indv_mod_table.rda"))
+load(here::here("data/model_output.rda"))
 
-indv_mod_table %>%
-  filter(term == "year_scaled", p.value < 0.05) %>%
+model_output %>%
+  filter(term == "year_scaled", p.adjust < 0.05) %>%
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>%
   mutate(positive = ifelse(estimate > 0, "+", "-")) %>%
   group_by(metric, positive) %>%
@@ -299,26 +298,28 @@ Our study represents the largest broad-scale multi-taxa assessment of functional
 
 ## Evidence of consensus
 
-`r colorize("The most stark area of consensus was the lack of general trend aggregating across communities. We did not detect an overall trend in any functional diversity metric, corrected or uncorrected. As with previous species-based syntheses, we also found no overall trend in species richness accompanied by increasing dissimilarity through time", "blue")` [@dornelas2018]`r colorize(", indicating that non-significant trends in functional metrics are consistent with similar well-documented species derived trends. We found significant turnover for all biomes, realm, and taxa except for marine studies, which stands in contrast to other global estimates of biodiversity change that found higher turnover in marine systems than terrestrial", "blue")` [@blowes2019].
+`r colorize("The most stark area of consensus was the lack of general trend aggregating across communities. We did not detect an overall trend in any functional diversity metric, corrected or uncorrected. As with previous species-based syntheses, we also found no overall trend in species richness accompanied by increasing dissimilarity through time", "blue")` [@dornelas2018]`r colorize(", indicating that non-significant trends in functional metrics are consistent with similar well-documented species derived trends. We found significant turnover for most biomes, realm, and taxa with the exception of marine, tropical and mammal studies. The lack of turnover in marine studies stands in contrast to other global estimates of biodiversity change that found higher turnover in marine systems than terrestrial", "blue")` [@blowes2019].
 `r colorize("However, previous global estimates are dominated by fish communities which we exclude here and may be driving the overall trend while disguising relative stasis in marine bird and mammal communities.", "blue")`
 
-`r colorize("We found evidence of functional richness loss in mammal studies, with a loss trend significantly different from zero and significantly different from the trend for birds, indicating a potential loss of functional capacity in these communities. This result is consistent with previous work linking anthropogenic drivers such as habitat loss, poaching, and human modification and development to loss of functional diversity in mammal communities across the globe", "blue")` [@brodie2021; @cox2022; @li2022].
+```{=html}
+<!--`r colorize("We found evidence of functional richness loss in mammal studies, with a loss trend significantly different from zero and significantly different from the trend for birds, indicating a potential loss of functional capacity in these communities. This result is consistent with previous work linking anthropogenic drivers such as habitat loss, poaching, and human modification and development to loss of functional diversity in mammal communities across the globe", "blue")` [@brodie2021; @cox2022; @li2022].
 `r colorize("However we did not find trends outside the random expectation for species loss, in contrast to expectations for multiple continents based on IUCN risk categories", "blue")` [@brodie2021].
-`r colorize("In general, functional capacity of mammals showed greater declines than bird communities.", "blue")`
-
+`r colorize("In general, functional capacity of mammals showed greater declines than bird communities.", "blue")`-->
+```
 ## Areas of incongruence
 
 `r colorize("The addition of functional trait data illuminated multiple areas where a synthesis approach is incongruous with system-specific studies or simply unexpected. For example, results for protected areas were surprising given the assumption that protection insulates communities from functional degradation. The only difference we found between protected and unprotected areas was significant turnover occurring outside protected areas and no significant turnover inside protected areas. Rather than the result of protection itself, this is likely due to the fact that the majority of studies were from terrestrial, temperate studies where turnover is known to be lower ", "blue")`[@blowes2019].
 `r colorize("While things may generally be more static within protect areas, the functional dimensions of protected communities fared no better or worse on average than their non-protected counter parts. Looking at individual studies, there is a mix of both losses and gains in almost all functional diversity and composition metrics across communities found in protected areas.", "blue")`
 
-`r colorize("We also found evidence of increasing evenness for marine studies, which was not predicted by previous work in marine systems. The empirical link between changes in evenness and ecosystem process is the most poorly studied of the metrics, however theory indicates that increased evenness improves function and stability ", "blue")` [@filstrup2019], `r colorize("as the dominance of one or a few species makes function sensitive to the ability of those species to respond to environmental change ", "blue")`[@hillebrand2008; @hillebrand2009].
+```{=html}
+<!--`r colorize("We also found evidence of increasing evenness for marine studies, which was not predicted by previous work in marine systems. The empirical link between changes in evenness and ecosystem process is the most poorly studied of the metrics, however theory indicates that increased evenness improves function and stability ", "blue")` [@filstrup2019], `r colorize("as the dominance of one or a few species makes function sensitive to the ability of those species to respond to environmental change ", "blue")`[@hillebrand2008; @hillebrand2009].
 `r colorize("Further, there is some evidence that maintaining evenness is important for supporting multifunctionality in communities ", "blue")`[@bagousse-pinguet2019].
-`r colorize("An increase in evenness is therefore a positive indicator for these communities, despite the fact that marine bird and mammal communities are some of the most threatened communities in the world. Still, this result may be a function of data limitations as the majority of marine studies are of seabird communities (7 of 9), so the general trend may be an early indicator of pay off from investments in sea bird recovery also found in recent species-based work ", "blue")`[@spatz2023].
-
+`r colorize("An increase in evenness is therefore a positive indicator for these communities, despite the fact that marine bird and mammal communities are some of the most threatened communities in the world. Still, this result may be a function of data limitations as the majority of marine studies are of seabird communities (7 of 9), so the general trend may be an early indicator of pay off from investments in sea bird recovery also found in recent species-based work ", "blue")`[@spatz2023].-->
+```
 `r colorize("Our results were also inconsistent with all predictions for changes in trait prevalence, including foraging strata, body size, and dietary traits. We found no changes in the prevalence of different foraging strategies, despite documented losses of understory birds in the neotropics and some evidence that agricultural incursion particularly threatens arboreal species. Those shifts may therefore be the result of specific contexts and not generalizable to bird communities across the globe. We found no evidence of general trends in the CWM for body mass for birds or mammals, indicating that either body size is not changing significantly due to climate change, opposing pressures such as urbanization are overshadowing climate change impacts, or more likely current shifts are happening at an intraspecific level and and have not yet propogated to the species losses that would be captured by our data. Further, many of the studies in our dataset draw from areas that may have experienced significant loss of large-bodied species before the observation window, with contemporary loss rates slowing", "blue")` [@fritz2009].
 `r colorize("Trends could be significantly different for the same time periods in regions of sub-Saharan Africa, for example, which has poor representation in our dataset but where megafauna exist on the landscape and are increasingly threatened", "blue")` [@ripple2015].
 
-`r colorize("Rather than declines in insectivory and increases in invertivory predicted by previous work, we instead found changes in the degree of consumption of fish, nectar, and vertebrates. Increases in fish consumption for bird and temperate studies may be the product of increased availability of easy fish from commercial fishing operations or the stocking of inland waterways for sport fishing. However, fisheries also have negative impacts on waterbirds through competition for fish or bird mortality due to by catch, making these results suprising. Decreases in nectar consumption for tropical studies is likely due to declines in bat species, as 4 of the 5 tropical studies are for mammals and bats were the only nectar consuming mammals sampled in our data. Interpretation of the increases for temperate studies is less clear, as temperate studies included many bird communities with a variety of nectar consumers. Similarly, decreasing trends for vertebrate consumption in marine and tropical studies are not obviously consistent with known changes in those contexts and warrant further examination.", "blue")`
+`r colorize("Rather than declines in insectivory and increases in invertivory predicted by previous work, we instead found changes in the degree of consumption of fish and vertebrates. Increases in fish consumption for bird and temperate studies may be the product of increased availability of easy fish from commercial fishing operations or the stocking of inland waterways for sport fishing. However, fisheries also have negative impacts on waterbirds through competition for fish or bird mortality due to by catch, making these results suprising. Decreasing trends for vertebrate consumption in marine and tropical studies are not obviously consistent with known changes in those contexts and warrant further examination.", "blue")`
 
 ## Study heterogeneity
 
