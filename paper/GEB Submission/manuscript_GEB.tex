@@ -247,7 +247,7 @@ traits were broken down into percentage or binary use for each level of
 the trait type (Table \ref{tab:traitTable}).
 
 \begin{table}
-
+\centering
 \caption{\label{tab:traitTable}Description of the traits included in the analysis broken down by categories at data type.}
 \centering
 \begin{tabular}[t]{l|l|>{\raggedright\arraybackslash}p{3cm}|>{\raggedright\arraybackslash}p{3cm}}
@@ -272,7 +272,7 @@ Trait & Category & Taxa & Data Type\\
 \cline{2-2}
  & Seeds &  & \\
 \cline{2-2}
-\multirow{-10}{*}{\raggedright\arraybackslash Diet} & Other Plant & \multirow{-10}{*}{\raggedright\arraybackslash Bird and Mammal} & \multirow{-10}{*}{\raggedright\arraybackslash percentage consumed}\\
+\multirow{-10}{*}[4.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Diet} & Other Plant & \multirow{-10}{*}{\raggedright\arraybackslash Bird and Mammal} & \multirow{-10}{*}{\raggedright\arraybackslash percentage consumed}\\
 \cline{1-4}
  & Below water surface &  & \\
 \cline{2-2}
@@ -286,24 +286,24 @@ Trait & Category & Taxa & Data Type\\
 \cline{2-2}
  & canopy &  & \\
 \cline{2-2}
-\multirow{-7}{*}{\raggedright\arraybackslash Foraging Strata} & aerial &  & \multirow{-7}{*}{\raggedright\arraybackslash percentage of use}\\
+\multirow{-7}{*}[3\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Foraging Strata} & aerial &  & \multirow{-7}{*}{\raggedright\arraybackslash percentage of use}\\
 \cline{1-2}
 \cline{4-4}
  & yes &  & \\
 \cline{2-2}
-\multirow{-2}{*}{\raggedright\arraybackslash Pelagic Specialist} & no & \multirow{-9}{*}{\raggedright\arraybackslash Bird} & \\
+\multirow{-2}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Pelagic Specialist} & no & \multirow{-9}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Bird} & \\
 \cline{1-3}
  & yes &  & \\
 \cline{2-2}
-\multirow{-2}{*}{\raggedright\arraybackslash Nocturnal} & no & \multirow{-2}{*}{\raggedright\arraybackslash Bird and Mammal} & \\
+\multirow{-2}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Nocturnal} & no & \multirow{-2}{*}{\raggedright\arraybackslash Bird and Mammal} & \\
 \cline{1-3}
  & yes &  & \\
 \cline{2-2}
-\multirow{-2}{*}{\raggedright\arraybackslash Crepuscular} & no &  & \\
+\multirow{-2}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Crepuscular} & no &  & \\
 \cline{1-2}
  & yes &  & \\
 \cline{2-2}
-\multirow{-2}{*}{\raggedright\arraybackslash Diurnal} & no & \multirow{-4}{*}{\raggedright\arraybackslash Mammal} & \multirow{-8}{*}{\raggedright\arraybackslash binary}\\
+\multirow{-2}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash Diurnal} & no & \multirow{-4}{*}{\raggedright\arraybackslash Mammal} & \multirow{-8}{*}{\raggedright\arraybackslash binary}\\
 \cline{1-4}
 Body Mass & - & Bird and Mammal & continous, in grams\\
 \hline
@@ -479,10 +479,10 @@ composition.
 \end{figure}
 
 \begin{table}[!h]
-
+\centering\centering
 \caption{\label{tab:resultsTab}Model estimates and statistics for general trend models for species richness, Jaccard similarity, and corrected functional diversity metrics. Additional model estimates, including CWM models, can be found in the supplement.}
 \centering
-\resizebox{\linewidth}{!}{
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \begin{tabular}[t]{l|l|>{\raggedright\arraybackslash}p{2cm}|l|r|r|l}
 \hline
 metric & effect & grouping & term & estimate & std.error & p.value\\
@@ -501,7 +501,7 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 \cline{4-7}
  &  &  & SD Year & 0.23 &  & \\
 \cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash SES\_FDiv} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & -0.01 &  & \\
+\multirow{-8}{*}[1\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash SES\_FDiv} & \multirow{-6}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & -0.01 &  & \\
 \cline{1-7}
  &  &  & Intercept & 0.10 & 0.17 & 0.56\\
 \cline{4-7}
@@ -517,7 +517,7 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 \cline{4-7}
  &  &  & SD Year & 0.17 &  & \\
 \cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash SES\_FEve} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & -0.21 &  & \\
+\multirow{-8}{*}[1\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash SES\_FEve} & \multirow{-6}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & -0.21 &  & \\
 \cline{1-7}
  &  &  & Intercept & -0.26 & 0.07 & <0.001\\
 \cline{4-7}
@@ -533,7 +533,7 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 \cline{4-7}
  &  &  & SD Year & 0.18 &  & \\
 \cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash SES\_FRic} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.06 &  & \\
+\multirow{-8}{*}[1\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash SES\_FRic} & \multirow{-6}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.06 &  & \\
 \cline{1-7}
  &  &  & Intercept & 0.46 & 0.02 & <0.001\\
 \cline{4-7}
@@ -549,7 +549,7 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 \cline{4-7}
  &  &  & SD Year & 0.02 &  & \\
 \cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash log(Jaccard + 1)} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.05 &  & \\
+\multirow{-8}{*}[1\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash log(Jaccard + 1)} & \multirow{-6}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.05 &  & \\
 \cline{1-7}
  &  &  & Intercept & 2.40 & 0.10 & <0.001\\
 \cline{4-7}
@@ -565,7 +565,7 @@ metric & effect & grouping & term & estimate & std.error & p.value\\
 \cline{4-7}
  &  &  & SD Year & 0.09 &  & \\
 \cline{4-7}
-\multirow{-8}{*}{\raggedright\arraybackslash log(Species Richness)} & \multirow{-6}{*}{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.34 &  & \\
+\multirow{-8}{*}[1\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash log(Species Richness)} & \multirow{-6}{*}[0.5\dimexpr\aboverulesep+\belowrulesep+\cmidrulewidth]{\raggedright\arraybackslash random} & \multirow{-3}{2cm}{\raggedright\arraybackslash time series within study} & Corr(Intercept, Year) & 0.34 &  & \\
 \hline
 \end{tabular}}
 \end{table}
@@ -596,7 +596,7 @@ uncorrected metrics, with some disappearing after correction, indicating
 that those trends were likely due to changes in the number of species.
 
 \begin{table}
-
+\centering
 \caption{\label{tab:trendTab}Number of studies that experienced a significant trend in each calculated metric out of 50 total studies.}
 \centering
 \begin{tabular}[t]{ccccccccc}
