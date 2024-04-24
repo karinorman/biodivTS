@@ -646,6 +646,7 @@ pval_df <- bind_cols(pval_df, p.adjust = adj.p)
 # add adjusted p value to model table
 
 model_output <- bind_rows(metric_model_table, indv_mod_table) %>%
+  select(-p.value) %>% 
   left_join(pval_df) %>%
   select(-significant, -tval)
 
@@ -672,7 +673,7 @@ Summaries of study slopes
 #First - how many studies had a significant trend for each metric? 
 model_output %>% 
   filter(!is.na(study_id)) %>%
-  filter(term == "year_scaled", p.value < 0.05) %>% 
+  filter(term == "year_scaled", p.adjust < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   mutate(positive = ifelse(estimate > 0, TRUE, FALSE)) %>%
   group_by(metric, positive) %>% 
@@ -682,7 +683,7 @@ model_output %>%
 #And which studies were they?
 model_output %>% 
   filter(!is.na(study_id)) %>%
-  filter(term == "year_scaled", p.value < 0.05) %>% 
+  filter(term == "year_scaled", p.adjust < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>% 
   select(study_id, metric) %>%
   distinct()
@@ -690,7 +691,7 @@ model_output %>%
 #Which were significant for multiple metrics?
 model_output %>% 
   filter(!is.na(study_id)) %>%
-  filter(term == "year_scaled", p.value < 0.05) %>% 
+  filter(term == "year_scaled", p.adjust < 0.05) %>% 
   filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S")) %>% 
   group_by(study_id) %>%
   filter(n() > 1) %>%
