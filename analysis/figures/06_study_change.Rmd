@@ -181,8 +181,10 @@ study_meta <- setdiff(study_meta, na_studies)
 #     .default = "0"
 #   ))) 
 
+all_metrics <- c("S", "Jaccard_base", "FRic", "FEve", "FDiv", "SES_FRic", "SES_FEve", "SES_FDiv")
+
 change_groups <- wide_table %>% 
-  select(study_id, S, Jaccard_base, FRic, FEve, FDiv) %>%
+  select(study_id,all_of(all_metrics)) %>%
   mutate(across(!study_id, ~case_when(
     . > 0 ~ "pos",
     . < 0 ~ "neg",
@@ -190,10 +192,38 @@ change_groups <- wide_table %>%
   ))) 
 
 change_group_count <- change_groups %>%
-  select(-study_id) %>%
+  select(-study_id, -starts_with("SES_")) %>%
   group_by(across(everything())) %>%
   count() 
 
+change_group_count_ses <- change_groups %>%
+  select(-c(study_id, FRic, FEve, FDiv)) %>%
+  group_by(across(everything())) %>%
+  count() 
+
+change_group_count_complete <- change_groups %>%
+    select(-c(study_id)) %>%
+    group_by(across(everything())) %>%
+    count() %>%
+  mutate(change_description = case_when(
+    S == "pos" ~ "increase in richness, not beyond random expectation", 
+    S == "neg" ~ "loss of redundancy", 
+    S == "0" & Jaccard_base == "neg" ~ "changes in functional space due to turnover",
+    n == 6 ~ "no change", 
+    .default = NA
+  ))
+
+change_group_ses_desc <- change_group_count_ses %>%
+   mutate(change_description = case_when(
+    S == "pos" ~ "increase in species richness, sometimes leading to increase in functional richness", 
+    S == "neg" ~ "loss of redundancy", 
+    S == "0" ~ "functional change independent of species richness change",
+    n == 7 ~ "no change", 
+    .default = NA
+  ))
+```
+
+```{r}
 no_change <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(across(!study_id, ~. == 0)) %>%
