@@ -221,33 +221,36 @@ change_group_ses_desc <- change_group_count_ses %>%
     n == 7 ~ "no change", 
     .default = NA
   ))
+
+usethis::use_data(change_group_ses_desc)
 ```
 
 ```{r}
-no_change <- change_groups %>% 
+change <-  change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
-  filter(across(!study_id, ~. == 0)) %>%
-  left_join(meta_clean)
+  filter(if_any(all_of(c("S", "Jaccard_base", "SES_FRic", "SES_FEve", "SES_FDiv")), ~. != 0))
+
+no_change <- study_meta %>% filter(!study_id %in% change$study_id, study_id %in% model_output$study_id)
 
 redundancy <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(S == "neg", SES_FRic == "0", SES_FDiv == "0", SES_FEve == "0") %>%
-  left_join(meta_clean)
+  left_join(study_meta)
 
 redundancy_gain <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(S == "pos", SES_FRic == "0", SES_FDiv == "0", SES_FEve == "0") %>%
-  left_join(meta_clean)
+  left_join(study_meta)
 
   
 evenness <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(across(!study_id & !SES_FEve, ~. == 0)) %>%
-  left_join(meta_clean)
+  left_join(study_meta)
 
 increase <- change_groups %>% 
   mutate(study_id = as.integer(study_id)) %>%
   filter(Jaccard_base == "neg", S == "pos", SES_FRic == "pos", SES_FDiv == "0", SES_FEve == "0") %>%
-  left_join(meta_clean)
+  left_join(study_meta)
 ```
 
