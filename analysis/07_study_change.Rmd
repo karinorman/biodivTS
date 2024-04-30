@@ -209,16 +209,16 @@ change_group_count_complete <- change_groups %>%
     S == "pos" ~ "increase in richness, not beyond random expectation", 
     S == "neg" ~ "loss of redundancy", 
     S == "0" & Jaccard_base == "neg" ~ "changes in functional space due to turnover",
-    n == 6 ~ "no change", 
+    n == 7 ~ "no change", 
     .default = NA
   ))
 
 change_group_ses_desc <- change_group_count_ses %>%
    mutate(change_description = case_when(
-    S == "pos" ~ "increase in species richness, sometimes leading to increase in functional richness", 
+    S == "pos" & n != "7" ~ "increase in species richness", 
     S == "neg" ~ "loss of redundancy", 
-    S == "0" ~ "functional change independent of species richness change",
-    n == 7 ~ "no change", 
+    S == "0" ~ "functional change",
+    n == "7" ~ "no change", 
     .default = NA
   ))
 
