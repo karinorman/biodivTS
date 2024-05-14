@@ -735,15 +735,13 @@ study_time_data <- model_data %>%
   dplyr::select(study_id, startyear, duration) %>% 
   distinct() %>%
   group_by(study_id) %>%
-  filter(startyear == min(startyear))
+  mutate(startyear = min(startyear), duration = max(duration)) %>%
+  distinct()
 
-
-study_slope_data <- indv_mod_table %>%
-  filter(term == "year_scaled") %>%
+study_slope_data <- model_output %>%
+  filter(!is.na(study_id), term == "year_scaled") %>%
   dplyr::select(study_id, metric, estimate) %>%
-  left_join(meta %>% 
-              mutate(study_id = as.character(study_id))) %>%
-  left_join(model_data %>% dplyr::select(study_id, startyear, duration) %>% distinct())
+  left_join(study_time_data)
 
 duration_slope <- study_slope_data %>%
   group_nest(metric) %>%
