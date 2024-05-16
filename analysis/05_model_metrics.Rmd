@@ -571,7 +571,8 @@ usethis::use_data(indv_mod_table)
 ```{r}
 dur_dfs <- list(min3 = filter(model_data, duration > 2),
                 min4 = filter(model_data, duration > 3),
-                min5 = filter(model_data, duration > 4))
+                min5 = filter(model_data, duration > 4),
+                min10 = filter(model_data, duration > 9))
 
 duration_sens <- map_dfr(dur_dfs, ~pmap_dfr(filter(mods, model_id == "base"), get_model, data = .x), .id = "dataID")
 
@@ -584,10 +585,12 @@ bad_dur_models <- duration_sens %>%
 min3_bad <- bad_dur_models %>% filter(dataID == "min3") %>% pull(metric)
 min4_bad <- bad_dur_models %>% filter(dataID == "min4") %>% pull(metric)
 min5_bad <- bad_dur_models %>% filter(dataID == "min5") %>% pull(metric)
+min10_bad <- bad_dur_models %>% filter(dataID == "min10") %>% pull(metric)
 
 refit_dur <- bind_rows(pmap_dfr(filter(mods, model_id == "base", metric_name %in% min3_bad), get_model, data = dur_dfs$min3, REML = FALSE) %>% mutate(dataID = "min3"),
                        pmap_dfr(filter(mods, model_id == "base", metric_name %in% min4_bad), get_model, data = dur_dfs$min4, REML = FALSE) %>% mutate(dataID = "min4"),
-                       pmap_dfr(filter(mods, model_id == "base", metric_name %in% min5_bad), get_model, data = dur_dfs$min5, REML = FALSE) %>% mutate(dataID = "min5")
+                       pmap_dfr(filter(mods, model_id == "base", metric_name %in% min5_bad), get_model, data = dur_dfs$min5, REML = FALSE) %>% mutate(dataID = "min5"),
+                       pmap_dfr(filter(mods, model_id == "base", metric_name %in% min10_bad), get_model, data = dur_dfs$min10, REML = FALSE) %>% mutate(dataID = "min10")
 )
 
 # two left that didn't converge
