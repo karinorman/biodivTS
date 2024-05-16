@@ -1,5 +1,5 @@
 # Functional Change through Time
-This repository contains the code necessary to reproduce analyses and figures associated with the manuscript "Examining the evidence of widespread maintenance of functional composition in vertebrate communities".
+This repository contains the code necessary to reproduce analyses and figures associated with the manuscript "No general trend for multiple dimensions of functional diversity in bird and mammal communities".
 
 It is archived on Zenodo at: https://doi.org/10.5281/zenodo.5514335
 
@@ -19,4 +19,5 @@ File Name | Description | Input | Output
 02_rarefy_timeseries| Calculate rarefied metrics. | `bt_traitfiltered.Rmd` | samples and metrics in `rarefied_metrics/` and `rarefied_samples/`, (file for each sample)
 03_rarefy_null_models.Rmd | Get null model samples for each rarefied sample, calculated metrics. | `rarefied_samples/`, `bt_traitfiltered.Rmd` | `null_table.Rmd`
 04_collate_rarefied_resamps_median.Rmd | Combine rarefied metrics with null model stats to get final dataframe of metrics. | `rarefied_metrics/`, `null_table.rda`, | `rarefied_metrics.rda`
-05_model_metrics.Rmd | Foramt data for modeling and run all models. | `meta.rda`, `rarefied_metrics.rda` | `model_data.rda`, `metric_model_table.rda`, `indv_mod_table`
+05_model_metrics.Rmd | Format data for modeling and run all models. | `meta.rda`, `rarefied_metrics.rda` | `model_data.rda`, `meta_clean.rda`, `metric_model_table.rda`, `indv_mod_table.rda`, `model_output.rda`, `sensitivity_output.rda`
+06_study_change.Rmd | Examine and group types of study-level change. | `model_output.rda`, `model_data.rda`| `change_group_ses_desc.rda`
