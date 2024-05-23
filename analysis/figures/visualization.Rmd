@@ -96,6 +96,35 @@ plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hju
 ggsave2(here::here("figures/study_map_hist.jpeg"), bg = "white")
 ```
 
+Hexbin map
+```{r}
+coast <- rnaturalearth::ne_coastline(scale = "small", returnclass = "sf")
+
+basemap <- ggplot(data = coast) + geom_sf(color = "grey") + 
+  ggthemes::theme_map() #+
+  #coord_sf(crs = 3857)  #+
+  #ggthemes::theme_map() 
+
+#xlim=c(-180,180), ylim=c(-57, 90), 
+bird_hexmap <- basemap +
+  geom_hex(data = study_data %>% select(rarefyID, rarefyID_x, rarefyID_y, taxa) %>% 
+             distinct() %>%
+             filter(taxa == "Birds"),
+             aes(x = rarefyID_x, y = rarefyID_y), color = "grey",# bins = 50, color = my_pal[2]) 
+                 bins = 35) +
+  scale_fill_gradient2()
+             scale_fill_gradient(low = "#bbe9ff", high = "#086788")
+
+            
+mammal_hexmap <- basemap +
+  geom_hex(data = study_data %>% select(rarefyID, rarefyID_x, rarefyID_y, taxa) %>% 
+             distinct() %>%
+             filter(taxa == "Mammals"),
+             aes(x = rarefyID_x, y = rarefyID_y), color = "grey",# bins = 50, color = my_pal[2]) 
+                 bins = 35) +
+  scale_fill_gradient2()
+```
+
 Metric plots with trend lines
 ```{r}
 load(here::here("data/metric_model_table.rda"))
