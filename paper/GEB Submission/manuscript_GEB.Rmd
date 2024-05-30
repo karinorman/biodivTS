@@ -199,13 +199,13 @@ For further details see the supplement.
 Where appropriate, response variables were $log$ or $log(x+1)$ transformed to better fit model assumptions of residual normality.
 
 To test for categorical trends within and between different levels of taxa, biome, realm, and protection status we fit separate models with each of those factors added as a predictor interacting with time to the original model structure.
-We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.8.2, @lenth2022].
+We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.10.1, @lenth2022].
 `r colorize("For some levels of the categorical variables we did not have a sufficient number of studies to estimate a general trend, we therefore only interpret results for levels with more than three studies.", "blue")` We assessed the impact of time series duration and start year on study-level trends using linear models with duration and start year as predictors.
-All models in our analysis were fit using the *lme4* (v1.1-30) package in R (v4.2.1) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
+All models in our analysis were fit using the *lme4* (v1.1-35.3) package in R (v4.3.3) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
 
 To correct for false positives due to multiple testing, we assess significance of the trends for the fixed effect of time based on adjusted p-values.
 Adjusted p-values were calculated using the Benjamini-Hochberg procedure, which controls the false discovery rate.
-The procedure was implemented by the function `p.adjust` in the R package *stats* (v4.2.1).
+The procedure was implemented by the function `p.adjust` in the R package *stats* (v4.3.3).
 
 # Results
 
