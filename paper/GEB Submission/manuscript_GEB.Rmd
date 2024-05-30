@@ -71,7 +71,8 @@ Impacts of these pressures are well documented at a global scale by an accelerat
 At the local scale however, species diversity tells a different story.
 Recent syntheses of local trends in biodiversity over time have found no net change in local species diversity despite ongoing turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017] and evidence of significant shifts in community composition underlying consistent species richness [@brose2016; @gotelli2017; @li2020].
 While communities are clearly changing, our most common species-based approaches do not fully capture the nature of that change.
-`r colorize("Still, using general trends derived from limited data as a diagnostic for the state of biodiversity is a topic of ongoing debate.", "blue")` Global analyses have been heavily criticized for geographic biases, lack of data in the most heavily impacted areas, and exclusion of individual studies' ecological context [@cardinale2014; @cardinale2018; @gonzalez2016].
+`r colorize("Still, using general trends derived from limited data as a diagnostic for the state of biodiversity is a topic of ongoing debate", "blue")` [@boënnec2024; @johnson2024].
+Global analyses have been heavily criticized for geographic biases, lack of data in the most heavily impacted areas, and exclusion of individual studies' ecological context [@cardinale2014; @cardinale2018; @gonzalez2016].
 Many of these criticisms reflect limitations of ecological data on the whole, `r colorize("leading to a call for additional data not only to fill geographic and temporal gaps, but to fill in key characteristics of communities", "blue")` [@dornelas2023; @primack2018].
 
 Functional diversity offers a potentially powerful addition to species-based approaches for detecting and describing community change by capturing changes in the traits that underpin fundamental ecological processes [@lavorel2002; @mcgill2006; @suding2008].
