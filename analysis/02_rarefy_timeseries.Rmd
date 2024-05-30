@@ -28,7 +28,7 @@ Load data
 load(here::here("data/bt_traitfiltered.rda"))
 
 ##	Get trait filtered data, rename columns to jive with the rest of the script
-bt_traitfiltered <- bt_traitfiltered
+bt_traitfiltered <- bt_traitfiltered %>%
   rename_with(toupper) %>%
   rename(Species = SPECIES, StudyMethod = STUDYMETHOD, ObsEventID = OBSEVENTID,
          rarefyID = RAREFYID, cell = CELL, Abundance = ABUNDANCE, Biomass = BIOMASS)
