@@ -59,7 +59,9 @@ study_map <- map_data("world") %>%
   ggplot(aes(long, lat, group = group)) +
   geom_polygon(fill = "white", colour = "grey") + 
   coord_map(xlim=c(-180,180), ylim=c(-57, 90), projection = "mercator") +
-  geom_point(data = study_data,
+  geom_point(data = study_data %>% filter(taxa == "Birds"),
+             aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.4, inherit.aes = FALSE) +
+  geom_point(data = study_data %>% filter(taxa == "Mammals"),
              aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.4, inherit.aes = FALSE) +
   #plot the US amphibian point on top so we can see it
   # geom_point(data = study_data %>% 
