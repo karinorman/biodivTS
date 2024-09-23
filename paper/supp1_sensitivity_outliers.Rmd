@@ -1,8 +1,8 @@
 ---
 title: "Supplement 1"
 output:
-  #pdf_document: default
-  word_document: default
+  pdf_document: default
+  #word_document: default
 ---
 
 # Sensitivity Analysis 
@@ -13,25 +13,27 @@ We performed sensitivity analyses to assess whether or not the general trends fo
 library(dplyr)
 library(kableExtra)
 
-tibble(sensitivity_test = c(rep("duration", 3), rep("trait coverage", 2), "amphibians"), 
-       model_id = c("min3", "min4", "min5", "covg85", "covg90", "with_amph"),
+tibble(sensitivity_test = c(rep("duration", 4), rep("trait coverage", 3)), 
+       model_id = c("min3", "min4", "min5", "min10", "covg75", "covg85", "covg90"),
        description = c("Exclude time series with fewer than 3 years",
                        "Exclude time series with fewer than 4 years",
                        "Exclude time series with fewer than 5 years",
+                       "Exclude time series with fewer than 10 years",
+                       "Exclude time series with less than 75% of species with trait data",
                        "Exclude time series with less than 85% of species with trait data",
-                       "Exclude time series with less than 90% of species with trait data",
-                       "Include Amphibian data"),
-       sig_metrics = c("CWM seed diet*, CWM canopy foraging*, CWM aerial foraging, Jaccard", 
-       "CWM seed diet*, CWM canopy foraging*, FRic*, Jaccard", 
-       "CWM seed diet*, CWM canopy foraging*, Jaccard", rep("Jaccard", 3))
+                       "Exclude time series with less than 90% of species with trait data"),
+       sig_metrics = c("CWM body mass*, CWM fish diet, Jaccard", 
+       "CWM body mass*, CWM fish diet, FRic*, Jaccard", 
+       "CWM body mass*, CWM fish diet, FRic*, Jaccard",
+       "CWM body mass*, CWM fish diet, Jaccard", rep("Jaccard, CWM fish diet", 3))
 ) %>% 
   #kable(format = "latex", caption = "Summary of the results for the sensitivity analyses, including those for duration of time series, trait coverage, and amphibian inclusion.") %>%
   kable(format = "latex") %>%
   column_spec(3:4, width = "3cm") %>%
   collapse_rows(columns = 1, valign = "middle") %>%
   kable_paper() %>%
-  kable_styling(latex_options= c("hold_position")) %>%
-  save_kable(here::here("figures/tables/sensitivity_table.jpeg"))
+  kable_styling(latex_options= c("hold_position")) #%>%
+  #save_kable(here::here("figures/tables/sensitivity_table.jpeg"))
 ```
 
 # Amphibian Trends
@@ -69,8 +71,8 @@ readr::read_csv(here::here("figures/amph_model_table.csv")) %>%
   column_spec(3, width = "2cm") %>%
   collapse_rows(columns = 1:3, valign = "middle") %>%
   kable_paper() %>%
-  kable_styling(latex_options= c("scale_down", "hold_position")) %>%
-  save_kable(here::here("figures/tables/amph_table.jpeg"))
+  kable_styling(latex_options= c("scale_down", "hold_position")) #%>%
+  #save_kable(here::here("figures/tables/amph_table.jpeg"))
 ```
 
 # Missing Individual Study Models
@@ -83,7 +85,7 @@ readr::read_csv(here::here("paper/missing_indv_studies.csv")) %>%
   #kable(format = "latex", caption = "Model estimates and statistics for general trend models for species richness, Jaccard similarity, and standardized functional diversity metrics for Amphibian time series.") %>%
   kable(format = "latex") %>%
   kable_paper() %>%
-  kable_styling(latex_options= c("scale_down", "hold_position")) %>%
-  save_kable(here::here("figures/tables/missing_models_table.jpeg"))
+  kable_styling(latex_options= c("scale_down", "hold_position"))# %>%
+  #save_kable(here::here("figures/tables/missing_models_table.jpeg"))
 ```
 

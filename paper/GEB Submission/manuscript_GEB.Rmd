@@ -117,8 +117,9 @@ Traits include: body mass, diet, nocturnality, forest foraging strata, and pelag
 For categorical traits, different category levels are represented as binary or percentage use (Table \ref{tab:traitTable}).
 
 ```{r traitTable, echo=FALSE}
+
 tibble(Trait = c(rep("Diet", 10), rep("Foraging Strata", 7), rep("Pelagic Specialist", 2), rep("Nocturnal", 2), rep("Crepuscular", 2), rep("Diurnal", 2), "Body Mass"),
-       Category = c("Invertebrate", "Mammals and Birds", "Reptiles", "Fish", "Unknown Vertebrates", "Scavenging", "Fruit", "Nectar", "Seeds", "Other Plant", 
+       Category = c("Invertebrate", "Mammals and Birds", "Reptiles", "Fish", "Unknown Vertebrates", "Scavenging", "Fruit", "Nectar", "Seeds", "Other Plant",
                     "Below water surface", "water surface", "ground", "understory", "> 2m, below canopy", "canopy", "aerial",
                     rep(c("yes", "no"), 4),
                     "-"),
@@ -127,7 +128,8 @@ tibble(Trait = c(rep("Diet", 10), rep("Foraging Strata", 7), rep("Pelagic Specia
   kable(format = "latex", caption = "Description of the traits included in the analysis broken down by categories at data type.") %>%
   collapse_rows(columns = 1:4) %>%
   column_spec(3:4, width = "3cm") %>%
-  kable_paper()
+  kable_paper() #%>%
+  #save_kable(here::here("figures/tables/trait_table.jpeg"))
 ```
 
 In order to ensure taxonomic consistency across datasets, BioTIME species were paired with trait data based on their species identifier from the Integrated Taxonomic Information System database (retrieved 09-15-2020 from the on-line database, <https://doi.org/10.5066/F7KH0KBK>), obtained through the `taxadb` R package [@norman2020; @rcoreteam2021].
@@ -190,7 +192,7 @@ Hereafter we refer to the *SES* as the corrected metric in comparison to the obs
 
 ## Analysis
 
-We estimated general trends `r colorize("across bird and mammals communities", "blue")` for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each location nested within the study, `r colorize("methods which deal well with the inherent imbalances in our data.", "blue")` We fit 18 individual *CWM* models, `r colorize("one for each trait included in the analysis", "blue")`.
+We estimated general trends `r colorize("across bird and mammal communities", "blue")` for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each location nested within the study, `r colorize("methods which deal well with the inherent imbalances in our data.", "blue")` We fit 18 individual *CWM* models, `r colorize("one for each trait included in the analysis", "blue")`.
 All time series with data for a given trait were included in the corresponding *CWM* model.
 We estimated study level trends using individual linear models.
 For studies with more than one location we fit a random slope and intercept for location.
@@ -325,10 +327,11 @@ change_group_ses_desc %>%
   mutate(type = ifelse(n == "32", "no change", type)) %>%
   rename(`Study Count` = `n`) %>%
      kable(format = "latex",
-        caption = "Table giving the count of number of studies for different kinds of functional change, broken down into no change functional change without species richness change, loss of redundancy, and increases in species richness. Trends direction is indicate by a positive or negative sign, with a 0 indicating no trend.", align = "c",
+        caption = "Table giving the count of number of studies for different kinds of functional change, broken down into no change functional change without species richness change, loss of redundancy, and increases in species richness. Trends direction is indicated by a positive or negative sign, with a 0 indicating no trend.", align = "c",
         latex_options= c("scale_down", "hold_position")) %>% 
   collapse_rows(columns = c(1,2)) %>%
-  column_spec(1, width = "4cm") 
+  column_spec(1, width = "4cm") #%>%
+  #save_kable(here::here("figures/tables/study_change_table.jpeg"))
   
 ```
 
