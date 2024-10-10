@@ -108,13 +108,13 @@ To address these goals, we present results for general trends that aggregate acr
 ## Data
 
 We obtained mammal and bird time series from the BioTIME database, a global repository of high-quality assemblage time series collected from the literature and ongoing monitoring efforts.
-Data are structured such that a study comprises all data collected following consistent sampling protocols and may contain multiple time series from separate locations.
-Time series represent full assemblages rather than populations of single species [@dornelas2018], and all time series include abundance of observed species.
+Data are structured such that a study comprises all data collected following consistent sampling protocols and may contain multiple site locations.
+Samples at each site represent full assemblages rather than populations of single species [@dornelas2018], `r colorize("and include both abundance and presence/absence data", "blue")`.
 Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale.
 Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @blowes2019 for details on how sample extents were defined], with the area of each cell set to one standard deviation away from the mean of the single extent locations.
 The resulting cell size for our data was approximately 95 km^2^.
-All samples from a study within a single cell were considered to be a single time series location, and species abundances were combined for all samples.
-`r colorize("This approach therefore sets an upper bound on the definition of "local" for studies with multiple locations. Our dataset included 29 single location studies (average spatial extent of ~4 km2), and 24 multi location studies aggregated by cell.", "blue")`
+All samples from a study within a single cell were considered to be a single time series location and species abundances, if available, were combined for all samples.
+`r colorize("This approach therefore sets an upper bound on the definition of local for studies with multiple locations. Our dataset included 29 single location studies (average spatial extent of ~4 km2), and 24 multi location studies aggregated by cell.", "blue")`
 
 We used trait data from the Elton Trait Database, which consists of species-level means for traits that represent species' multifaceted role in the community [@wilman2014].
 Traits include: body mass, diet, nocturnality, forest foraging strata, and pelagic use.
@@ -184,13 +184,13 @@ For variables with multiple levels each level was included as a separate trait a
 Continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
 `r colorize("In preparation for calculating diversity metrics dbFD calculates a trait distance matrix using Gower's distance and reduces the dimensionality of that trait space by performing PCoA.", "blue")` We limited the number of included PCoA axes to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
 This restriction allows for enough axes to capture the trait space while maintaining computational feasibility [@blonder2018].
-Metrics incorporated weighting based on species abundance.
+Metrics incorporated weighting based on species abundance when available.
 
 ## Null Models
 
 To assess functional change independent of species richness we calculated the standardized effect size (SES) for each of the three functional diversity metrics (*FRic*, *FEve*, *FDiv*) from null estimates [@swenson2012].
 Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
-Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
+Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species for abundance-based studies.
 Species pools were unique for each time series and included all species observed over the course of sampling, therefore accounting for geographic restrictions in species availability.
 `r colorize("This approach assumes that the likelihood of a species being present is equally likely through time and that the species abundance distribution is conserved.", "blue")` This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
 We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
@@ -380,12 +380,7 @@ While this can be an indication of increasing functional capacity or reestablish
 Notably, both of these studies were from temperate, terrestrial bird communities in Scandinavian countries with a unique environment and conservation context.
 Still, results are consistent with other broad-scale studies of bird communities, which found loss of common, functionally general species alongside increases in rare species [@inger2015; @rosenberg2019; @schipper2016].
 
-Study-level trends in *CWM*'s offer insight into how the functional space might be shifting through time, and how that functional turnover may or may not relate to species turnover.
-Every study that experienced a trend in a species or functional diversity metric (Table \ref{tab:studyChange}; functional change, loss of redundancy, and increase in species richness study types), with the exception of 3 "loss of redundancy" studies, also exhibited a trend in at least one *CWM*.
-This linking between *CWM* and other metrics indicates that changes in the shape of the functional space, and additions or losses of species, are almost always accompanied by a functional shift.
-However, shifts in the functional space were not restricted to change studies, as we also found significant *CWM* trends in 7 of the 32 "no change" studies.
-Functional turnover was also qualitatively divorced from species turnover, with just as many studies exhibiting functional turnover (at least one significant *CWM* trend) with species turnover as not.
-These studies give evidence that even minimal changes in species composition undetected by trends in species-based metrics can translate to meaningful changes to one or a few trait axes.
+`r colorize("Study-level trends in CWM's offer insight into how the functional space might be shifting through time, and how that functional turnover may or may not relate to species turnover. Every study that experienced a trend in a species or functional diversity metric (Table", "blue")` \ref{tab:studyChange}`r colorize("; functional change, loss of redundancy, and increase in species richness study types), with the exception of 3 \"loss of redundancy\" studies, also exhibited a trend in at least one CWM.This linking between CWM and other metrics indicates that changes in the shape of the functional space, and additions or losses of species, are almost always accompanied by a functional shift. However, shifts in the functional space were not restricted to change studies, as we also found significant CWM trends in 7 of the 32 \"no change\" studies. Functional turnover was also qualitatively divorced from species turnover, with just as many studies exhibiting functional turnover (at least one significant CWM trend) with species turnover as not. These post hoc observations give evidence that even minimal changes in species composition undetected by trends in species-based metrics can translate to significant changes to one or a few trait axes.", "blue")`
 
 ## Conservation Implications
 
