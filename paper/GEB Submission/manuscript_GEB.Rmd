@@ -9,7 +9,7 @@ abstract: |
   
   Major taxa studied: Mammals, Birds
   
-  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of species' functional roles to reconstruct time series of functional diversity and composition metrics. Using generalized linear mixed models, we estimated general trends in those metrics and trends for individual studies.
+  Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of species' functional roles to reconstruct time series of functional diversity and composition metrics. Our dataset included 2,432 time series of yearly observations from 50 studies with a maximum spatial extent of 95 km2. Using generalized linear mixed models, we estimated general trends in those metrics and trends for individual studies.
   
   Results: We found no overall temporal trends in functional diversity metrics. Study characteristics such as taxa, realm, biome, or protection status did not distinguish between types of change exhibited by communities. We found evidence of a temporal increase in fish consumption across all communities but no evidence to support multiple predictions for specific traits, including decreasing body size, dietary shifts, or changes in foraging strata. 
   
@@ -111,9 +111,10 @@ We obtained mammal and bird time series from the BioTIME database, a global repo
 Data are structured such that a study comprises all data collected following consistent sampling protocols and may contain multiple time series from separate locations.
 Time series represent full assemblages rather than populations of single species [@dornelas2018], and all time series include abundance of observed species.
 Following best practices for the database [@blowes2019], studies with multiple sample locations were split into individual time series following a standardized spatial scale.
-Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @dornelas2018 for details on how sample extents were defined], with the area of each cell set to one standard deviation away from the mean of the single extent locations.
+Scale was set by a global grid with cell size determined based on the sample extent of studies with only a single location [see @blowes2019 for details on how sample extents were defined], with the area of each cell set to one standard deviation away from the mean of the single extent locations.
 The resulting cell size for our data was approximately 95 km^2^.
 All samples from a study within a single cell were considered to be a single time series location, and species abundances were combined for all samples.
+`r colorize("This approach therefore sets an upper bound on the definition of "local" for studies with multiple locations. Our dataset included 29 single location studies (average spatial extent of ~4 km2), and 24 multi location studies aggregated by cell.", "blue")`
 
 We used trait data from the Elton Trait Database, which consists of species-level means for traits that represent species' multifaceted role in the community [@wilman2014].
 Traits include: body mass, diet, nocturnality, forest foraging strata, and pelagic use.
@@ -181,8 +182,7 @@ We also calculated the community-weighted mean (*CWM*) of all continuous traits 
 All available trait data for each study were included in functional diversity calculations with the exception of traits that were the same value for all observed species in the study.
 For variables with multiple levels each level was included as a separate trait axis.
 Continuous traits were z-score scaled to give each trait equal weight in the trait space [@leps2006; @schleuter2010].
-Before calculating diversity metrics, dbFD reduces the dimensionality of the trait space by performing PCoA.
-We limited the number of included PCoA axes to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
+`r colorize("In preparation for calculating diversity metrics dbFD calculates a trait distance matrix using Gower's distance and reduces the dimensionality of that trait space by performing PCoA.", "blue")` We limited the number of included PCoA axes to the maximum number of traits that fulfills the criteria $s >= 2^t$, where $s$ is the number of species and *t* is the number of traits.
 This restriction allows for enough axes to capture the trait space while maintaining computational feasibility [@blonder2018].
 Metrics incorporated weighting based on species abundance.
 
@@ -192,7 +192,7 @@ To assess functional change independent of species richness we calculated the st
 Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
 Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species.
 Species pools were unique for each time series and included all species observed over the course of sampling, therefore accounting for geographic restrictions in species availability.
-This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
+`r colorize("This approach assumes that the likelihood of a species being present is equally likely through time and that the species abundance distribution is conserved.", "blue")` This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
 We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
 We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
 SES estimates can be interpreted as how much of the functional characteristic (richness, evenness, divergence) was observed beyond what was expected by chance for a community of that species richness.
@@ -369,7 +369,6 @@ The next largest group of studies (7 studies) were those with no species richnes
 Based on a species approach alone, these communities appear to either be experiencing no change or some change in species identity, with unknown implications for conservation concern or ecological process.
 However, with the addition of a functional perspective we found multiple kinds of underlying functional change including increases and decreases in corrected functional richness and divergence and loss of corrected functional evenness.
 We therefore found evidence of both increases and decreases in the functional capacity of communities independent of species-based metrics, reinforcing the importance of moving beyond solely species-based approaches for biodiversity assessment [@hillebrand2017; @santini2017].
-All but one of the studies in this group experienced significant turnover, which was also reflected in trends for multiple *CWM*'s, indicating that the overall functional space was shifting even when some characteristics of the functional space were maintained.
 
 Nine studies showed loss of functional redundancy.
 These studies are characterized by a loss of species richness with no shift in functional diversity metrics, indicating the lost species were functionally similar enough to another species to not impact the overall functional diversity.
@@ -381,11 +380,18 @@ While this can be an indication of increasing functional capacity or reestablish
 Notably, both of these studies were from temperate, terrestrial bird communities in Scandinavian countries with a unique environment and conservation context.
 Still, results are consistent with other broad-scale studies of bird communities, which found loss of common, functionally general species alongside increases in rare species [@inger2015; @rosenberg2019; @schipper2016].
 
+Study-level trends in *CWM*'s offer insight into how the functional space might be shifting through time, and how that functional turnover may or may not relate to species turnover.
+Every study that experienced a trend in a species or functional diversity metric (Table \ref{tab:studyChange}; functional change, loss of redundancy, and increase in species richness study types), with the exception of 3 "loss of redundancy" studies, also exhibited a trend in at least one *CWM*.
+This linking between *CWM* and other metrics indicates that changes in the shape of the functional space, and additions or losses of species, are almost always accompanied by a functional shift.
+However, shifts in the functional space were not restricted to change studies, as we also found significant *CWM* trends in 7 of the 32 "no change" studies.
+Functional turnover was also qualitatively divorced from species turnover, with just as many studies exhibiting functional turnover (at least one significant *CWM* trend) with species turnover as not.
+These studies give evidence that even minimal changes in species composition undetected by trends in species-based metrics can translate to meaningful changes to one or a few trait axes.
+
 ## Conservation Implications
 
 While we found no over all trends in functional metrics, our results should not be interpreted as an indication that the ongoing biodiversity crisis is less severe than previously described, or that there is no concern for functional change as a result of anthropogenic impact.
 In fact, study-level trends indicate quite the opposite, that functional changes with negative or yet unknown implications for ecosystem processes may be going undetected by common species-based approaches.
-For example, loss of evenness in communities with constant species richness may be an first sign of a community being impacted by environmental change, with negative implications for stability and function.
+For example, loss of evenness in communities with constant species richness may be a first sign of a community being impacted by environmental change, with negative implications for stability and function.
 
 One of the biggest threats to biodiversity is the wholesale conversion of natural areas to urban or human-dominated landscapes [@tilman2017].
 Typical long-term monitoring data such as those included in our study stops before this conversion occurs, leaving the resultant precipitous declines in biodiversity unrecorded [@cardinale2014].
