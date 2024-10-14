@@ -225,6 +225,21 @@ change_group_ses_desc <- change_group_count_ses %>%
 usethis::use_data(change_group_ses_desc)
 ```
 
+Look at CWM's
+```{r}
+cwm_counts <- model_output %>% 
+  filter(!is.na(study_id), model_id == "base", p.adjust < 0.05, 
+         !metric %in% c("S", "FRic", "FEve", "FDiv", "SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base")) %>% 
+  select(metric, study_id) %>% 
+  count(metric)
+
+# get study-level significant CWM counts with their other change characteristics
+cwm_counts %>% 
+  full_join(change_groups) %>% 
+  select(-c("FRic", "FEve", "FDiv")) %>% 
+  View()
+```
+
 ```{r}
 # change <-  change_groups %>% 
 #   mutate(study_id = as.integer(study_id)) %>%
