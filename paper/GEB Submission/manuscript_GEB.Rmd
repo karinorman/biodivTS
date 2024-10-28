@@ -18,7 +18,7 @@ abstract: |
 journal: "Ecology Letters"
 date: "`r Sys.Date()`"
 bibliography: refs.bib
-csl: pnas.csl
+csl: apa-6th-edition.csl
 layout: 3p
 header-includes:
    - \usepackage{lineno}
@@ -66,23 +66,23 @@ colorize <- function(x, color) {
 
 # Introduction
 
-Ecological communities are experiencing unprecedented changes as a result of anthropogenic pressures such as climate change, land use change, and invasive species.
+Ecological communities are experiencing unprecedented changes due to anthropogenic pressures such as climate change, land use change, and invasive species.
 Impacts of these pressures are well documented at a global scale by an accelerating global extinction rate [@barnosky2011] and fundamental changes in some of the most well-studied systems [e.g. coral bleaching, @sully2019].
 At the local scale however, species diversity tells a different story.
 Recent syntheses of local trends in biodiversity over time have found no net change in local species diversity despite ongoing turnover [@brown2001; @dornelas2014; @vellend2013; @vellend2017] and evidence of significant shifts in community composition underlying consistent species richness [@brose2016; @gotelli2017; @li2020].
 While communities are clearly changing, our most common species-based approaches do not fully capture the nature of that change.
 Still, using general trends derived from limited data as a diagnostic for the state of biodiversity is a topic of ongoing debate [@boënnec2024; @johnson2024].
 Global analyses have been heavily criticized for geographic biases, lack of data in the most heavily impacted areas, `r colorize("short time windows biased toward the present day", "blue")` and exclusion of individual studies' ecological context [@cardinale2014; @cardinale2018; @gonzalez2016].
-Many of these criticisms reflect limitations of ecological data on the whole [@chapman2024], leading to a call for additional data not only to fill geographic and temporal gaps, but to fill in key characteristics of communities [@dornelas2023; @primack2018].
+Many of these criticisms reflect limitations of ecological data overall [@chapman2024], leading to a call for additional data not only to fill geographic and temporal gaps, but to fill in key characteristics of communities [@dornelas2023; @primack2018].
 
 Functional diversity offers a powerful addition to species-based approaches for detecting and describing community change by capturing changes in the traits that underpin fundamental ecological processes [@lavorel2002; @mcgill2006; @streit2023; @suding2008].
 Functional diversity metrics capture complimentary aspects of the trait space including the volume of the multidimensional space (functional diversity), how species and abundance are distributed across the space (functional evenness and divergence), and `r colorize("how the space maps to individual trait distributions", "blue")` (community weighted trait means).
 Considered together, they describe the aspects of the trait space that mediate ecological process.
 
 `r colorize("Trends in functional diversity across broad geographic extents", "blue")` are the aggregation of local-scale responses to acute pulse disturbance, persistent press disturbances, and periods of relative stasis [@inamine2022].
-Pulse disturbances have a sudden one time impact on the community, changing abundance distributions (functional evenness or divergence) or reducing the volume of the functional space [@boersma2016; @hillebrand2020; @larson2021].
+Pulse disturbances have a sudden one-time impact on the community, changing abundance distributions (functional evenness or divergence) or reducing the volume of the functional space [@boersma2016; @hillebrand2020; @larson2021].
 While press disturbances can also lead to loss of functional volume as species fail to adapt to new conditions, they can also lead to wholesale shifts in the location of the functional space as species fill in new environmental space.
-Rather than identifying outcomes of one of these specific processes, observational time series of functional diversity therefore capture the cumulative affects of multiple potentially competing processes.
+Rather than identifying outcomes of one of these specific processes, observational time series of functional diversity therefore capture the cumulative effects of multiple potentially competing processes.
 
 The expectation for functional diversity change across communities is not obvious from past work, and may or may not follow species richness trends [@dornelas2023; @larson2021].
 While loss of functional diversity is frequently cited as one of the most pressing concerns of the anthropocene [@cardinale2012; @dirzo2014; @young2016], observational trends show significant functional loss in some studies [@flynn2009] and no loss even in the most heavily impacted communities for others [@edwards2013; @larsen2018; @matuoka2020].
@@ -373,7 +373,7 @@ We therefore found evidence of both increases and decreases in the functional ca
 Nine studies showed loss of functional redundancy.
 These studies are characterized by a loss of species richness with no shift in functional diversity metrics, indicating the lost species were functionally similar enough to another species to not impact the overall functional diversity.
 Redundancy is critical for maintaining ecological processes in the face of disturbance as it ensures functional roles are maintained [@biggs2020], and a loss of functional redundancy likely reduces a community's capacity to respond to future stressors [@reich2012].
-These communities are actually fairing better than expected looking at species-based metrics alone, but are also in a precarious position for maintaining ecological function into the future [@pimiento2020a].
+These communities are actually faring better than expected looking at species-based metrics alone, but are also in a precarious position for maintaining ecological function into the future [@pimiento2020a].
 
 The final two studies showed an increase in species richness and observed functional richness, with only one showing an increase in functional richness beyond what was expected by chance (corrected functional richness).
 While this can be an indication of increasing functional capacity or reestablishment of previously lost species, it can also be the result of less desirable processes like the introduction of invasive species.
