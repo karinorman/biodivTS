@@ -11,7 +11,7 @@ abstract: |
   
   Methods: We paired thousands of bird and mammal assemblage time series from the BioTIME database with existing trait data representative of species' functional roles to reconstruct time series of functional diversity and composition metrics. Our dataset included 2,432 time series of yearly observations from 50 studies with a maximum spatial extent of 95 km2. Using generalized linear mixed models, we estimated general trends in those metrics and trends for individual studies.
   
-  Results: We found no overall temporal trends in functional diversity metrics. Study characteristics such as taxa, realm, biome, or protection status did not distinguish between types of change exhibited by communities. We found evidence of a temporal increase in fish consumption across all communities but no evidence to support multiple predictions for specific traits, including decreasing body size, dietary shifts, or changes in foraging strata. 
+  Results: We found no overall temporal trends in functional diversity metrics. Study characteristics such as taxa, realm, biome, or protection status did not distinguish between types of change exhibited by communities. We found evidence of a temporal increase in fish consumption across all communities but no evidence to support multiple predictions for specific traits, including decreasing body size, dietary shifts, or changes in bird foraging strata. 
   
   Main Conclusions: General temporal trends indicate that on the aggregate one type of functional change is not more prevalant than the other across many taxa, biomes, and realms. At the study-level, the majority of studies showed no species or functional trends, with the remainder of the studies falling into broad categories of functional changes independent of species richness, functional redundancy loss, and increasing species richness. 
   
@@ -24,9 +24,9 @@ header-includes:
    - \usepackage{lineno}
    - \linenumbers
 output: 
-  rticles::arxiv_article:
-    keep_tex: true
-#  word_document: default
+  # rticles::arxiv_article:
+  #   keep_tex: true
+  word_document: default
 editor_options: 
   markdown: 
     wrap: sentence
@@ -192,7 +192,7 @@ To assess functional change independent of species richness we calculated the st
 Null model corrections allow us to assess the degree to which the observed functional diversity metric deviates from the value expected by chance in a randomly assembled community.
 Null estimates were calculated for each rarefied sample by randomly sampling species from the species pool for each year and randomly assigning observed abundances to species for abundance-based studies.
 Species pools were unique for each time series and included all species observed over the course of sampling, therefore accounting for geographic restrictions in species availability.
-`r colorize("This approach assumes that the likelihood of a species being present is equally likely through time and that the species abundance distribution is conserved.", "blue")` This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
+`r colorize("This approach assumes the species pool is constant through time and that the species abundance distribution is conserved.", "blue")` This process was repeated 500 times to get an estimate and standard deviation of the null expectation for the metric for each rarefaction sample for that time series.
 We used these values to calculate SES using the following formula: $SES = [F_{obs} - mean_{(F_{null})}]/SD_{(F_{null})}$.
 We then calculated the median SES estimate for each metric from all the rarefaction samples for a time series.
 SES estimates can be interpreted as how much of the functional characteristic (richness, evenness, divergence) was observed beyond what was expected by chance for a community of that species richness.
@@ -204,7 +204,7 @@ This approach will be less accurate for shorter time series, as we likely will n
 We estimated general trends across bird and mammal communities for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each location nested within the study, methods which deal well with the inherent imbalances in our data.
 `r colorize("We fit individual models for each of the 18 CWM's calculated for continuous traits or trait categories (see diet, foraging strata, and body mass traits in Table 1).", "blue")` All time series with data for a given trait were included in the corresponding *CWM* model. We estimated study level trends using individual linear models. For studies with more than one location we fit a random slope and intercept for location. Study-level models could not be fit for five studies for at least one metric due to data limitations, but those studies were still included in the general models. They represented 13 of 1350 study-level models fit for each metric. For further details see the supplement. Where appropriate, response variables were $log$ or $log(x+1)$ transformed to better fit model assumptions of residual normality. `r colorize("The log transformation was applied to all metrics except the SES corrected functional diversity metrics, FEve, and CWM's for invertebrate consumption, ground foraging strata, and below water surface foraging strata.", "blue")`
 
-'r colorize("We tested for category-specific trends in all diversity metrics within and between different levels of taxa, biome, realm, and protection status by fitting separate models with each of those factors added as a predictor interacting with time to the original model structure.", "blue")\` We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.10.1, @lenth2022].
+'r colorize("We tested for category-specific trends in all diversity metrics within and between different levels of taxa, biome, realm, and protection status by fitting separate models with each of those factors added as a predictor interacting with time to the original model structure.", "blue")` We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.10.1, @lenth2022].
 For some levels of the categorical variables we did not have a sufficient number of studies to estimate a general trend, we therefore only interpret results for levels with more than three studies.
 We assessed the impact of time series duration and start year on study-level trends using linear models with duration and start year as predictors.
 All models in our analysis were fit using the *lme4* (v1.1-35.3) package in R (v4.3.3) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
@@ -392,11 +392,5 @@ One of the biggest threats to biodiversity is the wholesale conversion of natura
 Typical long-term monitoring data such as those included in our study stops before this conversion occurs, leaving the resultant precipitous declines in biodiversity unrecorded [@cardinale2014].
 This is a known issue with the culture of long-term monitoring, and our results should not be removed from that context.
 Rather, this study captures communities that are likely experiencing a degree of human intervention, but are still largely nature-dominated.
-
-# Acknowledgments
-
-We thank the scientists who contributed to and maintain the biodiversity databases included in this study, including BioTIME, Amphibio, and Elton Traits.
-
-We thank Dr Shane Blowes and Dr Sarah Supp, whose code we adapted for initial data processing of the BioTIME database.
 
 # References
