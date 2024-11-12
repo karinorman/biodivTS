@@ -234,7 +234,7 @@ slopes <- model_output %>%
     .default = "grey"
   )) %>%
   left_join(durations) %>%
-  mutate(duration = as.factor(duration))
+  mutate(duration_fac = as.factor(duration))
 
 colgraid <- colorRampPalette(c("white", "#77976e"))
 graid_pal <- colgraid(26)
@@ -255,8 +255,7 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
   metric_plot <- plot_data %>% 
     filter(!is.na(study_id)) %>% 
     ggplot() +
-    geom_dotplot(aes(x = estimate, fill = duration), 
-                 #stackdir = "center",
+    geom_dotplot(aes(x = estimate, fill = duration_fac), 
                  stackgroups = TRUE,
                  method = "histodot", 
                  binwidth = 0.15, dotsize = 1.15
@@ -267,10 +266,9 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           axis.title.y = element_blank(), 
           axis.text.y=element_blank(), 
-          axis.title=element_text(size=14,face="bold")) +
-    #labs(title = plot_label) +
+          axis.title=element_text(size=14)) ++
     xlim(-3.15, 3.15) +
-    #ylim(0, 2.5) +
+    xlab("temporal trend") +
     annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(7, "pt")) 
 
   if(isFALSE(keep_x_axis)) {
@@ -318,19 +316,24 @@ slope_plots <- pmap(slope_plot_df, plot_slopes)
 slope_plot_grid <- plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
                        hjust = -1, axis = "l", byrow = FALSE)
 
-duration_legend_plot <- slopes %>%
-  ggplot(aes(y = metric, x = estimate, color = duration)) +
-  geom_point() +
-  scale_color_gradient(low = "white", high = "#77976e")
-
-duration_legend <- get_legend(duration_legend_plot)
-
-
-test_plot <- slope_plot_grid + draw_grob(duration_legend,  .8, -.2, .3/3.3, 1, scale = 5)
-
 cowplot::save_plot(here::here("figures/slope_plot_grid.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = 1.18)
-# plot_grid(plotlist=slope_plots, labels = "AUTO", nrow = 3, align = 'vh',
-#                        hjust = -1, axis = "l", scale = 0.9)
+
+get_legends <- function(color){
+  duration_legend_plot <- slopes %>%
+    ggplot(aes(y = metric, x = estimate, color = duration)) +
+    geom_point() +
+    scale_color_gradient(low = "white", high = color) +
+    theme(legend.title = element_blank(), legend.text = element_blank(), 
+          legend.background = element_rect(fill='transparent'))
+  
+  duration_legend <- get_legend(duration_legend_plot)
+  leg <- grid.arrange(duration_legend)
+  ggsave(here::here(paste0("figures/slope_legends/", color, "_legend.png")), leg, width = .6, height = 1.5,
+         bg = "transparent")
+}
+
+map(muted, get_legends)
+
 ```
 
 
