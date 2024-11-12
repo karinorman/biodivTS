@@ -209,3 +209,129 @@ plot_join + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
 ggsave2(here::here("figures", "3met_long.jpeg"), bg = "white")
 ```
 
+Effect size plots
+
+```{r}
+load(here::here("data/model_output.rda"))
+
+durations <- model_data %>%
+  select(study_id, duration) %>%
+  group_by(study_id) %>%
+  mutate(duration = max(duration)) %>% 
+  distinct()
+
+slopes <- model_output %>% 
+  filter(term == "year_scaled", model_id == "base",
+         !metric %in% c("FDiv", "FRic", "FEve", "Jaccard_next")) %>% 
+  select(metric, estimate, p.adjust, study_id) %>%
+  group_by(metric) %>%
+  #rowwise() %>%
+  mutate(across(estimate, ~scale(.)[,1])) %>%
+  ungroup() %>%
+    mutate(ind = case_when(
+    estimate > 0 & p.adjust < 0.05 ~ "blue", 
+    estimate < 0 & p.adjust < 0.05 ~ "red", 
+    .default = "grey"
+  )) %>%
+  left_join(durations) %>%
+  mutate(duration = as.factor(duration))
+
+colgraid <- colorRampPalette(c("white", "#77976e"))
+graid_pal <- colgraid(26)
+
+
+plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
+  
+  if (metric_name == "empty") return(NULL)
+  
+  colgraid <- colorRampPalette(c("white", color))
+  graid_pal <- colgraid(26)
+
+  plot_data <- slopes %>%
+    filter(metric == metric_name) 
+  
+  gen_est <- plot_data %>% filter(is.na(study_id))
+  
+  metric_plot <- plot_data %>% 
+    filter(!is.na(study_id)) %>% 
+    ggplot() +
+    geom_dotplot(aes(x = estimate, fill = duration), 
+                 #stackdir = "center",
+                 stackgroups = TRUE,
+                 method = "histodot", 
+                 binwidth = 0.15, dotsize = 1.15
+    ) +
+    scale_fill_manual(values = graid_pal, guide = "none", drop = FALSE) +
+    geom_vline(aes(xintercept = gen_est$estimate), linetype = "longdash") +
+    theme_minimal() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.title.y = element_blank(), 
+          axis.text.y=element_blank(), 
+          axis.title=element_text(size=14,face="bold")) +
+    #labs(title = plot_label) +
+    xlim(-3.15, 3.15) +
+    #ylim(0, 2.5) +
+    annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(7, "pt")) 
+
+  if(isFALSE(keep_x_axis)) {
+    metric_plot <- metric_plot + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+  } else{
+    metric_plot <- metric_plot + xlim(-3.15, 3.15) +
+      geom_hline(aes(yintercept = 0))
+  }
+  
+  if(gen_est$p.adjust < 0.05){
+    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate+.2), y = 0.8, label = "*", size = unit(16, "pt"))
+  }
+  
+  return(metric_plot)
+}  
+
+muted <- khroma::color("muted")(5)
+
+slope_plot_df <- data.frame(metric_name = c("S", "Jaccard_base", 
+                     "SES_FRic", "SES_FEve", "SES_FDiv", 
+                     "CWM_diet_inv", "CWM_diet_scav", "CWM_diet_vfish", "CWM_diet_vunk", "CWM_diet_planto",
+                     "CWM_diet_seed", "CWM_diet_vend", "CWM_diet_nect", "CWM_diet_fruit", "CWM_diet_vect", 
+                     "CWM_forstrat_ground", "CWM_forstrat_watbelowsurf", "CWM_forstrat_wataroundsurf", 
+                     "CWM_forstrat_understory", "CWM_forstrat_aerial", 
+                     "CWM_forstrat_canopy", "CWM_forstrat_midhigh", "CWM_bodymass_value", rep("empty", 2)),
+                     plot_label = c("Species\nRichness", "Jaccard\nSimilarity", 
+                     "FRic SES", "FEve SES", "FDiv SES", 
+                     "Invertebrates", "Scavenge", "Fish", "Other\nVertebrates", "Other Plants",
+                     "Seeds", "Mammals\n& Birds", "Nectar", "Fruit", "Reptiles &\nAmphibians", 
+                     "Ground", "Below Water\nSurface", "Around Water\nSurface", 
+                     "Understory", "Aerial", "Canopy", "Midhigh", 
+                     "Body Mass", rep("empty", 2)), 
+                     keep_x_axis = c(FALSE, FALSE, 
+                     FALSE, FALSE, TRUE, 
+                     FALSE, FALSE, FALSE, FALSE, TRUE,
+                     FALSE, FALSE, FALSE, FALSE, TRUE, 
+                     FALSE, FALSE, FALSE, 
+                     FALSE, TRUE, 
+                     FALSE, FALSE, TRUE, rep(FALSE, 2)),
+                     color = c(rep(muted[1], 2), rep(muted[2], 3), rep(muted[3], 10), rep(muted[4], 7), rep(muted[5], 3))) %>%
+  mutate(across(keep_x_axis, as.logical))
+
+slope_plots <- pmap(slope_plot_df, plot_slopes)
+
+slope_plot_grid <- plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
+                       hjust = -1, axis = "l", byrow = FALSE)
+
+duration_legend_plot <- slopes %>%
+  ggplot(aes(y = metric, x = estimate, color = duration)) +
+  geom_point() +
+  scale_color_gradient(low = "white", high = "#77976e")
+
+duration_legend <- get_legend(duration_legend_plot)
+
+
+test_plot <- slope_plot_grid + draw_grob(duration_legend,  .8, -.2, .3/3.3, 1, scale = 5)
+
+cowplot::save_plot(here::here("figures/slope_plot_grid.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = 1.18)
+# plot_grid(plotlist=slope_plots, labels = "AUTO", nrow = 3, align = 'vh',
+#                        hjust = -1, axis = "l", scale = 0.9)
+```
+
+
+
