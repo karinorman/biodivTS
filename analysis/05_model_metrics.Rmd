@@ -772,3 +772,100 @@ slope_models <- bind_rows(duration_slope, startyear_slope)
 # Which predictor variables were significant?
 slope_models %>% filter(term != "(Intercept)", p.value < 0.05) %>% View()
 ```
+Check if Jaccard distance is correlated with time with Mantel test
+```{r}
+library(vegan)
+
+jaccard_dist <- model_data %>% 
+    select(rarefyID, value, year, metric) %>% 
+    pivot_wider(names_from = metric, values_from = value) %>% select(rarefyID, year, Jaccard_base) %>%
+  unite(obsid, rarefyID, year, remove = FALSE) %>%
+  rename(baselineID = rarefyID) %>%
+  mutate(#baseline = is.na(Jaccard_base), 
+         jacc_dist = 1-Jaccard_base) %>%
+  group_by(baselineID) %>%
+  mutate(time_dist = year - min(year)) %>%
+  ungroup() %>%
+  filter(!is.na(jacc_dist)) %>%
+  select(-Jaccard_base, -year)
+
+
+get_dist_mat <- function(df, dist_name){
+  dist_row <- df %>% 
+  select(obsid, baselineID, dist_name) %>% 
+  pivot_wider(names_from = obsid, values_from = dist_name) %>% 
+  mutate(baselineID = NA) 
+
+rownames(dist_row) <- "baselineID"
+
+dist_mat <- dist_row %>%
+  t() %>% as.data.frame()
+  
+dist_mat[,colnames(dist_row)[-1]] <- NA
+
+return(as.dist(dist_mat))
+}
+
+# do it one by one for each rarefyID
+get_mantel_stat <- function(rarefyID){
+  dist_data <- jaccard_dist %>%
+  filter(baselineID == rarefyID)
+  
+  jacc_dist_mat <- get_dist_mat(dist_data, "jacc_dist")
+time_dist_mat <- get_dist_mat(dist_data, "time_dist")
+
+mantel_test <- mantel(jacc_dist_mat, time_dist_mat, method = "spearman", permutations = 9999, na.rm = TRUE)
+
+data.frame(rarefyID = rarefyID, p.value = mantel_test$signif)
+}
+
+mantel_stats <- purrr::map_dfr(unique(jaccard_dist$baselineID), get_mantel_stat)
+```
+
+```{r}
+# create master matrices with all timeseries
+master_jacc_dist <- purrr::map_dfr(unique(jaccard_dist$baselineID), function(x){
+  #browser()
+  dist_row <- jaccard_dist %>% 
+    filter(baselineID == x) %>%
+  select(obsid, baselineID, "jacc_dist") %>% 
+  pivot_wider(names_from = obsid, values_from = "jacc_dist") 
+
+baseline_name <- unique(dist_row$baselineID)
+
+dist_mat <- dist_row %>%
+  mutate(baselineID = NA) %>%
+  rename(!!baseline_name := baselineID) %>%
+  t() %>% as.data.frame() %>%
+  rename(!!baseline_name := V1)
+  
+dist_mat[,colnames(dist_row)[-1]] <- NA
+
+return(dist_mat)
+}) %>%
+  as.dist()
+
+master_time_dist <- purrr::map_dfr(unique(jaccard_dist$baselineID), function(x){
+  #browser()
+  dist_row <- jaccard_dist %>% 
+    filter(baselineID == x) %>%
+  select(obsid, baselineID, "time_dist") %>% 
+  pivot_wider(names_from = obsid, values_from = "time_dist") 
+
+baseline_name <- unique(dist_row$baselineID)
+
+dist_mat <- dist_row %>%
+  mutate(baselineID = NA) %>%
+  rename(!!baseline_name := baselineID) %>%
+  t() %>% as.data.frame() %>%
+  rename(!!baseline_name := V1)
+  
+dist_mat[,colnames(dist_row)[-1]] <- NA
+
+return(dist_mat)
+}) %>%
+  as.dist()
+
+mantel_test <- mantel(master_jacc_dist, master_time_dist, method = "spearman", permutations = 9999, na.rm = TRUE)
+```
+
