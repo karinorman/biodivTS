@@ -24,9 +24,9 @@ header-includes:
    - \usepackage{lineno}
    - \linenumbers
 output: 
-  # rticles::arxiv_article:
-  #   keep_tex: true
-  word_document: default
+   rticles::arxiv_article:
+     keep_tex: true
+  #word_document: default
 editor_options: 
   markdown: 
     wrap: sentence
@@ -177,7 +177,7 @@ Higher values of *FEve* indicate more even spacing of species in the trait space
 *FDiv* measures the degree to which species and their abundances maximize differences in the functional space.
 Higher values of *FDiv* therefore correspond to communities where many highly abundant species are on the edges of the trait space.
 
-We also calculated the community-weighted mean (*CWM*) of all continuous traits `r colorize("(diet, foraging strata, body mass)", "blue")` to examine changes in the distribution of each trait. Wholesale shifts in the `r colorize("observed", "blue")` trait space due to changes of trait means could occur even while the shape `r colorize("and dispersion", "blue")` of the multidimensional trait space, as defined by functional richness, evenness, and divergence, is maintained `r colorize("through time", "blue")`. CWM's are therefore a way to assess whether or not turnover is occurring and what the nature of the shift may be. Hereafter we refer to results for functional metrics in two groups: functional diversity metrics (FRic, FEve, FDiv) and composition metrics (trait CWM's).
+To assess compositional changes, we also calculated the community-weighted mean (*CWM*) of all continuous traits `r colorize("(diet, foraging strata, body mass)", "blue")` to examine changes in the distribution of each trait. Wholesale shifts in the `r colorize("observed", "blue")` trait space due to changes of trait means could occur even while the shape `r colorize("and dispersion", "blue")` of the multidimensional trait space, as defined by functional richness, evenness, and divergence, is maintained `r colorize("through time", "blue")`. CWM's are therefore a way to assess whether or not turnover is occurring and what the nature of the shift may be. Hereafter we refer to results for functional metrics in two groups: functional diversity metrics (FRic, FEve, FDiv) and composition metrics (trait CWM's).
 
 All available trait data for each study were included in functional diversity calculations with the exception of traits that were the same value for all observed species in the study.
 For variables with multiple levels each level was included as a separate trait axis.
@@ -204,7 +204,7 @@ This approach will be less accurate for shorter time series, as we likely will n
 We estimated general trends across bird and mammal communities for each diversity metric using a linear mixed effects model with a random slope and intercept for each study and each location nested within the study, methods which deal well with the inherent imbalances in our data.
 `r colorize("We fit individual models for each of the 18 CWM's calculated for continuous traits or trait categories (see diet, foraging strata, and body mass traits in Table 1).", "blue")` All time series with data for a given trait were included in the corresponding *CWM* model. We estimated study level trends using individual linear models. For studies with more than one location we fit a random slope and intercept for location. Study-level models could not be fit for five studies for at least one metric due to data limitations, but those studies were still included in the general models. They represented 13 of 1350 study-level models fit for each metric. For further details see the supplement. Where appropriate, response variables were $log$ or $log(x+1)$ transformed to better fit model assumptions of residual normality. `r colorize("The log transformation was applied to all metrics except the SES corrected functional diversity metrics, FEve, and CWM's for invertebrate consumption, ground foraging strata, and below water surface foraging strata.", "blue")`
 
-'r colorize("We tested for category-specific trends in all diversity metrics within and between different levels of taxa, biome, realm, and protection status by fitting separate models with each of those factors added as a predictor interacting with time to the original model structure.", "blue")\` We estimated within-level slopes and calculated between-level contrasts using the *emmeans* package [v1.10.1, @lenth2022].
+'r colorize("We tested for category-specific trends in all diversity metrics within and between different levels of taxa, biome, realm, and protection status by fitting separate models with each of those factors added as a predictor interacting with time to the original model structure.", "blue")\` Fore each linear mixed effects model we estimated within-level slopes and calculated between-level contrasts for each categorical variable using the *emmeans* package [v1.10.1, @lenth2022].
 For some levels of the categorical variables we did not have a sufficient number of studies to estimate a general trend, we therefore only interpret results for levels with more than three studies.
 We assessed the impact of time series duration and start year on study-level trends using linear models with duration and start year as predictors.
 All models in our analysis were fit using the *lme4* (v1.1-35.3) package in R (v4.3.3) and p-values were calculated by Satterthwaite's degrees of freedom method using the *lmerTest* (v3.1-3) package with a significance level of $\alpha = 0.05$ [@bates2015; @kuznetsova2017; @rcoreteam2023].
@@ -339,7 +339,8 @@ change_group_ses_desc %>%
   select(type = change_description, everything()) %>%
   mutate(n = as.character(n),
            n = ifelse(n == "7", "32", n)) %>%
-  mutate(type = ifelse(n == "32", "no change", type)) %>%
+  mutate(type = ifelse(n == "32", "no change", type),
+         type = ifelse(type == "functional change", "functional diversity change", type)) %>%
   rename(`Study Count` = `n`) %>%
      kable(format = "latex",
         caption = "Table giving the count of number of studies for different kinds of functional change, broken down into no change functional change without species richness change, loss of redundancy, and increases in species richness. Trends direction is indicated by a positive or negative sign, with a 0 indicating no trend.", align = "c",
