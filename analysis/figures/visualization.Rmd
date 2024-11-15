@@ -63,7 +63,7 @@ study_map <- map_data("world") %>%
              aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.4, inherit.aes = FALSE) +
   geom_point(data = study_data %>% filter(taxa == "Mammals"),
              aes(rarefyID_x, rarefyID_y, color = taxa), alpha = 0.4, inherit.aes = FALSE) +
-  #plot the US amphibian point on top so we can see it
+  #plot the US amphibian point on bottom so we can see it
   # geom_point(data = study_data %>% 
   #              #filter(taxa %in% c("Amphibians")), 
   #              filter(taxa %in% c("Amphibians"), rarefyID_y > 0),
@@ -214,6 +214,12 @@ Effect size plots
 ```{r}
 load(here::here("data/model_output.rda"))
 
+metric_names <- unique(model_output$metric)
+raw_metrics <- c("SES_FRic", "SES_FDiv", "SES_FEve", 
+                 "CWM_diet_inv", "CWM_forstrat_ground", "CWM_forstrat_watbelowsurf", "FEve")
+log_metrics <- c("FRic", "S", "FDiv")
+logone_metrics <- metric_names[!metric_names %in% c(raw_metrics, log_metrics)]
+
 durations <- model_data %>%
   select(study_id, duration) %>%
   group_by(study_id) %>%
@@ -224,9 +230,13 @@ slopes <- model_output %>%
   filter(term == "year_scaled", model_id == "base",
          !metric %in% c("FDiv", "FRic", "FEve", "Jaccard_next")) %>% 
   select(metric, estimate, p.adjust, study_id) %>%
+  mutate(estimate_backtrans = case_when(
+           metric %in% log_metrics ~ exp(estimate),
+           metric %in% logone_metrics ~ 1 + exp(estimate),
+           .default = estimate
+         )) %>%
   group_by(metric) %>%
-  #rowwise() %>%
-  mutate(across(estimate, ~scale(.)[,1])) %>%
+  mutate(estimate_scale = scale(estimate_backtrans)[,1]) %>%
   ungroup() %>%
     mutate(ind = case_when(
     estimate > 0 & p.adjust < 0.05 ~ "blue", 
@@ -255,20 +265,20 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
   metric_plot <- plot_data %>% 
     filter(!is.na(study_id)) %>% 
     ggplot() +
-    geom_dotplot(aes(x = estimate, fill = duration_fac), 
+    geom_dotplot(aes(x = estimate_scale, fill = duration_fac), 
                  stackgroups = TRUE,
                  method = "histodot", 
                  binwidth = 0.15, dotsize = 1.15
     ) +
     scale_fill_manual(values = graid_pal, guide = "none", drop = FALSE) +
-    geom_vline(aes(xintercept = gen_est$estimate), linetype = "longdash") +
+    geom_vline(aes(xintercept = gen_est$estimate_scale), linetype = "longdash") +
     theme_minimal() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           axis.title.y = element_blank(), 
           axis.text.y=element_blank(), 
-          axis.title=element_text(size=14)) ++
+          axis.title=element_text(size=14)) +
     xlim(-3.15, 3.15) +
-    xlab("temporal trend") +
+    xlab("temporal slope estimate") +
     annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(7, "pt")) 
 
   if(isFALSE(keep_x_axis)) {
@@ -279,7 +289,7 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
   }
   
   if(gen_est$p.adjust < 0.05){
-    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate+.2), y = 0.8, label = "*", size = unit(16, "pt"))
+    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate_scale + .2), y = 0.8, label = "*", size = unit(16, "pt"))
   }
   
   return(metric_plot)
@@ -313,7 +323,7 @@ slope_plot_df <- data.frame(metric_name = c("S", "Jaccard_base",
 
 slope_plots <- pmap(slope_plot_df, plot_slopes)
 
-slope_plot_grid <- plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
+slope_plot_grid <- cowplot::plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
                        hjust = -1, axis = "l", byrow = FALSE)
 
 cowplot::save_plot(here::here("figures/slope_plot_grid.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = 1.18)
@@ -334,6 +344,185 @@ get_legends <- function(color){
 
 map(muted, get_legends)
 
+```
+Plots of significant contrasts
+```{r}
+contrast_data <- model_output %>%
+  filter(metric %in% c("Jaccard_base", "CWM_diet_vfish", "CWM_diet_vunk"), 
+         model_id != "base", 
+         effect %in% c("fixed", "contrast", "group_slope")) %>%
+  select(effect, term, estimate, p.adjust, metric, model_id)
+
+
+# test to plot taxa models
+test_plot_data <- contrast_data %>%
+  filter(model_id == "taxa", metric == "Jaccard_base")
+
+bird_params <- list(slope = test_plot_data %>% filter(term == "Birds") %>% pull(estimate),
+                    intercept = test_plot_data %>% filter(term == "(Intercept)") %>% pull(estimate),
+                    sig = test_plot_data %>% filter(term == "Birds") %>% pull(p.adjust) < 0.05)
+mammal_params <- list(slope = test_plot_data %>% filter(term == "Mammals") %>% pull(estimate),
+                      intercept = (test_plot_data %>% filter(term == "taxaMammals") %>% pull(estimate) + 
+                                     bird_params$intercept))
+ggplot() + theme_minimal() +
+  xlim(0, 1) +
+  ylim(0, 3) +
+  geom_abline(slope = bird_params$slope, intercept = bird_params$intercept, color = "red") +
+  geom_abline(slope = mammal_params$slope, intercept = mammal_params$intercept,)
+
+model_data %>%
+  filter(taxa != "Amphibians", metric == "Jaccard_base") %>%
+  ggplot(aes(x = year_scaled, y = value, color = taxa)) +
+  geom_point() +
+  geom_abline(slope = -0.033233485, intercept = 0.42832, color = "red") +
+  geom_abline(slope = -0.026364796, intercept = 0.42832 + 0.095965269)
+```
+Let's try dot plots of each categorical slope
+```{r}
+library(patchwork)
+
+group_slopes <- model_output %>% 
+    filter(effect == "group_slope", !metric %in% c("Jaccard_next", "FRic", "FEve", "FDiv"), 
+           !term %in% c("Global", "Polar/Temperate")) %>% 
+  select(model_id, term, estimate, p.adjust, metric) %>%
+  mutate(sig = ifelse(p.adjust < 0.05, "yes", "no")) %>%
+  left_join(data.frame(metric = c("S", "Jaccard_base", 
+                     "SES_FRic", "SES_FEve", "SES_FDiv", 
+                     "CWM_diet_inv", "CWM_diet_scav", "CWM_diet_vfish", "CWM_diet_vunk", "CWM_diet_planto",
+                     "CWM_diet_seed", "CWM_diet_vend", "CWM_diet_nect", "CWM_diet_fruit", "CWM_diet_vect", 
+                     "CWM_forstrat_ground", "CWM_forstrat_watbelowsurf", "CWM_forstrat_wataroundsurf", 
+                     "CWM_forstrat_understory", "CWM_forstrat_aerial", 
+                     "CWM_forstrat_canopy", "CWM_forstrat_midhigh", "CWM_bodymass_value"),
+                     plot_label = c("Species Richness", "Jaccard Similarity", 
+                     "FRic SES", "FEve SES", "FDiv SES", 
+                     "CWM Invertebrate Diet", "CWM Scavenge Diet", "CWM Fish Diet", "CWM Other Vertebrates Diet", "CWM Other Plants Diet",
+                     "CWM Seeds Diet", "CWM Mammals & Birds Diet", "CWM Nectar Diet", "CWM Fruit Diet", "CWM Reptiles & Amphibians Diet", 
+                     "CWM Ground Foraging", "CWM Below Water Surface Foraging", "CWM Around Water Surface Foraging", 
+                     "CWM Understory Foraging", "CWM Aerial Foraging", "CWM Canopy Foraging", "CWM Midhigh Foraging", 
+                     "CWM Body Mass"))) %>%
+  mutate(estimate_backtrans = case_when(
+           metric %in% log_metrics ~ exp(estimate),
+           metric %in% logone_metrics ~ 1 + exp(estimate),
+           .default = estimate
+         )) %>%
+  group_by(metric) %>%
+  mutate(numeric_metric = as.factor(cur_group_id()),
+         estimate_scale = scale(estimate_backtrans)[,1]) %>%
+  ungroup()
+
+sig_contrasts <- model_output %>%
+  filter(effect == "contrast", p.adjust < 0.05)
+
+get_estimate <- function(metric_name, term_name){
+  model_output %>% 
+    filter(metric == metric_name, term == term_name) %>%
+    pull(estimate_scale)
+}
+
+climate_plot <- group_slopes %>%
+  filter(model_id == "climate") %>%
+  ggplot(aes(y = numeric_metric, x = estimate_scale, color = term)) +
+  geom_point(aes(shape = sig), size = 3) +
+  #ylim(-7,7) +
+  #scale_x_discrete(expand=c(0.001, 4)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(), legend.title = element_blank(),
+        legend.position = "bottom", 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black")
+        ) +
+  scale_shape_manual(values = c(1, 19), guide = "none") +
+  #ggpubr::geom_bracket(data = group_slopes %>% filter(model_id == "climate"), xmin = unlist(get_estimate("CWM_diet_vunk", "Marine")), xmax = unlist(get_estimate("CWM_diet_vunk", "Terrestrial")), y.position = 11, label = "") +
+  scale_y_discrete(labels = group_slopes %>% select(numeric_metric, plot_label) %>% distinct() %>% tibble::deframe(), drop = FALSE) +
+  scale_color_manual(values = group_colors) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  guides(color=guide_legend(nrow=2, byrow=TRUE)) +
+  xlab("temporal slope estimate")
+
+climate_plot
+
+taxa_plot <- group_slopes %>%
+  filter(model_id == "taxa") %>%
+  ggplot(aes(y = numeric_metric, x = estimate_scale, color = term)) +
+  geom_point(aes(shape = sig), size = 3) +
+  #ylim(-7,7) +
+  #scale_x_discrete(expand=c(0.001, 4)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(), legend.title = element_blank(),
+        axis.line.y = element_blank(), axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(),
+        legend.position = "bottom",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black")
+        ) +
+  scale_shape_manual(values = c(1, 19), guide = "none") +
+  scale_color_manual(values = my_pal) +
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  guides(color=guide_legend(nrow=2, ncol = 2, byrow=TRUE)) +
+  scale_y_discrete(labels = group_slopes %>% select(numeric_metric, plot_label) %>% distinct() %>% tibble::deframe(), drop = FALSE) +
+  xlab("temporal slope estimate")
+
+taxa_plot
+
+pa_plot <- group_slopes %>%
+  filter(model_id == "protected_area") %>%
+  mutate(term = ifelse(term == TRUE, "Protected", "Unprotected")) %>%
+  ggplot(aes(y = numeric_metric, x = estimate_scale, color = term)) +
+  geom_point(aes(shape = sig), size = 3) +
+  #ylim(-7,7) +
+  #scale_x_discrete(expand=c(0.001, 4)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(), legend.title = element_blank(),
+        legend.position = "bottom",
+        axis.line.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.line = element_line(colour = "black")
+        ) +
+  scale_shape_manual(values = c(1, 19), guide = "none")+
+  scale_color_manual(values = my_pal) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  guides(color=guide_legend(nrow=2, ncol = 2, byrow=TRUE)) +
+  scale_y_discrete(labels = group_slopes %>% select(numeric_metric, plot_label) %>% distinct() %>% tibble::deframe(), drop = FALSE) +
+  xlab("temporal slope estimate")
+
+pa_plot
+
+realm_plot <- group_slopes %>%
+  filter(model_id == "realm") %>%
+  ggplot(aes(y = numeric_metric, x = estimate_scale, color = term)) +
+  geom_point(aes(shape = sig), size = 3) +
+  #ylim(-7,7) +
+  #scale_x_discrete(expand=c(0.001, 4)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(), legend.title = element_blank(),
+        axis.line.y = element_blank(), axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(),
+        legend.position = "bottom",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.border = element_blank(),
+        axis.line = element_line(colour = "black")
+        ) +
+  scale_shape_manual(values = c(1, 19), guide = "none") +
+  scale_color_manual(values = my_pal) +
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  guides(color=guide_legend(nrow=2, ncol = 2, byrow=TRUE)) +
+  scale_y_discrete(labels = group_slopes %>% select(numeric_metric, plot_label) %>% distinct() %>% tibble::deframe(), drop = FALSE) +
+  xlab("temporal slope estimate")
+
+realm_plot
+
+# contrasts_plot_grid <- cowplot::plot_grid(plotlist = list(climate_plot, taxa_plot, pa_plot, realm_plot), nrow = 1, rel_widths = c(1.7, 1, 1, 1), rel_heights = c(1, .6, .6, .6))
+# cowplot::save_plot(here::here("figures/contrasts_plot_grid.png"), contrasts_plot_grid, ncol = 4, nrow = 1, bg = "white", base_asp = 1, base_height = 5)
+
+contrasts_plot_grid <- climate_plot + taxa_plot + pa_plot + realm_plot + plot_layout(ncol = 4, axis_titles = "collect")
+ggsave(here::here("figures/contrasts_plot_grid.png"), contrasts_plot_grid, width = 15, heigh = 6)
 ```
 
 
