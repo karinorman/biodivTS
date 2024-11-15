@@ -277,7 +277,7 @@ log_mods <- tibble(metric_name = log_metrics,
                          taxa = "log(value) ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "log(value) ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
                          climate = "log(value) ~ year_scaled * climate + (year_scaled|study_id/rarefyID)",
-                   protected_area = "value ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
+                   protected_area = "log(value) ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate, protected_area), names_to = "model_id", values_to = "formula")
 
 logone_mods <- tibble(metric_name = logone_metrics, 
@@ -285,7 +285,7 @@ logone_mods <- tibble(metric_name = logone_metrics,
                          taxa = "logvalue ~ year_scaled * taxa + (year_scaled|study_id/rarefyID)",
                          realm = "logvalue ~ year_scaled * realm + (year_scaled|study_id/rarefyID)",
                          climate = "logvalue ~ year_scaled * climate + (year_scaled|study_id/rarefyID)",
-                      protected_area = "value ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
+                      protected_area = "logvalue ~ year_scaled * protected_area + (year_scaled|study_id/rarefyID)") %>%
   pivot_longer(cols = c(base, taxa, realm, climate, protected_area), names_to = "model_id", values_to = "formula")
 
 mods <- bind_rows(raw_value_mods, log_mods, logone_mods) %>% 
