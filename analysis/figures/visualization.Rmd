@@ -414,7 +414,7 @@ sig_contrasts <- model_output %>%
   filter(effect == "contrast", p.adjust < 0.05)
 
 get_estimate <- function(metric_name, term_name){
-  model_output %>% 
+  group_slopes %>% 
     filter(metric == metric_name, term == term_name) %>%
     pull(estimate_scale)
 }
@@ -423,6 +423,7 @@ climate_plot <- group_slopes %>%
   filter(model_id == "climate") %>%
   ggplot(aes(y = numeric_metric, x = estimate_scale, color = term)) +
   geom_point(aes(shape = sig), size = 3) +
+  geom_segment(aes(x = (get_estimate("CWM_diet_vunk", "Tropical") + 0.1), y = 11, xend = (get_estimate("CWM_diet_vunk", "Temperate") - .095)), color = "black") +
   #ylim(-7,7) +
   #scale_x_discrete(expand=c(0.001, 4)) +
   theme_bw() +
@@ -497,6 +498,7 @@ realm_plot <- group_slopes %>%
   filter(model_id == "realm") %>%
   ggplot(aes(y = numeric_metric, x = estimate_scale, color = term)) +
   geom_point(aes(shape = sig), size = 3) +
+   geom_segment(aes(x = (get_estimate("CWM_diet_vunk", "Marine") + 0.075), y = 11, xend = (get_estimate("CWM_diet_vunk", "Terrestrial")) - 0.075), color = "black") +
   #ylim(-7,7) +
   #scale_x_discrete(expand=c(0.001, 4)) +
   theme_bw() +
