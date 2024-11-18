@@ -345,38 +345,7 @@ get_legends <- function(color){
 map(muted, get_legends)
 
 ```
-Plots of significant contrasts
-```{r}
-contrast_data <- model_output %>%
-  filter(metric %in% c("Jaccard_base", "CWM_diet_vfish", "CWM_diet_vunk"), 
-         model_id != "base", 
-         effect %in% c("fixed", "contrast", "group_slope")) %>%
-  select(effect, term, estimate, p.adjust, metric, model_id)
 
-
-# test to plot taxa models
-test_plot_data <- contrast_data %>%
-  filter(model_id == "taxa", metric == "Jaccard_base")
-
-bird_params <- list(slope = test_plot_data %>% filter(term == "Birds") %>% pull(estimate),
-                    intercept = test_plot_data %>% filter(term == "(Intercept)") %>% pull(estimate),
-                    sig = test_plot_data %>% filter(term == "Birds") %>% pull(p.adjust) < 0.05)
-mammal_params <- list(slope = test_plot_data %>% filter(term == "Mammals") %>% pull(estimate),
-                      intercept = (test_plot_data %>% filter(term == "taxaMammals") %>% pull(estimate) + 
-                                     bird_params$intercept))
-ggplot() + theme_minimal() +
-  xlim(0, 1) +
-  ylim(0, 3) +
-  geom_abline(slope = bird_params$slope, intercept = bird_params$intercept, color = "red") +
-  geom_abline(slope = mammal_params$slope, intercept = mammal_params$intercept,)
-
-model_data %>%
-  filter(taxa != "Amphibians", metric == "Jaccard_base") %>%
-  ggplot(aes(x = year_scaled, y = value, color = taxa)) +
-  geom_point() +
-  geom_abline(slope = -0.033233485, intercept = 0.42832, color = "red") +
-  geom_abline(slope = -0.026364796, intercept = 0.42832 + 0.095965269)
-```
 Let's try dot plots of each categorical slope
 ```{r}
 library(patchwork)
