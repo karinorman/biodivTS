@@ -267,8 +267,8 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
     ggplot() +
     geom_dotplot(aes(x = estimate_scale, fill = duration_fac), 
                  stackgroups = TRUE,
-                 method = "histodot", 
-                 binwidth = 0.15, dotsize = 1.15
+                 method = "histodot"#, 
+                 #binwidth = 0.15, dotsize = 1.15
     ) +
     scale_fill_manual(values = graid_pal, guide = "none", drop = FALSE) +
     geom_vline(aes(xintercept = gen_est$estimate_scale), linetype = "longdash") +
@@ -277,14 +277,14 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
           axis.title.y = element_blank(), 
           axis.text.y=element_blank(), 
           axis.title=element_text(size=14)) +
-    xlim(-3.15, 3.15) +
+    xlim(-4.2, 7) +
     xlab("temporal slope estimate") +
     annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(7, "pt")) 
 
   if(isFALSE(keep_x_axis)) {
     metric_plot <- metric_plot + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
   } else{
-    metric_plot <- metric_plot + xlim(-3.15, 3.15) +
+    metric_plot <- metric_plot + xlim(-4.2, 7) +
       geom_hline(aes(yintercept = 0))
   }
   
