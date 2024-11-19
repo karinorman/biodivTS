@@ -244,7 +244,8 @@ slopes <- model_output %>%
     .default = "grey"
   )) %>%
   left_join(durations) %>%
-  mutate(duration_fac = as.factor(duration))
+  mutate(duration_fac = as.factor(duration)) %>%
+  filter(estimate_scale < 3.5, estimate_scale > -3.5)
 
 colgraid <- colorRampPalette(c("white", "#77976e"))
 graid_pal <- colgraid(26)
@@ -265,35 +266,40 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
   metric_plot <- plot_data %>% 
     filter(!is.na(study_id)) %>% 
     ggplot() +
-    geom_dotplot(aes(x = estimate_scale, fill = duration_fac), 
+    geom_dotplot(aes(x = estimate_scale, fill = duration_fac),
                  stackgroups = TRUE,
-                 method = "histodot"#, 
-                 #binwidth = 0.15, dotsize = 1.15
+                 method = "histodot",
+                 binwidth = 0.1, dotsize = 1.4
     ) +
     scale_fill_manual(values = graid_pal, guide = "none", drop = FALSE) +
     geom_vline(aes(xintercept = gen_est$estimate_scale), linetype = "longdash") +
+    #coord_fixed(ratio=5)+#, ylim = c(0,5)) +
+    #scale_y_continuous(limits=c(0, 1), expand = c(0, 0), breaks = seq(0, 1,1/10), labels=seq(0,10)) +
     theme_minimal() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           axis.title.y = element_blank(), 
           axis.text.y=element_blank(), 
           axis.title=element_text(size=14)) +
-    xlim(-4.2, 7) +
+    xlim(-3.5, 3.5) +
     xlab("temporal slope estimate") +
-    annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(7, "pt")) 
+    annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(6, "pt")) 
 
   if(isFALSE(keep_x_axis)) {
     metric_plot <- metric_plot + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
   } else{
-    metric_plot <- metric_plot + xlim(-4.2, 7) +
+    metric_plot <- metric_plot + xlim(-3.5, 3.5) +
       geom_hline(aes(yintercept = 0))
   }
   
   if(gen_est$p.adjust < 0.05){
-    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate_scale + .2), y = 0.8, label = "*", size = unit(16, "pt"))
+    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate_scale + .4), y = 0.8, label = "*", size = unit(16, "pt"))
   }
   
   return(metric_plot)
 }  
+
+keep <- pmap(slope_plot_df %>% filter(metric_name == "CWM_diet_planto"), plot_slopes)
+keep 
 
 muted <- khroma::color("muted")(5)
 
@@ -326,7 +332,7 @@ slope_plots <- pmap(slope_plot_df, plot_slopes)
 slope_plot_grid <- cowplot::plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
                        hjust = -1, axis = "l", byrow = FALSE)
 
-cowplot::save_plot(here::here("figures/slope_plot_grid.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = 1.18)
+cowplot::save_plot(here::here("figures/slope_plot_grid.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = .9)
 
 get_legends <- function(color){
   duration_legend_plot <- slopes %>%
@@ -353,6 +359,12 @@ library(patchwork)
 group_slopes <- model_output %>% 
     filter(effect == "group_slope", !metric %in% c("Jaccard_next", "FRic", "FEve", "FDiv"), 
            !term %in% c("Global", "Polar/Temperate")) %>% 
+  #get the general model estimates for foraging CWM's, since they contain only bird communities
+  bind_rows(model_output %>% filter(model_id == "base", term == "year_scaled", is.na(study_id),
+                        metric %in% c("CWM_forstrat_ground", "CWM_forstrat_watbelowsurf", "CWM_forstrat_wataroundsurf", 
+                                                                                 "CWM_forstrat_understory", "CWM_forstrat_aerial", 
+                                                                                 "CWM_forstrat_canopy", "CWM_forstrat_midhigh")) %>%
+              mutate(model_id = "taxa", term = "Birds")) %>%
   select(model_id, term, estimate, p.adjust, metric) %>%
   mutate(sig = ifelse(p.adjust < 0.05, "yes", "no")) %>%
   left_join(data.frame(metric = c("S", "Jaccard_base", 
