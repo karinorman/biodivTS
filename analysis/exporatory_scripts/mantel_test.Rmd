@@ -1,0 +1,100 @@
+---
+title: "Mantel Test"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+```
+
+get rarefied samples
+```{r}
+#helper function to load file
+loadRData <- function(file_name){
+  load(file_name)
+  get(ls()[ls() != "file_name"])
+}
+
+load(here::here("data/model_data.rda"))
+long_duration <- model_data %>% select(rarefyID, duration) %>%
+  filter(duration > 2) %>%
+  pull(rarefyID)
+
+#get list of rarefaction sample files
+path <- here::here("data", "rarefied_samples")
+files <- dir(path, "*.rda") %>%
+  paste0(path, "/", .)
+
+file_df <- data.frame(file_path = files) %>%
+  mutate(rarefyID = str_match(files,"_cell\\s*(.*?)\\s*_sample")[,2]) %>%
+  filter(rarefyID %in% long_duration)
+
+get_dist <- function(files){
+    
+    rare_comm <- loadRData(files[1])
+    
+    # meta <- rare_comm %>%
+    #   select(rarefyID, cell, rarefy_resamp, type) %>%
+    #   distinct()
+    
+    rare_comm <- rare_comm %>%
+      column_to_rownames("YEAR") %>%
+      dplyr::select(-rarefyID, -cell, -rarefy_resamp, -type)
+    
+    mat <- vegdist(rare_comm, method='jaccard', binary=TRUE)
+    
+    return(mat)
+  }
+
+
+rarefyid_distmat <- unique(file_df$rarefyID) %>%
+  purrr::set_names() %>% 
+  purrr::map(function(id){
+  
+  #browser() 
+  
+  files <- file_df %>% filter(rarefyID == id) %>%
+    pull(file_path)
+  
+  if (length(files) > 1) {
+    
+  mat_list <- purrr::map(files, get_dist)
+  dist_mat <- Reduce("+", mat_list) / length(mat_list)
+  
+  } else {
+    
+    dist_mat <- get_dist(files)
+    
+  }
+  return(dist_mat)
+})
+
+dim_check <- purrr::map(rarefyid_distmat, ~ dim(.x)[1] != 2)
+```
+
+
+```{r}
+# remove time series with only two time points, won't be able to permute
+sub_rarefyid_distmat <- rarefyid_distmat[unlist(dim_check)]
+
+get_mantel <- function(jacc_dist_mat){
+  years <- as.integer(names(jacc_dist_mat))
+  names(years) <- names(jacc_dist_mat)
+  year_dist <- dist(years)
+  
+  mantel_out <- mantel(jacc_dist_mat, year_dist, method = "spearman", permutations = 9999)
+  
+  return(data.frame(p.value = mantel_out$signif, perm_num = mantel_out$permutations))
+}
+
+ mantel_list <- #names(sub_rarefyid_distmat) %>%
+#   purrr::set_names() %>% 
+  purrr::map(sub_rarefyid_distmat, get_mantel)
+ 
+ names(mantel_list) <- names(sub_rarefyid_distmat)
+
+ mantel_df <- bind_rows(mantel_list, .id = "rarefyID") %>%
+   mutate(p.adjust =  p.adjust(mantel_df$p.value, method = "BH"))
+ 
+ usethis::use_data(mantel_df)
+```
