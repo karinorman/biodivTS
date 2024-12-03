@@ -131,7 +131,7 @@ Metric plots with trend lines
 ```{r}
 load(here::here("data/metric_model_table.rda"))
 
-plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, color_list){
+plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, color_list, legend){
 
   if(is.na(xlabel)) xlabel <- NULL
   
@@ -163,12 +163,17 @@ plot_metric <- function(metric_name, ylabel, yval, xlabel, data, model_coef, col
     theme_classic() + 
     #theme_classic(base_size = 12) + 
     #theme(legend.position = "none") +
-    theme(axis.title = element_text(size=7), legend.position = "none") +
     ylab(ylabel) +
     xlab(xlabel) +
     labs(color = "Climate") +
     scale_x_continuous(breaks = scales::pretty_breaks(n = 6)) +
     scale_colour_manual(values = color_list, drop = FALSE)
+  
+  if (legend == TRUE){
+    trend_plot <- trend_plot + theme(axis.title = element_text(size=7)) 
+  } else{
+    trend_plot <- trend_plot + theme(axis.title = element_text(size=7), legend.position = "none")
+  }
   
   ggsave(paste0(here::here("figures"), "/",metric_name, "_trend.png"), trend_plot)
   return(trend_plot)
@@ -207,6 +212,18 @@ legend <- get_legend(leg_plot)
 plot_join + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
 
 ggsave2(here::here("figures", "3met_long.jpeg"), bg = "white")
+```
+
+Get hindcast Jaccard plot for supplement
+```{r}
+jaccard_hind_plot <- plot_metric("Jaccard_hind", ylabel = "log(Jaccard + 1)", yval = "logvalue", xlabel = "year", data = model_data %>% mutate("log(value)" = log(value)), 
+            model_coef = metric_model_table %>% filter(model_id == "base"), 
+            color_list = group_colors,
+            legend = TRUE)
+
+jaccard_hind_plot + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
+
+ggsave(here::here("figures", "jaccard_hind_plot.jpeg"), bg = "white", width = 6, height = 4)
 ```
 
 Effect size plots
