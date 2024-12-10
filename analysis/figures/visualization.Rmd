@@ -245,7 +245,7 @@ durations <- model_data %>%
 
 slopes <- model_output %>% 
   filter(term == "year_scaled", model_id == "base",
-         !metric %in% c("FDiv", "FRic", "FEve", "Jaccard_next")) %>% 
+         !metric %in% c("FDiv", "FRic", "FEve", "Jaccard_next", "Jaccard_hind")) %>% 
   select(metric, estimate, p.adjust, study_id) %>%
   mutate(estimate_backtrans = case_when(
            metric %in% log_metrics ~ exp(estimate),
@@ -278,38 +278,45 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
   plot_data <- slopes %>%
     filter(metric == metric_name) 
   
+  # plotting parameters
+  lim_buffer <- plot_data %>% filter(!is.na(estimate)) %>% pull(estimate) %>% sd()/4
+  lim <- max(abs(plot_data$estimate))
+  
   gen_est <- plot_data %>% filter(is.na(study_id))
   
   metric_plot <- plot_data %>% 
     filter(!is.na(study_id)) %>% 
     ggplot() +
-    geom_dotplot(aes(x = estimate_scale, fill = duration_fac),
+    geom_dotplot(aes(x = estimate, fill = duration_fac),
                  stackgroups = TRUE,
-                 method = "histodot",
-                 binwidth = 0.1, dotsize = 1.4
+                 method = "histodot"#,
+                 #binwidth = 0.1, dotsize = 1.4
     ) +
     scale_fill_manual(values = graid_pal, guide = "none", drop = FALSE) +
-    geom_vline(aes(xintercept = gen_est$estimate_scale), linetype = "longdash") +
+    geom_vline(aes(xintercept = gen_est$estimate), linetype = "longdash") +
     #coord_fixed(ratio=5)+#, ylim = c(0,5)) +
     #scale_y_continuous(limits=c(0, 1), expand = c(0, 0), breaks = seq(0, 1,1/10), labels=seq(0,10)) +
     theme_minimal() +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           axis.title.y = element_blank(), 
-          axis.text.y=element_blank(), 
-          axis.title=element_text(size=14)) +
-    xlim(-3.5, 3.5) +
+          axis.text.y=element_blank()#, 
+          #axis.title=element_text(size=14)
+          ) +
+    xlim(-lim - lim_buffer, 
+         lim + lim_buffer) +
     xlab("temporal slope estimate") +
-    annotate('text', x = -2.5, y = 0.8, label = plot_label, size = unit(6, "pt")) 
+    geom_hline(aes(yintercept = 0)) +
+    annotate('text', x = (-lim + (2*lim_buffer)), y = 0.8, label = plot_label, size = unit(4, "pt")) 
 
   if(isFALSE(keep_x_axis)) {
-    metric_plot <- metric_plot + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+    #metric_plot <- metric_plot + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
   } else{
-    metric_plot <- metric_plot + xlim(-3.5, 3.5) +
-      geom_hline(aes(yintercept = 0))
+    #metric_plot <- metric_plot + xlim(-3.5, 3.5) +
+      #geom_hline(aes(yintercept = 0))
   }
   
   if(gen_est$p.adjust < 0.05){
-    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate_scale + .4), y = 0.8, label = "*", size = unit(16, "pt"))
+    metric_plot <- metric_plot + annotate('text', x = (gen_est$estimate + (lim_buffer*2)), y = 0.8, label = "*", size = unit(16, "pt"))
   }
   
   return(metric_plot)
@@ -329,9 +336,9 @@ slope_plot_df <- data.frame(metric_name = c("S", "Jaccard_base",
                      "CWM_forstrat_canopy", "CWM_forstrat_midhigh", "CWM_bodymass_value", rep("empty", 2)),
                      plot_label = c("Species\nRichness", "Jaccard\nSimilarity", 
                      "FRic SES", "FEve SES", "FDiv SES", 
-                     "Invertebrates", "Scavenge", "Fish", "Other\nVertebrates", "Other Plants",
+                     "Invertebrates", "Scavenge", "Fish", "Other\nVertebrates", "Other\nPlants",
                      "Seeds", "Mammals\n& Birds", "Nectar", "Fruit", "Reptiles &\nAmphibians", 
-                     "Ground", "Below Water\nSurface", "Around Water\nSurface", 
+                     "Ground", "Below Water\nSurface", "Around\nWater\nSurface", 
                      "Understory", "Aerial", "Canopy", "Midhigh", 
                      "Body Mass", rep("empty", 2)), 
                      keep_x_axis = c(FALSE, FALSE, 
@@ -349,7 +356,7 @@ slope_plots <- pmap(slope_plot_df, plot_slopes)
 slope_plot_grid <- cowplot::plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
                        hjust = -1, axis = "l", byrow = FALSE)
 
-cowplot::save_plot(here::here("figures/slope_plot_grid.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = .9)
+cowplot::save_plot(here::here("figures/slope_plot_grid_test.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = .7)
 
 get_legends <- function(color){
   duration_legend_plot <- slopes %>%
