@@ -1,0 +1,104 @@
+---
+title: "Editable tables"
+output: html_document
+date: "2024-12-13"
+---
+
+```{r}
+library(kableExtra)
+library(magrittr)
+library(tidyverse)
+#library(printr)
+library(rticles)
+library(knitr)
+library(flextable)
+
+```
+
+```{r}
+traitTable <- tibble(Trait = c(rep("Diet", 10), rep("Foraging Strata", 7), rep("Pelagic Specialist", 2), rep("Nocturnal", 2), rep("Crepuscular", 2), rep("Diurnal", 2), "Body Mass"),
+       Category = c("Invertebrate", "Mammals and Birds", "Reptiles", "Fish", "Unknown Vertebrates", "Scavenging", "Fruit", "Nectar", "Seeds", "Other Plant",
+                    "Below water surface", "water surface", "ground", "understory", "> 2m, below canopy", "canopy", "aerial",
+                    rep(c("yes", "no"), 4),
+                    "-"),
+       Taxa = c(rep("Bird and Mammal", 10), rep("Bird", 7), rep("Bird", 2), rep("Bird and Mammal", 2), rep("Mammal", 4), "Bird and Mammal"),
+       `Data Type` = c(rep("percentage consumed", 10), rep("percentage of use", 7), rep("binary", 8), "continous, in grams")) %>%
+  flextable()
+  # kable(format = "latex", caption = "Description of the traits included in the analysis broken down by categories at data type.") %>%
+  # collapse_rows(columns = 1:4) %>%
+  # column_spec(3:4, width = "3cm") %>%
+  # kable_paper() #%>%
+  # #save_kable(here::here("figures/tables/trait_table.jpeg"))
+
+traitTable <- traitTable %>% merge_v() %>% border_inner_h() %>% border_inner_v() 
+  
+
+```
+
+```{r}
+load(here::here("data/model_output.rda"))
+
+change_table <- model_output %>%
+  filter(term == "year_scaled", p.adjust < 0.05) %>%
+  filter(metric %in% c("SES_FRic", "SES_FEve", "SES_FDiv", "Jaccard_base", "S", "FRic", "FEve", "FDiv")) %>%
+  mutate(positive = ifelse(estimate > 0, "+", "-")) %>%
+  group_by(metric, positive) %>%
+  summarise(n_study_id = n_distinct(study_id)) %>%
+  pivot_wider(names_from = "metric", values_from = "n_study_id", values_fill = 0) %>%
+  select(positive, S, Jaccard_base, FRic, FEve, FDiv, SES_FRic, SES_FEve, SES_FDiv) %>%
+  flextable() %>% 
+  set_header_labels(positive = "", S = "S", Jaccard_base = "Jaccard Similarity", FRic = "FRic", 
+                    FEve = "FEve", FDiv = "FDiv", SES_FRic = "SES FRic", SES_FEve = "SES FEve", SES_FDiv = "SES FDiv") %>%
+  add_header_row(
+  values = c("", "species", "functional"),
+  colwidths = c(1, 2, 6))
+  # kable(format = "latex", 
+  #       #col.names = c("", "S", "Jaccard Similarity", "FRic", "FEve", "FDiv", "SES FRic", "SES FEve", "SES FDiv"),
+  #       col.names = c("", "richness", "Jaccard Similarity", "richness", "evenness", "divergence", "SES richness", "SES evenness", "SES divergence"),
+  #       caption = "Number of studies that experienced a significant trend in each calculated metric out of 50 total studies. Both observed and corrected (SES) versions of functional metrics are included.", 
+  #       booktabs = TRUE, align = "c", escape = FALSE) %>%
+  # kableExtra::add_header_above(c("", "species" = 2, "functional" = 6)) %>%
+  # kable_styling("striped") #%>%
+  # #save_kable(here::here("figures/tables/trend_table.jpeg"))
+
+change_table
+
+```
+
+```{r}
+load(here::here("data/change_group_ses_desc.rda"))
+
+change_group_ses_desc[change_group_ses_desc == "pos"] <- "+"
+change_group_ses_desc[change_group_ses_desc == "neg"] <- "-"
+
+change_groups_table <- change_group_ses_desc %>%
+  select(type = change_description, everything()) %>%
+  mutate(n = as.character(n),
+           n = ifelse(n == "7", "32", n)) %>%
+  mutate(type = ifelse(n == "32", "no change", type),
+         type = ifelse(type == "functional change", "functional diversity change", type)) %>%
+  rename(`Study Count` = `n`) %>%
+  flextable() %>%
+  merge_v(j = "type")  %>%
+  border_inner_h() %>%
+  border_inner_v() %>%
+  set_header_labels(type = "type", S = "S", Jaccard_base = "Jaccard Similarity", FRic = "FRic", 
+                    FEve = "FEve", FDiv = "FDiv", SES_FRic = "SES FRic", SES_FEve = "SES FEve", SES_FDiv = "SES FDiv") 
+  
+  #    kable(format = "latex",
+  #       caption = "Table giving the count of number of studies for different kinds of functional change, broken down into no change functional change without species richness change, loss of redundancy, and increases in species richness. Trends direction is indicated by a positive or negative sign, with a 0 indicating no trend.", align = "c",
+  #       latex_options= c("scale_down", "hold_position")) %>% 
+  # collapse_rows(columns = c(1,2)) %>%
+  # column_spec(1, width = "4cm") #%>%
+  #save_kable(here::here("figures/tables/study_change_table.jpeg"))
+
+change_groups_table
+
+```
+
+```{r}
+save_as_docx(
+  "Table 1" = traitTable, "Table 2" = change_table, "Table 3" = change_groups_table,
+  path = here::here("figures/table_doc.docx"))
+```
+
