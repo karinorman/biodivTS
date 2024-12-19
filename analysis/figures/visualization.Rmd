@@ -74,7 +74,7 @@ study_map <- map_data("world") %>%
   #theme(legend.title  = element_blank(), legend.text = element_text(size = 12)) +
   guides(color = guide_legend(override.aes= list(alpha = 0.8)))
 
-ggsave(here::here("figures/study_map.jpeg"), bg = "white")
+ggsave(here::here("figures/study_map.jpeg"), bg = "white", dpi = 800)
 ```
 
 ```{r}
@@ -95,7 +95,7 @@ duration_hist <- study_data %>%
 
 plot_grid(study_map, duration_hist, labels = "AUTO", nrow = 2, align = 'vh', hjust = -1, axis = "l", scale = c(1,0.9), rel_heights = c(2, 1.25))
 
-ggsave2(here::here("figures/study_map_hist.jpeg"), bg = "white")
+ggsave2(here::here("figures/study_map_hist.jpeg"), bg = "white", dpi = 1000, width = 180, units = "mm")
 ```
 
 Hexbin map
@@ -188,7 +188,8 @@ plot_map <- tibble(metric_name = c("S", "Jaccard_base", "SES_FRic", "SES_FDiv", 
            xlabel = c(NA, NA, NA, "year", "year"))
 m_plots <- pmap(plot_map, plot_metric, data = model_data %>% mutate("log(value)" = log(value)), 
                 model_coef = metric_model_table %>% filter(model_id == "base"), 
-                color_list = group_colors)
+                color_list = group_colors, 
+                legend = FALSE)
 
 plot_join <- plot_grid(plotlist=m_plots, labels = "AUTO", nrow = 3, align = 'vh',
                        hjust = -1, axis = "l", scale = 0.9)
@@ -211,7 +212,7 @@ legend <- get_legend(leg_plot)
 #plot_join + draw_grob(legend,  2/3.3, -0.3, .3/3.3, 1, scale = 0.6)
 plot_join + draw_grob(legend,  2/3.3, -0.3,.3/3.3, 1, scale = 0.01)
 
-ggsave2(here::here("figures", "3met_long.jpeg"), bg = "white")
+ggsave2(here::here("figures", "3met_long.jpeg"), bg = "white", width = 180, unit = "mm", dpi = 1000)
 ```
 
 Get hindcast Jaccard plot for supplement
@@ -322,8 +323,6 @@ plot_slopes <- function(metric_name, plot_label, keep_x_axis, color){
   return(metric_plot)
 }  
 
-keep <- pmap(slope_plot_df %>% filter(metric_name == "CWM_diet_planto"), plot_slopes)
-keep 
 
 muted <- khroma::color("muted")(5)
 
@@ -356,7 +355,7 @@ slope_plots <- pmap(slope_plot_df, plot_slopes)
 slope_plot_grid <- cowplot::plot_grid(plotlist=slope_plots, nrow = 5, align = 'vh',
                        hjust = -1, axis = "l", byrow = FALSE)
 
-cowplot::save_plot(here::here("figures/slope_plot_grid_test.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = .7)
+cowplot::save_plot(here::here("figures/slope_plot_grid_test.png"), slope_plot_grid, ncol = 7, nrow = 5, bg = "white", base_asp = .7, dpi = 1000)
 
 get_legends <- function(color){
   duration_legend_plot <- slopes %>%
@@ -367,9 +366,9 @@ get_legends <- function(color){
           legend.background = element_rect(fill='transparent'))
   
   duration_legend <- get_legend(duration_legend_plot)
-  leg <- grid.arrange(duration_legend)
+  leg <- gridExtra::grid.arrange(duration_legend)
   ggsave(here::here(paste0("figures/slope_legends/", color, "_legend.png")), leg, width = .6, height = 1.5,
-         bg = "transparent")
+         bg = "transparent", dpi = 800)
 }
 
 map(muted, get_legends)
@@ -529,7 +528,7 @@ realm_plot
 # cowplot::save_plot(here::here("figures/contrasts_plot_grid.png"), contrasts_plot_grid, ncol = 4, nrow = 1, bg = "white", base_asp = 1, base_height = 5)
 
 contrasts_plot_grid <- climate_plot + taxa_plot + pa_plot + realm_plot + plot_layout(ncol = 4, axis_titles = "collect")
-ggsave(here::here("figures/contrasts_plot_grid.png"), contrasts_plot_grid, width = 15, heigh = 6)
+ggsave(here::here("figures/contrasts_plot_grid.jpg"), contrasts_plot_grid, width = 15, heigh = 6, dpi = 1000)
 ```
 
 
